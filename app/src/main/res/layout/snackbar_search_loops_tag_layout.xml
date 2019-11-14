@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:scrollbarStyle="insideInset">
+
+        <LinearLayout
+            android:id="@+id/tag_table"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/perc_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/percussion_tag"
+                android:onClick="setPercLoopsTag"
+                android:text="@string/percussion_tag" />
+
+            <Button
+                android:id="@+id/arpeggio_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/arpeggio_tag"
+                android:onClick="setArpeggioLoopsTag"
+                android:text="@string/arpeggio_tag" />
+
+            <Button
+                android:id="@+id/atmospheric_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/arpeggio_tag"
+                android:onClick="setAtmosphericLoopsTag"
+                android:text="@string/atmospheric_tap" />
+
+            <Button
+                android:id="@+id/gtr_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/guitar_tag"
+                android:onClick="setGuitarLoopsTag"
+                android:text="@string/guitar_tag" />
+
+
+            <Button
+                android:id="@+id/hat_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/hats_tag"
+                android:onClick="setHatLoopsTag"
+                android:text="@string/hats_tag" />
+
+            <Button
+                android:id="@+id/keys_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/keys_tag"
+                android:onClick="setKeysLoopsTag"
+                android:text="@string/keys_tag" />
+
+            <Button
+                android:id="@+id/strings_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/strings_tag"
+                android:onClick="setStringsLoopsTag"
+                android:text="@string/strings_tag" />
+
+            <Button
+                android:id="@+id/synth_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/synthesizer_tag"
+                android:onClick="setSynthLoopsTag"
+                android:text="@string/synthesizer_tag" />
+
+            <Button
+                android:id="@+id/pad_loops"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/pads_tag"
+                android:onClick="setPadLoopsTag"
+                android:text="@string/pads_tag"
+
+                />
+
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+</LinearLayout>

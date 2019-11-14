@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+        <ImageButton
+            android:id="@+id/play_stop_btn"
+            app:layout_constraintHeight_percent=".2"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintWidth_percent=".1"
+            android:layout_marginBottom="4dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"/>
+        <ImageButton
+            android:id="@+id/undo"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_percent=".25"
+            app:layout_constraintTop_toBottomOf="@id/play_stop_btn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent=".17"
+            android:layout_marginBottom="4dp"
+            />
+        <ImageButton
+            android:id="@+id/redo"
+            android:layout_width="55dp"
+            android:layout_height="44dp"
+            android:layout_marginBottom="4dp"
+            />
+        <ImageButton
+            android:id="@+id/record_armed_btn"
+            android:layout_width="55dp"
+            android:layout_height="44dp"
+            android:layout_marginBottom="4dp"
+            />
+        <ImageButton
+            android:id="@+id/settings_btn"
+            android:layout_width="55dp"
+            android:layout_height="44dp"
+            android:layout_marginBottom="4dp"
+            />
+        <ImageButton
+            android:id="@+id/load_btn"
+            android:layout_width="55dp"
+            android:layout_height="44dp"
+            android:layout_marginBottom="4dp"
+            android:layout_below="@id/settings_btn"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+

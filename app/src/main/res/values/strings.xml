@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">NextSoundz</string>
+    <string name="load_confirm">Load</string>
+    <string name="load_alert_message">Load a sound</string>
+    <string name="load_cancel">Cancel</string>
+
+    <item name="pad_height" format="float" type="dimen">.25</item>
+    <string name="title_activity_load_drum_sound">LoadDrumSoundActivity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+    <string name="soundfx">SoundFX</string>
+    <string name="sound_fx_tag">Sound FX</string>
+    <string name="rnb_tag">RnB</string>
+    <string name="west_coast_hip_hop_tag">West Coast Hip-Hop</string>
+    <string name="east_coast_hip_hop_tag">East Coast Hip-Hop</string>
+    <string name="trap_soul_tag">Trap Soul</string>
+    <string name="trap_tag">Trap</string>
+    <string name="arpeggio_tag">Arpeggio</string>
+    <string name="atmospheric_tap">Atmospheric</string>
+    <string name="guitar_tag">Guitar</string>
+    <string name="keys_tag">Keys</string>
+    <string name="synthesizer_tag">Synthesizer</string>
+    <string name="strings_tag">Strings</string>
+    <string name="pads_tag">Pads</string>
+    <string name="hats_tag">Hats</string>
+    <string name="snares_tag">Snares</string>
+    <string name="kicks_tag">Kicks</string>
+    <string name="_808_s_tag">808\'s</string>
+    <string name="clapsTag">Claps</string>
+    <string name="percussion_tag">Percussion</string>
+    <string name="builds_tag">Builds</string>
+    <string name="fills_tag">Fills</string>
+    <string name="rolls_tag">Rolls</string>
+    <string name="shakers_tag">Shakers</string>
+    <string name="snaps_tag">Snaps</string>
+    <string name="toms_tag">Toms</string>
+    <string name="crash_cymbals_tag">Crash Cymbals</string>
+    <string name="transfx_tag">TransFX</string>
+</resources>

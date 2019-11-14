@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:scrollbarStyle="insideInset">
+
+        <LinearLayout
+            android:id="@+id/tag_table"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/hats"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/hats_tag"
+                android:onClick="setHatTag"
+                android:text="@string/hats_tag" />
+
+            <Button
+                android:id="@+id/snares"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/snares_tag"
+                android:onClick="setSnaresTag"
+                android:text="@string/snares_tag" />
+
+            <Button
+                android:id="@+id/kicks"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/kicks_tag"
+                android:onClick="setKicksTag"
+                android:text="@string/kicks_tag" />
+
+            <Button
+                android:id="@+id/_808s"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/_808_s_tag"
+                android:onClick="setSubsTag"
+                android:text="@string/_808_s_tag" />
+
+            <Button
+                android:id="@+id/claps"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/clapsTag"
+                android:onClick="setClapsTag"
+                android:text="@string/clapsTag" />
+
+            <Button
+                android:id="@+id/percussion"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/percussion_tag"
+                android:onClick="setPercussionTag"
+                android:text="@string/percussion_tag" />
+
+            <Button
+                android:id="@+id/builds"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/builds_tag"
+                android:onClick="setBuildsTag"
+                android:text="@string/builds_tag" />
+
+            <Button
+                android:id="@+id/fills"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/fills_tag"
+                android:onClick="setFillsTag"
+                android:text="@string/fills_tag" />
+
+            <Button
+                android:id="@+id/rolls"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/rolls_tag"
+                android:onClick="setRollsTag"
+                android:text="@string/rolls_tag" />
+
+            <Button
+                android:id="@+id/shakers"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/shakers_tag"
+                android:onClick="setShakersTag"
+                android:text="@string/shakers_tag" />
+
+            <Button
+                android:id="@+id/snaps"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/snaps_tag"
+                android:onClick="setSnapsTag"
+                android:text="@string/snaps_tag" />
+
+            <Button
+                android:id="@+id/toms"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/toms_tag"
+                android:onClick="setTomsTag"
+                android:text="@string/toms_tag" />
+
+            <Button
+                android:id="@+id/crash"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/crash_cymbals_tag"
+                android:onClick="setCrashTag"
+                android:text="@string/crash_cymbals_tag" />
+
+            <Button
+                android:id="@+id/trans_fx"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/transfx_tag"
+                android:onClick="setTransFxTag"
+                android:text="@string/transfx_tag" />
+
+            <Button
+                android:id="@+id/sound_fx"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/soundfx"
+                android:onClick="setSoundFxTag"
+                android:text="@string/soundfx" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+</LinearLayout>

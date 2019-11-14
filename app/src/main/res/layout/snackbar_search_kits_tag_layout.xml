@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:padding="4dp"
+        android:scrollbarStyle="insideInset">
+
+        <LinearLayout
+            android:id="@+id/tag_table"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/trap_kits"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/trap_tag"
+                android:onClick="setTrapKitTag"
+                android:text="@string/trap_tag"
+
+                />
+
+            <Button
+                android:id="@+id/trap_soul_kits"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/trap_soul_tag"
+                android:onClick="setTrapSoulKitsTag"
+                android:text="@string/trap_soul_tag"
+
+                />
+
+            <Button
+                android:id="@+id/east_coast_kits"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/east_coast_hip_hop_tag"
+                android:onClick="setEastCoastKitsTag"
+                android:text="@string/east_coast_hip_hop_tag"
+
+                />
+
+            <Button
+                android:id="@+id/west_coast_kits"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/west_coast_hip_hop_tag"
+                android:onClick="setWestCoastKitsTag"
+                android:text="@string/west_coast_hip_hop_tag" />
+
+            <Button
+                android:id="@+id/rnb_kits"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/rnb_tag"
+                android:onClick="setRnbKitsTag"
+                android:text="@string/rnb_tag"
+
+                />
+
+            <Button
+                android:id="@+id/sound_fx_kits"
+                style="@style/TagTextViews"
+                android:contentDescription="@string/sound_fx_tag"
+                android:onClick="setSoundFxKitsTag"
+                android:text="@string/sound_fx_tag" />
+
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+</LinearLayout>

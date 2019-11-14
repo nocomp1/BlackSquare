@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+
+    <Button
+        android:id="@+id/pad1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="@id/pad5"
+        app:layout_constraintBottom_toBottomOf="@id/pad2"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintTop_toTopOf="@id/pad2"
+        app:layout_constraintWidth_percent=".17" />
+
+
+    <Button
+        android:id="@+id/pad2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="@id/pad6"
+        app:layout_constraintBottom_toBottomOf="@id/pad3"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintTop_toTopOf="@id/pad3"
+        app:layout_constraintWidth_percent=".17" />
+
+
+    <Button
+        android:id="@+id/pad3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="@id/pad7"
+        app:layout_constraintBottom_toBottomOf="@id/pad4"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintTop_toTopOf="@id/pad4"
+        app:layout_constraintWidth_percent=".17" />
+
+    <Button
+        android:id="@+id/pad4"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintEnd_toEndOf="@id/pad8"
+        app:layout_constraintStart_toStartOf="@id/pad8"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintTop_toBottomOf="@id/pad8"
+        app:layout_constraintWidth_percent=".17" />
+    <Button
+        android:id="@+id/pad5"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginRight="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/pad6"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent=".17" />
+
+
+    <Button
+        android:id="@+id/pad6"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginRight="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/pad7"
+        app:layout_constraintEnd_toStartOf="@id/pad7"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintTop_toTopOf="@id/pad7"
+        app:layout_constraintWidth_percent=".17" />
+
+    <Button
+        android:id="@+id/pad7"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent=".17"
+        app:layout_constraintVertical_chainStyle="packed"/>
+
+    <Button
+        android:id="@+id/pad8"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginLeft="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/pad7"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintStart_toEndOf="@id/pad7"
+        app:layout_constraintTop_toTopOf="@id/pad7"
+        app:layout_constraintWidth_percent=".17" />
+
+    <Button
+        android:id="@+id/pad9"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintEnd_toEndOf="@id/pad5"
+        app:layout_constraintBottom_toTopOf="@id/pad5"
+        app:layout_constraintWidth_percent=".17" />
+
+    <Button
+        android:id="@+id/pad10"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintEnd_toEndOf="@id/pad6"
+        app:layout_constraintBottom_toTopOf="@id/pad6"
+        app:layout_constraintWidth_percent=".17" />
+
+    <Button
+        android:id="@+id/pad11"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintEnd_toEndOf="@id/pad7"
+        app:layout_constraintBottom_toTopOf="@id/pad7"
+        app:layout_constraintWidth_percent=".17" />
+
+    <Button
+        android:id="@+id/pad12"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintHeight_percent=".317"
+        app:layout_constraintEnd_toEndOf="@id/pad8"
+        app:layout_constraintBottom_toTopOf="@id/pad8"
+        app:layout_constraintWidth_percent=".17" />
+
+    <ImageButton
+        android:id="@+id/play_stop_btn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:srcCompat ="@drawable/play_to_stop_anim"
+        android:layout_marginLeft="20dp"
+        android:onClick="playStop"
+        app:layout_constraintHeight_percent=".19"
+        app:layout_constraintStart_toEndOf="@id/pad12"
+        app:layout_constraintBottom_toTopOf="@id/undo"
+        app:layout_constraintTop_toTopOf="@id/pad12"
+        app:layout_constraintWidth_percent=".09" />
+
+    <ImageButton
+        android:id="@+id/undo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:srcCompat ="@drawable/ic_undo"
+        app:layout_constraintEnd_toEndOf="@id/play_stop_btn"
+        app:layout_constraintHeight_percent=".19"
+        app:layout_constraintStart_toStartOf="@id/play_stop_btn"
+        app:layout_constraintBottom_toTopOf="@id/redo"
+        app:layout_constraintTop_toBottomOf="@id/play_stop_btn"
+        app:layout_constraintWidth_percent=".09" />
+
+    <ImageButton
+        android:id="@+id/redo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/default_pad"
+        app:srcCompat ="@drawable/ic_redo"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="@id/record_armed_btn"
+        app:layout_constraintHeight_percent=".19"
+        app:layout_constraintStart_toStartOf="@id/record_armed_btn"
+        app:layout_constraintTop_toBottomOf="@id/record_armed_btn"
+        app:layout_constraintWidth_percent=".09" />
+
+
+    <ImageButton
+        android:id="@+id/record_armed_btn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="4dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:srcCompat ="@drawable/ic_fiber_manual_record_default"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent=".19"
+
+        app:layout_constraintBottom_toBottomOf="@id/play_stop_btn"
+        app:layout_constraintStart_toEndOf="@id/play_stop_btn"
+
+        app:layout_constraintWidth_percent=".09" />
+
+    <ImageButton
+        android:id="@+id/settings_btn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="@id/undo"
+        app:layout_constraintHeight_percent=".19"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@id/undo"
+        app:layout_constraintTop_toBottomOf="@id/undo"
+        app:layout_constraintWidth_percent=".09"
+        app:srcCompat ="@drawable/ic_settings_applications"
+        android:textSize="12sp"/>
+
+
+    <ImageButton
+        android:id="@+id/load_btn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/default_pad"
+        android:padding="8dp"
+        app:srcCompat ="@drawable/ic_folder_open"
+        app:layout_constraintEnd_toEndOf="@id/redo"
+        app:layout_constraintHeight_percent=".19"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@id/redo"
+        app:layout_constraintTop_toBottomOf="@id/redo"
+        app:layout_constraintWidth_percent=".09" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+

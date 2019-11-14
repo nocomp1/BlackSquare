@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad21"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad22"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad23"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad24"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad17"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad18"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad19"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:id="@+id/pad20"
+            android:background="@drawable/default_pad"
+            android:layout_marginLeft="5dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad13"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad14"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/tag_button"
+            android:id="@+id/pad15"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+        <Button
+            android:layout_marginLeft="5dp"
+            android:background="@drawable/default_pad"
+            android:id="@+id/pad16"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+    </LinearLayout>
+
+</LinearLayout>
