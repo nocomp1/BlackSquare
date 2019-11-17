@@ -20,6 +20,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColor">@color/textColor</item>
+        <item name="dialogCornerRadius">8dp</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
@@ -27,7 +28,7 @@
 
     <!-- TagButtonViews -->
     <style name="TagTextViews">
-        <item name="android:textColor">#fff</item>
+        <item name="android:textColor">@color/textColor</item>
         <item name="android:background">@drawable/tag_button</item>
         <item name="android:paddingLeft">8dp</item>
         <item name="android:paddingRight">8dp</item>
@@ -35,6 +36,21 @@
         <item name="android:layout_height">22dp</item>
         <item name="android:layout_width">wrap_content</item>
     </style>
+    <!-- Menu headers -->
+    <style name="menu_headers">
+        <item name="android:textColor">@color/textColor</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:translationZ">5dp</item>
+    </style>
 
+    <!-- Menu Text -->
+    <style name="menu_text">
+        <item name="android:textColor">@color/textColor</item>
+        <item name="android:textStyle">bold</item>
+
+    </style>
 
 </resources>

@@ -27,8 +27,8 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
 
     private var soundPool: SoundPool? = null
 
-    private var LOAD_REQUEST_CODE: Int = 0
-    private var SETTINGS_REQUEST_CODE: Int = 0
+    private var LOAD_REQUEST_CODE: Int = 100
+    private var SETTINGS_REQUEST_CODE: Int = 200
     private var sound1: Int = 0
     private var sound2: Int = 0
     private var sound3: Int = 0
@@ -60,7 +60,7 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
         savedInstanceState: Bundle?
     ): View? {
 
-        val view: View = inflater.inflate(R.layout.drum_fragment_layout, container, false)
+        val view: View = inflater.inflate(R.layout.drum_screen_home_fragment_layout, container, false)
 
 
         view.pad1.setOnTouchListener { v, event ->
@@ -153,6 +153,7 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
         view.load_btn.setOnClickListener(this)
         view.play_stop_btn.setOnClickListener(this)
         view.record_armed_btn.setOnClickListener(this)
+        view.settings_btn.setOnClickListener(this)
 
         return view
     }
@@ -430,7 +431,7 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
         if (!isPlaying) {
             play_stop_btn.setImageResource(R.drawable.play_to_stop_anim)
             play_stop_btn.setBackgroundResource(R.drawable.selected_menu_btn)
-            (play_stop_btn.drawable as AnimatedVectorDrawable).start()
+           (play_stop_btn.drawable as AnimatedVectorDrawable).start()
             isPlaying = true
 
 

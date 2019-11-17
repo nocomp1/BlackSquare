@@ -236,7 +236,7 @@
         app:layout_constraintStart_toStartOf="@id/undo"
         app:layout_constraintTop_toBottomOf="@id/undo"
         app:layout_constraintWidth_percent=".09"
-        app:srcCompat ="@drawable/ic_settings_applications"
+        app:srcCompat ="@drawable/ic_music_settings"
         android:textSize="12sp"/>
 
 
