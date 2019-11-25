@@ -3,11 +3,8 @@ package com.example.nextsoundz.Fragments
 
 import android.app.Activity.RESULT_OK
 import android.content.Intent
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.SoundPool
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -133,27 +130,12 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
                 else -> false
             }
         }
-        view.pad11.setOnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> pad11()
-                MotionEvent.ACTION_UP -> setPad11Selected()
-                else -> false
-            }
-        }
-        view.pad12.setOnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> pad12()
-                MotionEvent.ACTION_UP -> setPad12Selected()
-                else -> false
-            }
-        }
+
 
         //Menu controls
 
-        view.load_btn.setOnClickListener(this)
-        view.play_stop_btn.setOnClickListener(this)
-        view.record_armed_btn.setOnClickListener(this)
-        view.settings_btn.setOnClickListener(this)
+       // view.load_btn.setOnClickListener(this)
+
 
         return view
     }
@@ -269,51 +251,30 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
         return false
     }
 
-    private fun setPad11Selected(): Boolean {
-
-        if (padSelected != pad11 || padSelected == null) {
-            pad11.setBackgroundResource(R.drawable.selected_buton)
-            padSelected?.setBackgroundResource(R.drawable.default_pad)
-            padSelected = pad11
-        }
-
-        return false
-    }
-
-    private fun setPad12Selected(): Boolean {
-
-        if (padSelected != pad12 || padSelected == null) {
-            pad12.setBackgroundResource(R.drawable.selected_buton)
-            padSelected?.setBackgroundResource(R.drawable.default_pad)
-            padSelected = pad12
-        }
-
-        return false
-    }
 
 
     private fun loadDefaultDrumKit() {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(10)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .build()
 
-            soundPool = SoundPool.Builder()
-                .setMaxStreams(12)
-                .setAudioAttributes(audioAttributes)
-                .build()
-        } else {
-            soundPool = SoundPool(6, AudioManager.STREAM_MUSIC, 0)
-        }
-        val am = activity!!.assets
+
+
+       // val am = activity!!.assets
         val context = activity?.applicationContext
-        sound1 = soundPool!!.load(context, R.raw.sound1, 1)
-        sound2 = soundPool!!.load(context, R.raw.sound1, 1)
-        sound3 = soundPool!!.load(context, R.raw.sound1, 1)
+
+
+        sound1 = soundPool!!.load(context, R.raw.sound2, 1)
+        sound2 = soundPool!!.load(context, R.raw.wood, 1)
+        sound3 = soundPool!!.load(context, R.raw.click, 1)
         sound4 = soundPool!!.load(context, R.raw.sound1, 1)
-        sound5 = soundPool!!.load(context, R.raw.sound1, 1)
+        sound5 = soundPool!!.load(context, R.raw.sound3, 1)
         sound6 = soundPool!!.load(context, R.raw.sound1, 1)
         sound7 = soundPool!!.load(context, R.raw.sound1, 1)
         sound8 = soundPool!!.load(context, R.raw.sound1, 1)
@@ -324,17 +285,12 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
 
     }
 
-    init {
-        System.loadLibrary("native-lib")
-    }
 
 
     override fun onClick(v: View?) {
 
         when (v?.id) {
-            R.id.load_btn -> loadSound()
-            R.id.play_stop_btn -> playStop()
-            R.id.record_armed_btn -> recordArmed()
+            R.id.settings_btn -> loadSound()
             R.id.settings_btn -> settings()
         }
 
@@ -342,48 +298,48 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
 
 
     fun pad1(): Boolean {
-        soundPool!!.play(sound1, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound1, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad2(): Boolean {
-        soundPool!!.play(sound2, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound2, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad3(): Boolean {
-        soundPool!!.play(sound3, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound3, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad4(): Boolean {
-        soundPool!!.play(sound4, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound4, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
         return false
     }
 
     fun pad5(): Boolean {
-        soundPool!!.play(sound5, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound5, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad6(): Boolean {
-        soundPool!!.play(sound6, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound6, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad7(): Boolean {
-        soundPool!!.play(sound7, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound7, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad8(): Boolean {
-        soundPool!!.play(sound8, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound8, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad9(): Boolean {
-        soundPool!!.play(sound9, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound9, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
@@ -393,12 +349,12 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
     }
 
     fun pad11(): Boolean {
-        soundPool!!.play(sound11, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound11, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
     fun pad12(): Boolean {
-        soundPool!!.play(sound12, 1.0f, 1.0f, 0, 0, 10f)
+        soundPool!!.play(sound12, 1.0f, 1.0f, 0, 0, 1.0f)
         return false
     }
 
@@ -424,40 +380,6 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
     private fun settings() {
         val intent = Intent(activity!!.applicationContext, SettingsDialogActivity::class.java)
         startActivityForResult(intent,SETTINGS_REQUEST_CODE)
-    }
-
-    private fun playStop() {
-
-        if (!isPlaying) {
-            play_stop_btn.setImageResource(R.drawable.play_to_stop_anim)
-            play_stop_btn.setBackgroundResource(R.drawable.selected_menu_btn)
-           (play_stop_btn.drawable as AnimatedVectorDrawable).start()
-            isPlaying = true
-
-
-        } else {
-            play_stop_btn.setBackgroundResource(R.drawable.default_pad)
-            play_stop_btn.setImageResource(R.drawable.stop_to_play_anim)
-            (play_stop_btn.drawable as AnimatedVectorDrawable).start()
-            isPlaying = false
-
-
-        }
-    }
-
-
-    fun recordArmed() {
-
-        if (!isRecording) {
-            record_armed_btn.setBackgroundResource(R.drawable.selected_menu_btn)
-            isRecording = true
-
-
-        } else {
-            record_armed_btn.setBackgroundResource(R.drawable.default_pad)
-            isRecording = false
-
-        }
     }
 
 

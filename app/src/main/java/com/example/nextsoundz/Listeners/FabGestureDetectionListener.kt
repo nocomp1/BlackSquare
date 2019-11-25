@@ -20,6 +20,13 @@ class FabGestureDetectionListener : GestureDetector.SimpleOnGestureListener() {
 
         fun onFabSingleTapConfirmed(e: MotionEvent?)
         fun onFabDoubleTap(e: MotionEvent?)
+        fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean
+
     }
 
 
@@ -66,9 +73,11 @@ class FabGestureDetectionListener : GestureDetector.SimpleOnGestureListener() {
         distanceX: Float,
         distanceY: Float
     ): Boolean {
-        Log.d(GESTURETAGBUTTON, "on scroll\t   \t\t" + distanceX + "\t\tveloxity y\t\t" + distanceY)
-        //handle the values here        return super.onScroll(e1, e2, distanceX, distanceY)
-        return true
+        callback.onScroll(e1, e2, distanceX, distanceY)
+       // Log.d(GESTURETAGBUTTON, "on scroll\t   \t\t" + distanceX + "\t\tveloxity y\t\t" + distanceY)
+        //handle the values here
+        return super.onScroll(e1, e2, distanceX, distanceY)
+
     }
 
     override fun onContextClick(e: MotionEvent?): Boolean {

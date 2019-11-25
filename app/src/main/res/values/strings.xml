@@ -36,4 +36,6 @@
     <string name="toms_tag">Toms</string>
     <string name="crash_cymbals_tag">Crash Cymbals</string>
     <string name="transfx_tag">TransFX</string>
+    <string name="bpm">BPM</string>
+    <string name="isMetronomeOn">isMetronomeOn</string>
 </resources>

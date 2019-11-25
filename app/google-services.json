@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "573685248013",
+    "firebase_url": "https://blacksquare-1a62f.firebaseio.com",
+    "project_id": "blacksquare-1a62f",
+    "storage_bucket": "blacksquare-1a62f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573685248013:android:d82719fea0cf2626e6e544",
+        "android_client_info": {
+          "package_name": "com.example.nextsoundz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "573685248013-o6i65nm4j5jo5lgid9asd7q6sp5nf0en.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nextsoundz",
+            "certificate_hash": "734b875a16da53d29a76fb62c2ae170576f6c9b5"
+          }
+        },
+        {
+          "client_id": "573685248013-mfj78koenb4npn7g6hvnal5jaigk073r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB79f9O26BwtTEpCHWkrfOYtsx-keFZzDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "573685248013-mfj78koenb4npn7g6hvnal5jaigk073r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
