@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/tempo_menu"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/colorPrimaryDark"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/project_tempo_header"
+                style="@style/menu_headers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/menu_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Note Repeat"
+                    android:textColor="@color/textColor" />
+
+            </LinearLayout>
+
+            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+                android:id="@+id/note_repeat_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="8dp">
+
+                <TableRow>
+
+                    <RadioButton
+                        android:id="@+id/fourth_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="true"
+                        android:text="1/4"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/eight_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:text="1/8"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/sixtenth_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:text="1/16"
+                        android:textAlignment="center" />
+                </TableRow>
+
+                <TableRow>
+
+                    <RadioButton
+                        android:id="@+id/thirty_two_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+
+                        android:checked="false"
+                        android:text="1/32"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/sixty_four_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:text="1/64"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/four_triplet_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:text="1/4 t"
+                        android:textAlignment="center" />
+                </TableRow>
+
+                <TableRow>
+
+                    <RadioButton
+                        android:id="@+id/eight_triplet_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:text="1/8 t"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/sixteen_triplet_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:text="1/16 t"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/dotted_note"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:text="Dotted"
+                        android:textAlignment="center" />
+                </TableRow>
+
+
+            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
+
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

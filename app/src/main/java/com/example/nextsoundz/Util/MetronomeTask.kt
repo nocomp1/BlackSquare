@@ -184,7 +184,7 @@ class MetronomeTask(applicationContext: Context) : Runnable {
 //
 //                if (Metronome.isActive()) {
 //                    //getting the current bpm
-//                    milliPerBeat = Bpm.getBpm()
+//                    milliPerBeat = Bpm.getConvertedBeatPerMilliSec()
 //
 //                    if (startTime == milliPerBeat) {
 //                        var diff1 = System.currentTimeMillis() - startTime

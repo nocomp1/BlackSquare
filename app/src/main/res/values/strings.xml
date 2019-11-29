@@ -38,4 +38,6 @@
     <string name="transfx_tag">TransFX</string>
     <string name="bpm">BPM</string>
     <string name="isMetronomeOn">isMetronomeOn</string>
+    <string name="project_tempo">project tempo</string>
+    <string name="metronomeSoundId">metronome sound id</string>
 </resources>

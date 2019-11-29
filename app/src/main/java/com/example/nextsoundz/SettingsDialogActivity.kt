@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
+import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
 import com.example.nextsoundz.Singleton.Metronome
 import kotlinx.android.synthetic.main.activity_dialog_settings_layout.*
@@ -15,7 +16,12 @@ import kotlinx.android.synthetic.main.activity_dialog_settings_layout.*
 class SettingsDialogActivity : AppCompatActivity() {
 
     private var bpm: Long = 0L
-    private var metronomeIsOn = true
+    private var isMetronomeOn = true
+    private var previousClickTime = 0L
+    private lateinit var mainActivity :MainActivity
+    //60 seconds in a minute
+    private val seconds = 60000L
+
 
     lateinit var sharedPref: SharedPreferences
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,38 +30,63 @@ class SettingsDialogActivity : AppCompatActivity() {
         setContentView(R.layout.activity_dialog_settings_layout)
 
 
+        mainActivity = MainActivity()
+
         sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
 
-        metronomeIsOn = sharedPref.getBoolean(getString(R.string.isMetronomeOn), true)
+        tempo_value.text = Bpm.getProjectTempo().toString()
 
-        metronome.isChecked = metronomeIsOn
-        Metronome.setState(metronomeIsOn)
+        /// Setting our  switch state
+        metronome.isChecked = Metronome.isActive()
 
-        metronome.setOnCheckedChangeListener { buttonView, isChecked ->
-            when (isChecked) {
-                true -> Metronome.setState(true)
-                false -> Metronome.setState(false)
+        ////// Metronome switch Listener
+        metronome.setOnCheckedChangeListener { metronomeView, isChecked ->
+            setMetronomeState(metronomeView,isChecked)
+        }
+
+
+    }
+
+
+
+
+    private fun setMetronomeState(metronomeView :View,isActive: Boolean) {
+
+        when (isActive) {
+            true -> {
+
+                Metronome.setState(isActive)
+//                //set the state of the metronome inside shared preference
+//                with(sharedPref.edit()) {
+//                    putBoolean(getString(R.string.isMetronomeOn), isActive)
+//                    commit()
+//                }
 
             }
 
-            //set the state of the metronome
-            with(sharedPref.edit()) {
-                putBoolean(getString(R.string.isMetronomeOn), isChecked)
-                commit()
+            false -> {
+
+
+                Metronome.setState(isActive)
+//                //set the state of the metronome inside shared preference
+//                with(sharedPref.edit()) {
+//                    putBoolean(getString(R.string.isMetronomeOn), isActive)
+//                    commit()
+//                }
+
+
+
             }
-            Metronome.setState(isChecked)
 
         }
 
     }
 
-    var previousClickTime = 0L
+
+
     fun tapInTemp(v: View) {
 
         var timeBetweenClicks = 0L
-
-        //60 seconds in a minute
-        val seconds = 60000L
 
         val temp = System.currentTimeMillis()
 
@@ -68,12 +99,13 @@ class SettingsDialogActivity : AppCompatActivity() {
             bpm = (seconds / timeBetweenClicks)
 
             //set the global bpm
-            Bpm.setBpm(bpm)
+            Bpm.tempoToBeatPerMilliSec(bpm)
             //update Ui
             tempo_value.text = "${bpm.toString()} ${getString(R.string.bpm)}"
 
             //reset previousClick time and bpm
             previousClickTime = 0L
+
 
 
             Log.i("MyView", "prevclick ${previousClickTime}")
@@ -83,8 +115,13 @@ class SettingsDialogActivity : AppCompatActivity() {
             previousClickTime = temp
         }
 
-
     }
+
+
+
+
+
+
 
     override fun onDestroy() {
 

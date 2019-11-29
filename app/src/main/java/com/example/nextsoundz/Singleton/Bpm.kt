@@ -6,7 +6,7 @@ object Bpm {
 
     var secondsInAminute = 60000L
 
-    fun getBpm(): Long {
+    fun getConvertedBeatPerMilliSec(): Long {
 
         //milliseconds per beat
         val milliSecPerBeat = secondsInAminute / userBpm
@@ -16,8 +16,10 @@ object Bpm {
 
     }
 
-    fun setBpm(bmp: Long){
-        userBpm = bmp
-
+    fun tempoToBeatPerMilliSec(tempo: Long){
+        userBpm = tempo
     }
+
+    fun getProjectTempo(): Long{
+       return userBpm }
 }

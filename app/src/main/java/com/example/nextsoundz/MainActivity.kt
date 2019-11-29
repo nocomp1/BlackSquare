@@ -11,20 +11,18 @@ import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceManager
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.LinearLayout
+import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.nextsoundz.Adapters.TabsViewPagerAdapter
 import com.example.nextsoundz.Fragments.*
 import com.example.nextsoundz.Listeners.FabGestureDetectionListener
-import com.example.nextsoundz.Listeners.HomeVolumeSliderListener
+import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
 import com.example.nextsoundz.Singleton.Metronome
 import com.example.nextsoundz.Util.MetronomeTask
@@ -35,16 +33,16 @@ import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    MetronomeTask.MetronomeListener,HomeVolumeSliderListener.SliderListener {
+    MetronomeTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
-
+    private var metronomeSoundId = R.raw.wood
+    private var projectTempo: Long = 100L
+    private var isMetronomeOn: Boolean = true
+    lateinit var sharedPref: SharedPreferences
     lateinit var metronomeExecutor: ScheduledExecutorService
     lateinit var metronomeTask: MetronomeTask
     lateinit var mygestureDetector: GestureDetector
     var GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
-    private var isPlaying = false
-    private var isRecording = false
-    private var prefs: SharedPreferences? = null
     private lateinit var soundPool: SoundPool
     private var sound1: Int = 0
     val maxMetronomeIncrement = 25
@@ -53,22 +51,33 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var SETTINGS_REQUEST_CODE: Int = 200
     private var LOAD_SOUND_REQUEST_CODE: Int = 300
 
+    private lateinit var volumeSlider: SeekBar
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
 
+        //////Setttng up project shared preferences/////////
+        sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
 
 
+        //////// Setting state of the metronome/////////
+        isMetronomeOn = sharedPref.getBoolean(getString(R.string.isMetronomeOn), true)
+        metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
+        Metronome.setState(isMetronomeOn)
+        Metronome.setSoundId(metronomeSoundId)
+        metronomeTask = MetronomeTask(application)
+        ///// callback to increment progress bar per beat
+        metronomeTask.setProgressListener(this)
 
 
+        //////// Getting and setting our project tempo///////
+        projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 100L)
+        Bpm.tempoToBeatPerMilliSec(projectTempo)
 
 
-
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
-
-        Metronome.setSoundId(R.raw.wood)
         //full screen
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -101,6 +110,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         viewPager.adapter = adapter
 
         tabs.setupWithViewPager(viewPager)
+
+
         //Set up icon for tabs
 //        val viewDrums = layoutInflater.inflate(R.layout.home_custom_tab,null)
 //        viewDrums.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_mpc)
@@ -109,38 +120,28 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 //        val viewInstrument = layoutInflater.inflate(R.layout.home_custom_tab,null)
 //        viewInstrument.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_instrument)
 //        tabs.getTabAt(1)!!.customView=viewInstrument
-//
-//        val viewSequence = layoutInflater.inflate(R.layout.home_custom_tab,null)
-//        viewSequence.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_sequence)
-//        tabs.getTabAt(2)!!.customView=viewSequence
-//
-//        val viewRecording = layoutInflater.inflate(R.layout.home_custom_tab,null)
-//        viewRecording.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_mixer)
-//        tabs.getTabAt(3)!!.customView=viewRecording
 
-//        val viewSongMode = layoutInflater.inflate(R.layout.home_custom_tab,null)
-//        viewSongMode.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_recording)
-//        tabs.getTabAt(4)!!.customView=viewSongMode
 
-//
-        //create our listeners
+        //create our listener for the ui button touch events
         val fabGestureDetectionListener = FabGestureDetectionListener()
-        val homeVolumeSliderListener = HomeVolumeSliderListener()
-        metronomeTask = MetronomeTask(application)
-
         mygestureDetector = GestureDetector(this@MainActivity, fabGestureDetectionListener)
 
         var touchListener = View.OnTouchListener { v, event ->
             mygestureDetector.onTouchEvent(event)
         }
 
-        play_stop_btn.setOnTouchListener(touchListener)
-        voulume_slider.setOnTouchListener(homeVolumeSliderListener)
+
+
+        note_repeat_btn.setOnTouchListener(touchListener)
 
         //set our callback so we can deal with our gestures in this activity
         fabGestureDetectionListener.setFabGestureListener(this)
-        homeVolumeSliderListener.setHomeVoulumeSliderListener(this)
-        metronomeTask.setProgressListener(this)
+
+
+        //Main UI volume slider
+        volumeSlider = main_ui_volume_seek_slider
+        volumeSlider.setOnSeekBarChangeListener(this)
+
 
     }
 
@@ -156,93 +157,21 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-
-
-    override fun homeVoulumeSliderOntouch(v: View?, event: MotionEvent?) {
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val height = displayMetrics.heightPixels
-        val screenWidth = displayMetrics.widthPixels
-
-        val whereItouchX = event!!.rawX
-val viewWidth = v!!.width
-val startingXbounds =screenWidth-viewWidth
-
-      //  val actWidth =width-viewWidth
-
-        val whereIendAt:Float
-        val inBetween :Float
-
-                when (event!!.action) {
-
-            MotionEvent.ACTION_DOWN -> {
-                  Log.d("xx", "whereItouchX=  ${whereItouchX} ")
-                // Log.d("xx", "screenWidth=  ${screenWidth}")
-               // Log.d("xx", "viewWidth=  ${viewWidth}")
-               // Log.d("xx", "startingXbounds=  ${startingXbounds}")
-            }
-            MotionEvent.ACTION_MOVE -> {
-                Log.d("xx", "whereItouchX...Moved=  ${event!!.rawX} ")
-
-                  //   whereIendAt = event!!.rawX
-                   //  inBetween=whereIendAt
-               // Log.d("xx", "whereIendAt=  ${whereIendAt} ")
-                   // Log.d("xx", "inBetween=  ${inBetween} ")
-                    voulume_slider.translationX = (screenWidth-whereItouchX-viewWidth)
-
-
-
-//                if(whereItouchX < whereIendAt){
-//                    val inBetween = whereItouchX +whereIendAt
-//                    voulume_slider.translationX = (whereItouchX+inBetween)
-//                }
-
-                //Log.d("xx", "XMove=  $layoutX")
-            }
-
-
-        }
-
-    }
-
-
-
-
-
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        var paramX: Float
-        var paramY: Float
-        var layout = voulume_slider_layout as (LinearLayout)
-
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val height = displayMetrics.heightPixels
-        val width = displayMetrics.widthPixels
-        var layoutXandY = IntArray(2)
-
-        voulume_slider_layout.getLocationOnScreen(layoutXandY)
-
-//        val layoutX = event!!.rawX
-//
-//        val Y = voulume_slider.y
-
         when (event!!.action) {
 
             MotionEvent.ACTION_DOWN -> {
-              //  Log.d("xx", "Xlayout=  ${layoutXandY[0]} ")
-               // Log.d("xx", "Ylayout=  ${layoutXandY[1]}")
+
             }
             MotionEvent.ACTION_MOVE -> {
 
-              //  voulume_slider.translationX =width-layoutX
-                //Log.d("xx", "XMove=  $layoutX")
             }
-
 
         }
 
         return super.onTouchEvent(event)
     }
+
 
     override fun onFabFling(
         e1: MotionEvent?,
@@ -259,81 +188,77 @@ val startingXbounds =screenWidth-viewWidth
     }
 
 
-    override fun onFabSingleTapConfirmed(e: MotionEvent?) {
-        Log.d(GESTURETAGBUTTON, "single confirmed")
-
-
-        //user must double tap to stoprecording
-
-        if (!isPlaying) {
-
-            fabProgress.indeterminateDrawable.setColorFilter(
-                ContextCompat.getColor(this, R.color.colorAccent),
-                android.graphics.PorterDuff.Mode.MULTIPLY
-            )
-            play_stop_btn.setImageResource(R.drawable.play_to_stop_anim)
-            //fab.setBackgroundResource(R.drawable.selected_menu_btn)
-            (play_stop_btn.drawable as AnimatedVectorDrawable).start()
-            isPlaying = true
-
-
-            Bpm.setBpm(140L)
-
-            if (Metronome.isActive()) {
-                startMetronome()
-            }
-
-            if (!isRecording) {
-
-
-            }
-
-
-        } else {
-
-
-            // fab.setBackgroundResource(R.drawable.default_pad)
-            play_stop_btn.setImageResource(R.drawable.stop_to_play_anim)
-            (play_stop_btn.drawable as AnimatedVectorDrawable).start()
-            isPlaying = false
-            fabProgress.progress = 0
-
-            if (Metronome.isActive()) {
-                stopMetronome()
-            }
-
-
-        }
-    }
-
-    private fun startMetronome() {
+    fun startMetronome() {
 
 
         metronomeExecutor = Executors.newScheduledThreadPool(1)
         metronomeExecutor.scheduleWithFixedDelay(
             metronomeTask,
             0,
-            Bpm.getBpm(),
+            Bpm.getConvertedBeatPerMilliSec(),
             TimeUnit.MILLISECONDS
         )
         // metronomeExecutor.shutdown()
 
     }
 
-    private fun stopMetronome() {
-
+    fun stopMetronome() {
 
         metronomeExecutor.shutdownNow()
+
+
+    }
+
+    override fun onDestroy() {
+
+//            if (Metronome.isActive()) {
+//                metronomeExecutor.shutdownNow()
+//            }
+
+        super.onDestroy()
+    }
+
+
+    override fun onFabSingleTapConfirmed(e: MotionEvent?) {
+        Log.d(GESTURETAGBUTTON, "single confirmed")
+
+        if (ApplicationState.noteRepeatActive) {
+            note_repeat_btn.setBackgroundResource(R.drawable.default_pad)
+            ApplicationState.noteRepeatActive = false
+
+
+        } else {
+
+            note_repeat_btn.setBackgroundResource(R.drawable.note_repeat_selected_state)
+            ApplicationState.noteRepeatActive = true
+
+        }
 
     }
 
     override fun onFabDoubleTap(e: MotionEvent?) {
         Log.d(GESTURETAGBUTTON, "double  tap ")
 
+        ///Note repeat menu double tapped
+        val intent = Intent(applicationContext, NoteRepeatDialogActivity::class.java)
+        startActivityForResult(intent, LOAD_SOUND_REQUEST_CODE)
     }
 
 
     override fun onResume() {
+
+        //Resume playing our Metronome when user returns
+        if (ApplicationState.isPlaying) {
+            if (Metronome.isActive()) {
+                startMetronome()
+            } else {
+
+                //reset progress to 0
+                fabProgress.progress = 0
+            }
+        }
+
+
         when (measureCount) {
 
             4 -> maxProgress = 100
@@ -347,12 +272,62 @@ val startingXbounds =screenWidth-viewWidth
         super.onResume()
     }
 
+    override fun onPause() {
+        //Resume playing our Metronome when user returns
+        if (ApplicationState.isPlaying) {
+            if (Metronome.isActive()) {
+                stopMetronome()
+            }
+        }
 
-    fun onRecord(view: View) {
+        super.onPause()
+    }
 
+
+    fun onPlayStopTapped(view: View) {
+
+        if (!ApplicationState.isPlaying) {
+
+            fabProgress.indeterminateDrawable.setColorFilter(
+                ContextCompat.getColor(this, R.color.colorAccent),
+                android.graphics.PorterDuff.Mode.MULTIPLY
+            )
+            play_stop_btn.setImageResource(R.drawable.play_to_stop_anim)
+            //fab.setBackgroundResource(R.drawable.selected_menu_btn)
+            (play_stop_btn.drawable as AnimatedVectorDrawable).start()
+            ApplicationState.isPlaying = true
+
+
+
+            if (Metronome.isActive()) {
+                startMetronome()
+            }
+
+            if (!ApplicationState.isRecording) {
+
+
+            }
+
+        } else {
+
+            // fab.setBackgroundResource(R.drawable.default_pad)
+            play_stop_btn.setImageResource(R.drawable.stop_to_play_anim)
+            (play_stop_btn.drawable as AnimatedVectorDrawable).start()
+            ApplicationState.isPlaying = false
+            fabProgress.progress = 0
+
+            if (Metronome.isActive()) {
+                stopMetronome()
+            }
+
+        }
+
+    }
+
+    fun onRecordTapped(view: View) {
 
         //start recording
-        if (!isRecording) {
+        if (!ApplicationState.isRecording) {
             record_btn.setImageResource(R.drawable.ic_recording_color)
             fabProgress.indeterminateDrawable.setColorFilter(
                 ContextCompat.getColor(this, R.color.recording),
@@ -361,7 +336,7 @@ val startingXbounds =screenWidth-viewWidth
             //fab.setColorFilter(R.color.pinkendcolor)
             //fab.background=getDrawable(R.color.pinkendcolor)
             // (record_btn.drawable as AnimatedVectorDrawable).start()
-            isRecording = true
+            ApplicationState.isRecording = true
 
 
         } else {
@@ -372,7 +347,7 @@ val startingXbounds =screenWidth-viewWidth
             // fab.setColorFilter(R.color.colorPrimaryDark)
             record_btn.setImageResource(R.drawable.ic_record_default)
             // (play_stop_btn.drawable as AnimatedVectorDrawable).start()
-            isRecording = false
+            ApplicationState.isRecording = false
 
 
         }
@@ -386,9 +361,8 @@ val startingXbounds =screenWidth-viewWidth
     }
 
     fun onUndoTapped(view: View) {}
+
     fun onLoadTapped(view: View) {
-
-
         val intent = Intent(applicationContext, LoadDrumSoundDialogActivity::class.java)
         startActivityForResult(intent, LOAD_SOUND_REQUEST_CODE)
     }
@@ -422,10 +396,29 @@ val startingXbounds =screenWidth-viewWidth
         distanceY: Float
     ): Boolean {
 
-        Log.d("bitch", "we are scrolling horizontal ")
+        Log.d("hhh", "we are scrolling horizontal ")
 
 
         return false
+    }
+
+
+    //Volume Slider input from user --> to fragments
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        DrumScreenHomeFragment().onProgressChanged(seekBar, progress, fromUser)
+
+
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        DrumScreenHomeFragment().onStartTrackingTouch(seekBar)
+        Log.d("pussy onStartTrackTouch", seekBar.toString())
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        DrumScreenHomeFragment().onStopTrackingTouch(seekBar)
+        Log.d("pussy onStopTrackiTouch", seekBar.toString())
     }
 
 

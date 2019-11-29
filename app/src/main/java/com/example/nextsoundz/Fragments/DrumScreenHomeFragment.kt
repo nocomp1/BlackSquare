@@ -6,11 +6,13 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.SoundPool
 import android.os.Bundle
+import android.util.Half.toFloat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import android.widget.SeekBar
 import androidx.viewpager.widget.ViewPager
 import com.example.nextsoundz.LoadDrumSoundDialogActivity
 import com.example.nextsoundz.R
@@ -20,7 +22,14 @@ import kotlinx.android.synthetic.main.drum_bank1.*
 import kotlinx.android.synthetic.main.drum_bank1.view.*
 
 
-class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
+class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
+
+
+    private var defaulVolume: Float = 1.0f
+
+    private var pad1VolumeLeft: Float = defaulVolume
+    private var pad1VolumeRight: Float = defaulVolume
+
 
     private var soundPool: SoundPool? = null
 
@@ -38,16 +47,21 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
     private var sound10: Int = 0
     private var sound11: Int = 0
     private var sound12: Int = 0
-    private var padSelected: View? = null
+    private var padSelected: View? =null
     private var isPlaying = false
     private var isRecording = false
+    private var mainActivity = null
+    private var volumeSeekBar: SeekBar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val pager: ViewPager? = viewPager
         pager?.offscreenPageLimit = 5
+
         loadDefaultDrumKit()
+
+
 
     }
 
@@ -57,7 +71,15 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
         savedInstanceState: Bundle?
     ): View? {
 
-        val view: View = inflater.inflate(R.layout.drum_screen_home_fragment_layout, container, false)
+
+//        val view2: View =
+//            layoutInflater.inflate(R.layout.activity_main, null, false)
+//
+//        volumeSeekBar = view2.findViewById<SeekBar>(R.id.main_ui_volume_seek_slider)
+
+
+        val view: View =
+            inflater.inflate(R.layout.drum_screen_home_fragment_layout, container, false)
 
 
         view.pad1.setOnTouchListener { v, event ->
@@ -131,10 +153,8 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
             }
         }
 
-
         //Menu controls
-
-       // view.load_btn.setOnClickListener(this)
+        // view.load_btn.setOnClickListener(this)
 
 
         return view
@@ -252,7 +272,6 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
     }
 
 
-
     private fun loadDefaultDrumKit() {
 
         soundPool = SoundPool.Builder()
@@ -265,8 +284,7 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
             .build()
 
 
-
-       // val am = activity!!.assets
+        // val am = activity!!.assets
         val context = activity?.applicationContext
 
 
@@ -286,7 +304,6 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
     }
 
 
-
     override fun onClick(v: View?) {
 
         when (v?.id) {
@@ -298,13 +315,16 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
 
 
     fun pad1(): Boolean {
-        soundPool!!.play(sound1, 1.0f, 1.0f, 0, 0, 1.0f)
+
+        soundPool!!.play(sound1, pad1VolumeLeft, pad1VolumeRight, 0, 0, 1.0f)
         return false
     }
 
     fun pad2(): Boolean {
-        soundPool!!.play(sound2, 1.0f, 1.0f, 0, 0, 1.0f)
-        return false
+        Log.d(" getVolumeRight", getVolumeRight().toString())
+        soundPool!!.play(sound2, getVolumeRight(), getVolumeRight(), 0, 0, 1.0f)
+
+        return true
     }
 
     fun pad3(): Boolean {
@@ -374,12 +394,12 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
 
     private fun loadSound() {
         val intent = Intent(activity!!.applicationContext, LoadDrumSoundDialogActivity::class.java)
-        startActivityForResult(intent,LOAD_REQUEST_CODE)
+        startActivityForResult(intent, LOAD_REQUEST_CODE)
     }
 
     private fun settings() {
         val intent = Intent(activity!!.applicationContext, SettingsDialogActivity::class.java)
-        startActivityForResult(intent,SETTINGS_REQUEST_CODE)
+        startActivityForResult(intent, SETTINGS_REQUEST_CODE)
     }
 
 
@@ -403,4 +423,45 @@ class DrumScreenHomeFragment : Fragment(), View.OnClickListener {
         }
 
     }
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
+//        when (padSelected) {
+//
+//            pad1 -> {
+
+//                activity!!.main_ui_volume_seek_slider.setProgress(progress)
+       val volume =progress.toFloat()/100
+                this.pad1VolumeLeft= volume
+               this.pad1VolumeRight= volume
+
+                Log.d(" onProgressChanged", pad1VolumeLeft.toString())
+               // Log.d(" onProgressChanged", "pad selected $padSelected.toString()")
+
+//            }
+//
+//        }
+
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        Log.d(" onProgressChanged", pad1VolumeLeft.toString())
+
+
+
+    }
+    fun setVolumeRight(){
+
+    }
+    fun getVolumeRight(): Float{
+
+        return this.pad1VolumeLeft
+
+    }
+
 }
