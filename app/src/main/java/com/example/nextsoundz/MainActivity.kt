@@ -11,6 +11,8 @@ import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.os.Handler
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -25,22 +27,25 @@ import com.example.nextsoundz.Listeners.FabGestureDetectionListener
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
 import com.example.nextsoundz.Singleton.Metronome
-import com.example.nextsoundz.Util.MetronomeTask
+import com.example.nextsoundz.Tasks.PlayEngineTask
+import io.reactivex.internal.schedulers.ExecutorScheduler
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    MetronomeTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
+    PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
+    private var playEngineMilliSecRate: Long = 1000L
     private var isMetronomeOn: Boolean = true
     lateinit var sharedPref: SharedPreferences
-    lateinit var metronomeExecutor: ScheduledExecutorService
-    lateinit var metronomeTask: MetronomeTask
+    lateinit var playEngineExecutor: ScheduledExecutorService
+    lateinit var playEngineTask: PlayEngineTask
     lateinit var mygestureDetector: GestureDetector
     var GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
     private lateinit var soundPool: SoundPool
@@ -68,9 +73,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
-        metronomeTask = MetronomeTask(application)
+        playEngineTask = PlayEngineTask(application)
         ///// callback to increment progress bar per beat
-        metronomeTask.setProgressListener(this)
+        playEngineTask.setProgressListener(this)
 
 
         //////// Getting and setting our project tempo///////
@@ -104,7 +109,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         val adapter = TabsViewPagerAdapter(supportFragmentManager)
         adapter.addFragment(DrumScreenHomeFragment(), "Drums")
         adapter.addFragment(InstrumentFragment(), "Instrument")
-        adapter.addFragment(SequenceFragment(), "Edit Sequence")
+        adapter.addFragment(SequenceFragment(), "Sequence")
         adapter.addFragment(RecordingFragment(), "Recording")
         adapter.addFragment(SongFragment(), "Song")
         viewPager.adapter = adapter
@@ -188,23 +193,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
 
-    fun startMetronome() {
+    fun startPlayEngine() {
 
 
-        metronomeExecutor = Executors.newScheduledThreadPool(1)
-        metronomeExecutor.scheduleWithFixedDelay(
-            metronomeTask,
-            0,
-            Bpm.getConvertedBeatPerMilliSec(),
-            TimeUnit.MILLISECONDS
-        )
-        // metronomeExecutor.shutdown()
+
+        playEngineExecutor = Executors.newScheduledThreadPool(1)
+        playEngineExecutor.schedule(playEngineTask,0,TimeUnit.MILLISECONDS)
+
 
     }
 
-    fun stopMetronome() {
+    fun stopPlayEngine() {
 
-        metronomeExecutor.shutdownNow()
+        playEngineExecutor.shutdownNow()
 
 
     }
@@ -212,7 +213,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     override fun onDestroy() {
 
 //            if (Metronome.isActive()) {
-//                metronomeExecutor.shutdownNow()
+//                playEngineExecutor.shutdownNow()
 //            }
 
         super.onDestroy()
@@ -247,38 +248,38 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     override fun onResume() {
 
-        //Resume playing our Metronome when user returns
-        if (ApplicationState.isPlaying) {
-            if (Metronome.isActive()) {
-                startMetronome()
-            } else {
-
-                //reset progress to 0
-                fabProgress.progress = 0
-            }
-        }
-
-
-        when (measureCount) {
-
-            4 -> maxProgress = 100
-
-
-            8 -> maxProgress = 200
-
-
-        }
+//        //Resume playing our Metronome when user returns
+//        if (ApplicationState.isPlaying) {
+//            if (Metronome.isActive()) {
+//                startPlayEngine()
+//            } else {
+//
+//                //reset progress to 0
+//                fabProgress.progress = 0
+//            }
+//        }
+//
+//
+//        when (measureCount) {
+//
+//            4 -> maxProgress = 100
+//
+//
+//            8 -> maxProgress = 200
+//
+//
+//        }
 
         super.onResume()
     }
 
     override fun onPause() {
-        //Resume playing our Metronome when user returns
-        if (ApplicationState.isPlaying) {
-            if (Metronome.isActive()) {
-                stopMetronome()
-            }
-        }
+//        //Resume playing our Metronome when user returns
+//        if (ApplicationState.isPlaying) {
+//            if (Metronome.isActive()) {
+//                stopPlayEngine()
+//            }
+//        }
 
         super.onPause()
     }
@@ -300,7 +301,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
             if (Metronome.isActive()) {
-                startMetronome()
+                startPlayEngine()
             }
 
             if (!ApplicationState.isRecording) {
@@ -317,7 +318,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             fabProgress.progress = 0
 
             if (Metronome.isActive()) {
-                stopMetronome()
+                stopPlayEngine()
             }
 
         }

@@ -51,7 +51,7 @@
 
 
 
-                <TextView
+                <NumberPicker
                     android:id="@+id/tempo_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -59,6 +59,7 @@
                     android:text="120 BPM"
                     android:textSize="16sp"
                     android:textColor="@color/textColor"
+
 
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
