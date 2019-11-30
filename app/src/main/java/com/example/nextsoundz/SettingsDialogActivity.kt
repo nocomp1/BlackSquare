@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.Window
+import android.widget.NumberPicker
 import androidx.appcompat.app.AppCompatActivity
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
@@ -33,8 +34,9 @@ class SettingsDialogActivity : AppCompatActivity() {
         mainActivity = MainActivity()
 
         sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
-
-        tempo_value.text = Bpm.getProjectTempo().toString()
+        tempo_value.minValue =40
+        tempo_value.maxValue =300
+        tempo_value.value = Bpm.getProjectTempo().toInt()
 
         /// Setting our  switch state
         metronome.isChecked = Metronome.isActive()
@@ -43,6 +45,16 @@ class SettingsDialogActivity : AppCompatActivity() {
         metronome.setOnCheckedChangeListener { metronomeView, isChecked ->
             setMetronomeState(metronomeView,isChecked)
         }
+
+        ////// Tempo number picker Listener
+        tempo_value.setOnValueChangedListener(NumberPicker.OnValueChangeListener {
+                picker, oldVal, newVal ->
+
+            //set the global bpm
+            Bpm.tempoToBeatPerMilliSec(newVal.toLong())
+            Log.i("tempoNewValue", "$newVal" )
+        })
+
 
 
     }
@@ -101,7 +113,7 @@ class SettingsDialogActivity : AppCompatActivity() {
             //set the global bpm
             Bpm.tempoToBeatPerMilliSec(bpm)
             //update Ui
-            tempo_value.text = "${bpm.toString()} ${getString(R.string.bpm)}"
+            tempo_value.value = bpm.toInt()
 
             //reset previousClick time and bpm
             previousClickTime = 0L
