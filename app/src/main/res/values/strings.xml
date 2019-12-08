@@ -40,4 +40,10 @@
     <string name="isMetronomeOn">isMetronomeOn</string>
     <string name="project_tempo">project tempo</string>
     <string name="metronomeSoundId">metronome sound id</string>
+    <string name="selectedBar">selected bar measure</string>
+    <string name="selectedPattern">selected pattern</string>
+    <string name="selectedInstrument">selected instrument track</string>
+    <string name="selectedDrumBank">selected drum bank</string>
+    <string name="soundID">SoundFileId</string>
+    <string name="padSelected">padSelected</string>
 </resources>

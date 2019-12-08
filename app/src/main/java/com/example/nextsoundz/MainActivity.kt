@@ -11,8 +11,6 @@ import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.os.Handler
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -21,24 +19,43 @@ import android.view.WindowManager
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProviders
 import com.example.nextsoundz.Adapters.TabsViewPagerAdapter
 import com.example.nextsoundz.Fragments.*
 import com.example.nextsoundz.Listeners.FabGestureDetectionListener
+import com.example.nextsoundz.Managers.DrumPadSoundPool
+import com.example.nextsoundz.Managers.SoundResManager
+import com.example.nextsoundz.Objects.NoteRepeat
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
 import com.example.nextsoundz.Singleton.Metronome
 import com.example.nextsoundz.Tasks.PlayEngineTask
-import io.reactivex.internal.schedulers.ExecutorScheduler
+import com.example.nextsoundz.ViewModels.SoundsViewModel
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
+    PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener,
+    PlayEngineTask.NoteRepeatListener {
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+
+        //DrumScreenHomeFragment().triggerNoteRepeat()
+    }
+
+    override fun triggerNoteRepeat(noteRepeatObject: NoteRepeat) {
+        //DrumScreenHomeFragment().triggerNoteRepeat()
+        noteRepeatInterval = noteRepeatObject
+//         Log.d("noteRepeatInterval","note repeat engineCounter ${noteRepeatObject.engineCounter}")
+//        Log.d("noteRepeatInterval","note repeat interval ${noteRepeatObject.noteRepeatInterval}")
+
+    }
+
+    private lateinit var soundsViewModel: SoundsViewModel
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
     private var playEngineMilliSecRate: Long = 1000L
@@ -55,6 +72,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     var measureCount = 4
     private var SETTINGS_REQUEST_CODE: Int = 200
     private var LOAD_SOUND_REQUEST_CODE: Int = 300
+    private lateinit var noteRepeatInterval :NoteRepeat
 
     private lateinit var volumeSlider: SeekBar
 
@@ -73,7 +91,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
+
+//        ApplicationState.pad1LftVolume = 0.5f
+//        ApplicationState.pad1RftVolume = 0.5f
+//        ApplicationState.pad2LftVolume = 0.5f
+//        ApplicationState.pad2RftVolume = 0.5f
+
         playEngineTask = PlayEngineTask(application)
+
         ///// callback to increment progress bar per beat
         playEngineTask.setProgressListener(this)
 
@@ -90,22 +115,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         )
         supportActionBar?.hide()
 
-        //Checking for Midi capabilities
-        if (this.packageManager.hasSystemFeature(PackageManager.FEATURE_MIDI)) {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setUpMidi()
-
-            } else {
-                //customer can not use the controller feature of the app
-
-                TODO("VERSION.SDK_INT < M")
-            }
+        /////Set up MIDI  capabilities
+        setUpMidi()
 
 
-        }
-
-
+        ////Set up our Tabs
         val adapter = TabsViewPagerAdapter(supportFragmentManager)
         adapter.addFragment(DrumScreenHomeFragment(), "Drums")
         adapter.addFragment(InstrumentFragment(), "Instrument")
@@ -113,18 +128,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         adapter.addFragment(RecordingFragment(), "Recording")
         adapter.addFragment(SongFragment(), "Song")
         viewPager.adapter = adapter
-
         tabs.setupWithViewPager(viewPager)
+
+
+        //Setting up View model to communicate to our fragments
+        this?.let {
+            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+        }
 
 
         //Set up icon for tabs
 //        val viewDrums = layoutInflater.inflate(R.layout.home_custom_tab,null)
 //        viewDrums.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_mpc)
 //        tabs.getTabAt(0)!!.customView=viewDrums
-//
-//        val viewInstrument = layoutInflater.inflate(R.layout.home_custom_tab,null)
-//        viewInstrument.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_instrument)
-//        tabs.getTabAt(1)!!.customView=viewInstrument
 
 
         //create our listener for the ui button touch events
@@ -134,7 +150,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         var touchListener = View.OnTouchListener { v, event ->
             mygestureDetector.onTouchEvent(event)
         }
-
 
 
         note_repeat_btn.setOnTouchListener(touchListener)
@@ -148,17 +163,49 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         volumeSlider.setOnSeekBarChangeListener(this)
 
 
+          setUpSoundPool()
+
+    }
+
+//    private fun setupNoteRepeatInterval() {
+//
+//        soundsViewModel.noteRepeatInterval.postValue(noteRepeatInterval)
+//    }
+
+    fun setUpSoundPool() {
+        val drumPadSoundPool = DrumPadSoundPool(this)
+        drumPadSoundPool.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
+        ///////////post to be available to fragments
+
+       // soundsViewModel.drumPadSoundPool.postValue(volumeSlider)
     }
 
     @TargetApi(23)
     private fun setUpMidi() {
+        //Checking for Midi capabilities
+        if (this.packageManager.hasSystemFeature(PackageManager.FEATURE_MIDI)) {
 
-        val m = this.getSystemService(Context.MIDI_SERVICE) as MidiManager
-        //Get List of Already Plugged In Entities
-        val info = m.devices
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-        //notification when, for example, keyboards are plugged in or unplugged
-        // m.registerDeviceCallback({ x -> })
+                val m = this.getSystemService(Context.MIDI_SERVICE) as MidiManager
+                //Get List of Already Plugged In Entities
+                val info = m.devices
+
+                //notification when, for example, keyboards are plugged in or unplugged
+                // m.registerDeviceCallback({ x -> })
+            } else {
+                //customer can not use the controller feature of the app
+
+                TODO("VERSION.SDK_INT < M")
+            }
+
+
+        }
+
+
+
+
+
 
     }
 
@@ -196,9 +243,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     fun startPlayEngine() {
 
 
-
         playEngineExecutor = Executors.newScheduledThreadPool(1)
-        playEngineExecutor.schedule(playEngineTask,0,TimeUnit.MILLISECONDS)
+        playEngineExecutor.schedule(playEngineTask, 0, TimeUnit.MILLISECONDS)
 
 
     }
@@ -414,12 +460,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
         DrumScreenHomeFragment().onStartTrackingTouch(seekBar)
-        Log.d("pussy onStartTrackTouch", seekBar.toString())
+        Log.d(" onStartTrackTouch", seekBar.toString())
     }
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
         DrumScreenHomeFragment().onStopTrackingTouch(seekBar)
-        Log.d("pussy onStopTrackiTouch", seekBar.toString())
+        Log.d(" onStopTrackiTouch", seekBar.toString())
     }
 
 

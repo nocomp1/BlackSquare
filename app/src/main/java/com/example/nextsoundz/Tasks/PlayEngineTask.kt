@@ -8,7 +8,9 @@ import android.media.AudioTrack
 import android.media.SoundPool
 import android.os.SystemClock
 import android.util.Log
+import com.example.nextsoundz.Fragments.DrumScreenHomeFragment
 import com.example.nextsoundz.MainActivity
+import com.example.nextsoundz.Objects.NoteRepeat
 import com.example.nextsoundz.R
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
@@ -19,8 +21,17 @@ import java.util.*
 class PlayEngineTask(applicationContext: Context) : TimerTask() {
 
 
+    private lateinit var noteRepeatObject: NoteRepeat
     private lateinit var callback: MetronomeListener
-    private var soundPool: SoundPool
+    private lateinit var noteRepeatCallback: NoteRepeatListener
+    private var soundPool: SoundPool = SoundPool.Builder()
+        .setMaxStreams(1)
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+        )
+        .build()
     private var interval: Long = 1L
     private var milliPerBeat: Long = 0L
     private var sound = 0
@@ -32,50 +43,49 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
     interface MetronomeListener {
         fun updateProgressBar()
     }
+    interface NoteRepeatListener {
+        fun triggerNoteRepeat(noteRepeatObject: NoteRepeat)
+    }
 
+
+    fun setNoteRepeatListener(callback: NoteRepeatListener) {
+        this.noteRepeatCallback = callback as DrumScreenHomeFragment
+    }
     fun setProgressListener(callback: MetronomeListener) {
         this.callback = callback as MainActivity
     }
 
-    var player: AudioTrack
-    val minBufferSize: Int
+   // var player: AudioTrack
+   // val minBufferSize: Int
 
     init {
 
-        minBufferSize = AudioTrack.getMinBufferSize(
-            44100, AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT
-        )
-
-
-
-        player = AudioTrack.Builder()
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            .setAudioFormat(
-                AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setSampleRate(44100)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .build()
-            )
-            .setBufferSizeInBytes(minBufferSize)
-            .build()
+//        minBufferSize = AudioTrack.getMinBufferSize(
+//            44100, AudioFormat.CHANNEL_OUT_MONO,
+//            AudioFormat.ENCODING_PCM_16BIT
+//        )
+//
+//
+//
+//        player = AudioTrack.Builder()
+//            .setAudioAttributes(
+//                AudioAttributes.Builder()
+//                    .setUsage(AudioAttributes.USAGE_GAME)
+//                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+//                    .build()
+//            )
+//            .setAudioFormat(
+//                AudioFormat.Builder()
+//                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+//                    .setSampleRate(44100)
+//                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+//                    .build()
+//            )
+//            .setBufferSizeInBytes(minBufferSize)
+//            .build()
 
 
         // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(1)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            .build()
         // } else
         // soundPool = SoundPool(1, AudioManager.STREAM_MUSIC, 0)
 
@@ -142,10 +152,15 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
 
         /////////////ENGINE INITIAL START TIME BEFORE WE ENTER OUR ENGINE LOOP///////
         var startTime = SystemClock.uptimeMillis()
+        Log.d("engineCounter", "interv time outside loop start time $startTime")
 
-        //////////////MILLISECONDS INTERVAL TIME PERIOD/////////////
-        var interV = startTime + Bpm.getConvertedBeatPerMilliSec()
-        //Log.d("engineCounter", "interv time outside loop $interV.toString()")
+        ///MILLISECONDS INTERVAL TIME PERIOD FOR
+        // EACH BEAT PER MILLISECONDS(EX: 750 MILLSEC IS 80BPM)/////////////
+        var bpmInterval = startTime + Bpm.getConvertedBeatPerMilliSec()
+        Log.d("engineCounter", "interv time outside loop bpm $bpmInterval")
+        var noteRepeatInterval = startTime + Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat)!!
+        Log.d("engineCounter", "interv time outside loop note repeat $noteRepeatInterval")
+
 
         //////////////ENGINE LOOP/////////////////
         while (ApplicationState.isPlaying) {
@@ -162,7 +177,7 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
             /////////////////////////////////////////////////////////////////////////////////////////////
             if (Metronome.isActive()) {
 
-                if (engineCounter == interV) {
+                if (engineCounter == bpmInterval) {
 
                     //////////play sound////////
                     soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
@@ -171,20 +186,41 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
                     callback.updateProgressBar()
 
                     ////////////update our next interval since we started the play engine/////////
-                    interV = engineCounter + Bpm.getConvertedBeatPerMilliSec()
+                    bpmInterval = engineCounter + Bpm.getConvertedBeatPerMilliSec()
                     // Log.d("engineCounter", "PLAY A CLICK SOUND")
 
 
                 }
             } else {
+
                 ///////set a new interval counter when we return back to a active state
-                interV = engineCounter + Bpm.getConvertedBeatPerMilliSec()
+                bpmInterval = engineCounter + Bpm.getConvertedBeatPerMilliSec()
 
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////
-            //
+            //                  NOTE REPEAT
             ///////////////////////////////////////////////////////////////////////////////////////
+
+
+           // if (ApplicationState.noteRepeatActive) {  }
+
+                if (engineCounter == noteRepeatInterval) {
+
+                    //Log.d("engineCounter", "NOte REPEAT")
+
+                // val   noteRepeatObject = NoteRepeat(engineCounter,noteRepeatInterval)
+                   // soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
+                  //  Bpm.targetNoteRepeatInterval = noteRepeatInterval
+                   // Bpm.currentEngineStartTime = engineCounter
+
+                   // noteRepeatCallback.triggerNoteRepeat(noteRepeatObject)
+                    // Log.d("engineCounter", "NO REPEAT")
+                    noteRepeatInterval= engineCounter + Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat)!!
+                }
+
+
+
 
 
 
