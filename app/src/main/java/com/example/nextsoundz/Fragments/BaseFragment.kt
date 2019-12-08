@@ -10,4 +10,6 @@ abstract class BaseFragment : Fragment(){
     abstract fun onStartTrackingTouch(seekBar: SeekBar?)
 
     abstract fun onStopTrackingTouch(seekBar: SeekBar?)
+
+    abstract fun triggerNoteRepeat()
 }

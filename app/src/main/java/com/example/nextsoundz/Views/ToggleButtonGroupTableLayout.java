@@ -8,6 +8,8 @@ import android.widget.RadioButton;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 
+import java.util.ArrayList;
+
 
 public class ToggleButtonGroupTableLayout extends TableLayout implements OnClickListener {
 
@@ -33,9 +35,20 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
 
     @Override
     public void onClick(View v) {
+
+        ////Remove all selected
+        for(int i=0; i < radioButtonList.size(); i++){
+
+           int id = radioButtonList.get(i);
+           RadioButton rb = (RadioButton) findViewById(id) ;
+
+           rb.setChecked(false);
+        }
+
         final RadioButton rb = (RadioButton) v;
         if (activeRadioButton != null) {
             activeRadioButton.setChecked(false);
+
         }
         rb.setChecked(true);
         activeRadioButton = rb;
@@ -57,16 +70,33 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
      */
     @Override
     public void addView(View child, android.view.ViewGroup.LayoutParams params) {
+
+//
+//        TableRow tableRow =(TableRow) child;
+//        int trCount = tableRow.getChildCount();
+//        for (int i=0; i < trCount; i++) {
+//            final View v = tableRow.getChildAt(i);
+//            if (v instanceof RadioButton) {
+//                if (((RadioButton) v).isChecked())
+//                    activeRadioButton =  ((RadioButton) v);
+//            }
+//
+//
+//        }
         super.addView(child, params);
         setChildrenOnClickListener((TableRow) child);
+
+
     }
 
-
+ArrayList<Integer> radioButtonList = new ArrayList();
     private void setChildrenOnClickListener(TableRow tr) {
         final int c = tr.getChildCount();
         for (int i=0; i < c; i++) {
             final View v = tr.getChildAt(i);
             if (v instanceof RadioButton) {
+
+                radioButtonList.add(v.getId());
                 v.setOnClickListener(this);
                 if (((RadioButton) v).isChecked())
                     activeRadioButton = (RadioButton) v;
@@ -79,7 +109,6 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
         if (activeRadioButton != null) {
             return activeRadioButton.getId();
         }
-
         return -1;
     }
 }

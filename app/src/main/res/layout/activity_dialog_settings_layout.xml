@@ -160,9 +160,73 @@
         android:id="@+id/delete"/>
 
 </LinearLayout>
+            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+                android:id="@+id/bar_measure_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="8dp">
+
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bar"
+                    android:layout_margin="4dp"
+                    android:textSize="16sp"
+                    android:textColor="@color/textColor"/>
+                <RadioButton
+                    android:id="@+id/two_bar_measure"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/radio_button_background"
+                    android:button="@android:color/transparent"
+                    android:checked="false"
+                    android:text="2"
+                    android:clickable="true"
+                    android:onClick="onBarSelected"
+                    android:textAlignment="center" />
+
+                <RadioButton
+                    android:id="@+id/three_bar_measure"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/radio_button_background"
+                    android:button="@android:color/transparent"
+                    android:checked="false"
+                    android:onClick="onBarSelected"
+                    android:text="4"
+                    android:textAlignment="center" />
+
+                <RadioButton
+                    android:id="@+id/four_bar_measure"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/radio_button_background"
+                    android:button="@android:color/transparent"
+                    android:checked="false"
+                    android:onClick="onBarSelected"
+                    android:text="6"
+                    android:textAlignment="center" />
+                <RadioButton
+                    android:id="@+id/five_bar_measure"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/radio_button_background"
+                    android:button="@android:color/transparent"
+                    android:onClick="onBarSelected"
+                    android:checked="false"
+                    android:text="8"
+                    android:textAlignment="center" />
+            </TableRow>
+            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
 
             <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
-                android:id="@+id/note_repeat_radio_group"
+                android:id="@+id/pattern_radio_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -177,7 +241,7 @@
                         android:layout_margin="4dp"
                         android:background="@drawable/radio_button_background"
                         android:button="@android:color/transparent"
-                        android:checked="true"
+                        android:checked="false"
                         android:text="P1"
                         android:textAlignment="center" />
 
@@ -372,7 +436,7 @@
                         android:layout_margin="4dp"
                         android:background="@drawable/radio_button_background"
                         android:button="@android:color/transparent"
-                        android:checked="true"
+                        android:checked="false"
                         android:text="Keys"
                         android:textAlignment="center" />
 
@@ -616,7 +680,7 @@
                     android:layout_margin="4dp"
                     android:background="@drawable/radio_button_background"
                     android:button="@android:color/transparent"
-                    android:checked="true"
+                    android:checked="false"
                     android:text="Bank 1"
                     android:textAlignment="center" />
 
