@@ -3,7 +3,8 @@ package com.example.nextsoundz.Singleton
 object ApplicationState {
 
 
-
+    var noteRepeatHasChanged: Boolean =false
+    var tempoHasChanged: Boolean = false
     val defaultVolume = 0.75f
 
     var pad1LftVolume: Float = defaultVolume
@@ -53,9 +54,9 @@ object ApplicationState {
     var selectedDrumBank = -1
     var projectMeasure :Int = 2
     var selectedPadId :Int? = null
-
-    var selectedNoteRepeat = 2
-
+    var selectedNoteRepeatId = -1
+    var selectedNoteRepeat = 0
+    var drumScreenInitialLoad = -1
 
 
 //fun setSelectedBar(bar : Int){

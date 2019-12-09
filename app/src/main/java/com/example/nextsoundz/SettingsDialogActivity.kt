@@ -58,6 +58,8 @@ class SettingsDialogActivity : AppCompatActivity() {
 
             //set the global bpm
             Bpm.tempoToBeatPerMilliSec(newVal.toLong())
+
+            ApplicationState.tempoHasChanged=true
         })
 
        // sharedPref.edit().clear().commit()
@@ -72,6 +74,7 @@ class SettingsDialogActivity : AppCompatActivity() {
         setUpInstrumentTrackChoice()
         ///Set up Drum Bank choice
         setUpDrumBankChoice()
+
 
     }
 
@@ -162,6 +165,8 @@ class SettingsDialogActivity : AppCompatActivity() {
 
     fun tapInTemp(v: View) {
 
+        val currentTempo = Bpm.getProjectTempo()
+
         var timeBetweenClicks = 0L
 
         val temp = System.currentTimeMillis()
@@ -182,10 +187,15 @@ class SettingsDialogActivity : AppCompatActivity() {
             //reset previousClick time and bpm
             previousClickTime = 0L
 
-            Log.i("MyView", "prevclick ${previousClickTime}")
+
+            if (currentTempo != Bpm.getProjectTempo()){
+                ApplicationState.tempoHasChanged=true
+            }
+
+           // Log.i("MyView", "prevclick ${previousClickTime}")
 
         } else {
-            Log.i("MyView", "First Click")
+           // Log.i("MyView", "First Click")
             previousClickTime = temp
         }
 
@@ -223,32 +233,6 @@ class SettingsDialogActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-
-//
-//        //set the state inside shared preference
-//        with(sharedPref.edit()) {
-//
-//
-//            if(bar_measure_radio_group.checkedRadioButtonId != -1)
-//            putInt(getString(R.string.selectedBar), bar_measure_radio_group.checkedRadioButtonId)
-//
-//
-//            if(pattern_radio_group.checkedRadioButtonId != -1)
-//            putInt(getString(R.string.selectedPattern), pattern_radio_group.checkedRadioButtonId)
-//
-//            if(instrument_tracks_radio_group.checkedRadioButtonId!= -1)
-//            putInt(
-//                getString(R.string.selectedInstrument),
-//                instrument_tracks_radio_group.checkedRadioButtonId
-//            )
-//            if(drum_bank_radio_group.checkedRadioButtonId != -1)
-//            putInt(getString(R.string.selectedDrumBank), drum_bank_radio_group.checkedRadioButtonId)
-//            commit()
-//        }
-
-
-
-
 
         if(bar_measure_radio_group.checkedRadioButtonId != -1)
         ApplicationState.selectedBarMeasure = bar_measure_radio_group.checkedRadioButtonId

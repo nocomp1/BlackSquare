@@ -3,14 +3,10 @@ package com.example.nextsoundz.Tasks
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioFormat
-import android.media.AudioTrack
 import android.media.SoundPool
 import android.os.SystemClock
 import android.util.Log
-import com.example.nextsoundz.Fragments.DrumScreenHomeFragment
 import com.example.nextsoundz.MainActivity
-import com.example.nextsoundz.Objects.NoteRepeat
 import com.example.nextsoundz.R
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
@@ -21,9 +17,7 @@ import java.util.*
 class PlayEngineTask(applicationContext: Context) : TimerTask() {
 
 
-    private lateinit var noteRepeatObject: NoteRepeat
     private lateinit var callback: MetronomeListener
-    private lateinit var noteRepeatCallback: NoteRepeatListener
     private var soundPool: SoundPool = SoundPool.Builder()
         .setMaxStreams(1)
         .setAudioAttributes(
@@ -32,25 +26,14 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
                 .build()
         )
         .build()
-    private var interval: Long = 1L
-    private var milliPerBeat: Long = 0L
-    private var sound = 0
-    private var isSoundLoaded = false
-    private var startTime = 0L
 
+    private var sound = 0
     private var context = applicationContext
 
     interface MetronomeListener {
         fun updateProgressBar()
     }
-    interface NoteRepeatListener {
-        fun triggerNoteRepeat(noteRepeatObject: NoteRepeat)
-    }
 
-
-    fun setNoteRepeatListener(callback: NoteRepeatListener) {
-        this.noteRepeatCallback = callback as DrumScreenHomeFragment
-    }
     fun setProgressListener(callback: MetronomeListener) {
         this.callback = callback as MainActivity
     }
@@ -158,7 +141,7 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
         // EACH BEAT PER MILLISECONDS(EX: 750 MILLSEC IS 80BPM)/////////////
         var bpmInterval = startTime + Bpm.getConvertedBeatPerMilliSec()
         Log.d("engineCounter", "interv time outside loop bpm $bpmInterval")
-        var noteRepeatInterval = startTime + Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat)!!
+        var noteRepeatInterval = startTime + Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeatId)!!
         Log.d("engineCounter", "interv time outside loop note repeat $noteRepeatInterval")
 
 
@@ -199,29 +182,8 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////
-            //                  NOTE REPEAT
+            //
             ///////////////////////////////////////////////////////////////////////////////////////
-
-
-           // if (ApplicationState.noteRepeatActive) {  }
-
-                if (engineCounter == noteRepeatInterval) {
-
-                    //Log.d("engineCounter", "NOte REPEAT")
-
-                // val   noteRepeatObject = NoteRepeat(engineCounter,noteRepeatInterval)
-                   // soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
-                  //  Bpm.targetNoteRepeatInterval = noteRepeatInterval
-                   // Bpm.currentEngineStartTime = engineCounter
-
-                   // noteRepeatCallback.triggerNoteRepeat(noteRepeatObject)
-                    // Log.d("engineCounter", "NO REPEAT")
-                    noteRepeatInterval= engineCounter + Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat)!!
-                }
-
-
-
-
 
 
 
@@ -236,31 +198,6 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
 
 
 }
-
-
-//
-//        if (Metronome.isActive()) {
-//           // metronomeCounter++
-//
-//
-//                if (isSoundLoaded) {
-//                    soundPool.setOnLoadCompleteListener { soundPool, sampleId, status ->
-//
-//                        soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
-//                        isSoundLoaded = true
-//                    }
-//                } else {
-//                    soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
-//                }
-//
-//                callback.updateProgressBar()
-//                //reset engineCounter
-//               // metronomeCounter = 1
-//
-//        }
-
-
-
 
 
 

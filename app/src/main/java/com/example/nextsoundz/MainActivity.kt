@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
@@ -25,7 +24,6 @@ import com.example.nextsoundz.Fragments.*
 import com.example.nextsoundz.Listeners.FabGestureDetectionListener
 import com.example.nextsoundz.Managers.DrumPadSoundPool
 import com.example.nextsoundz.Managers.SoundResManager
-import com.example.nextsoundz.Objects.NoteRepeat
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
 import com.example.nextsoundz.Singleton.Metronome
@@ -38,41 +36,21 @@ import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener,
-    PlayEngineTask.NoteRepeatListener {
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-
-        //DrumScreenHomeFragment().triggerNoteRepeat()
-    }
-
-    override fun triggerNoteRepeat(noteRepeatObject: NoteRepeat) {
-        //DrumScreenHomeFragment().triggerNoteRepeat()
-        noteRepeatInterval = noteRepeatObject
-//         Log.d("noteRepeatInterval","note repeat engineCounter ${noteRepeatObject.engineCounter}")
-//        Log.d("noteRepeatInterval","note repeat interval ${noteRepeatObject.noteRepeatInterval}")
-
-    }
+    PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
     private lateinit var soundsViewModel: SoundsViewModel
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
-    private var playEngineMilliSecRate: Long = 1000L
     private var isMetronomeOn: Boolean = true
     lateinit var sharedPref: SharedPreferences
     lateinit var playEngineExecutor: ScheduledExecutorService
     lateinit var playEngineTask: PlayEngineTask
     lateinit var mygestureDetector: GestureDetector
     var GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
-    private lateinit var soundPool: SoundPool
-    private var sound1: Int = 0
+
     val maxMetronomeIncrement = 25
-    var maxProgress = 75
-    var measureCount = 4
     private var SETTINGS_REQUEST_CODE: Int = 200
     private var LOAD_SOUND_REQUEST_CODE: Int = 300
-    private lateinit var noteRepeatInterval :NoteRepeat
 
     private lateinit var volumeSlider: SeekBar
 
@@ -82,7 +60,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         setContentView(R.layout.activity_main)
 
 
-        //////Setttng up project shared preferences/////////
+        //////Setting up project shared preferences/////////
         sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
 
 
@@ -91,11 +69,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
-
-//        ApplicationState.pad1LftVolume = 0.5f
-//        ApplicationState.pad1RftVolume = 0.5f
-//        ApplicationState.pad2LftVolume = 0.5f
-//        ApplicationState.pad2RftVolume = 0.5f
 
         playEngineTask = PlayEngineTask(application)
 
@@ -132,7 +105,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
         //Setting up View model to communicate to our fragments
-        this?.let {
+        this.let {
             soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
         }
 
@@ -163,22 +136,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         volumeSlider.setOnSeekBarChangeListener(this)
 
 
-          setUpSoundPool()
+
 
     }
 
-//    private fun setupNoteRepeatInterval() {
-//
-//        soundsViewModel.noteRepeatInterval.postValue(noteRepeatInterval)
-//    }
-
-    fun setUpSoundPool() {
-        val drumPadSoundPool = DrumPadSoundPool(this)
-        drumPadSoundPool.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
-        ///////////post to be available to fragments
-
-       // soundsViewModel.drumPadSoundPool.postValue(volumeSlider)
-    }
 
     @TargetApi(23)
     private fun setUpMidi() {
@@ -201,10 +162,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
         }
-
-
-
-
 
 
     }
