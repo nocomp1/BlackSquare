@@ -95,7 +95,7 @@
 
             <Button
                 android:id="@+id/note_repeat_btn"
-                android:layout_width="65dp"
+                android:layout_width="55dp"
                 android:layout_height="35dp"
                 android:layout_marginStart="10dp"
                 android:text="Note"
@@ -134,16 +134,26 @@
                 app:srcCompat="@drawable/play_to_stop_anim" />
 
                 <SeekBar
-                    android:layout_marginEnd="8dp"
+
                     android:thumb="@drawable/ic_volume_slider_knob"
                     android:id="@+id/main_ui_volume_seek_slider"
-                    android:layout_width="189dp"
+                    android:layout_width="170dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
                     android:max="100"
                     android:progress="5"
                     android:splitTrack="false"
                     android:progressDrawable="@drawable/ic_volume_slider_bg"/>
+            <Button
+                android:id="@+id/seekbar_slider_menu_toggle"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+
+                android:text="V"
+                android:background="@drawable/default_pad"
+
+                />
+
         </LinearLayout>
 
 

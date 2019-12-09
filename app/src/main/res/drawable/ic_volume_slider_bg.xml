@@ -2,7 +2,7 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="189dp"
     android:height="49dp"
-    android:viewportWidth="189"
+    android:viewportWidth="169"
     android:viewportHeight="49">
   <path
       android:pathData="m421.096,-379.995l0,574.488l574.488,0l0,-574.488l-574.488,0z"

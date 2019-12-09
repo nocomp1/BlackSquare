@@ -15,7 +15,9 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.PopupMenu
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
@@ -135,8 +137,30 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         volumeSlider = main_ui_volume_seek_slider
         volumeSlider.setOnSeekBarChangeListener(this)
 
+        //Selector menu for volume slider
+        setUpMenuforMainVolumeslider()
 
 
+
+    }
+
+    private fun setUpMenuforMainVolumeslider() {
+
+        seekbar_slider_menu_toggle.setOnClickListener {
+
+
+            val popupMenu = PopupMenu(this,seekbar_slider_menu_toggle)
+            //Inflating the Popup using xml file
+            popupMenu.getMenuInflater().inflate(R.menu.main_seekbar_popup_menu, popupMenu.getMenu())
+
+            popupMenu.setOnMenuItemClickListener {
+
+                Toast.makeText(this,"You Clicked : " + it.getTitle(), Toast.LENGTH_SHORT).show()
+
+                true
+            }
+            popupMenu.show()
+        }
 
     }
 

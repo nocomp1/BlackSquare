@@ -46,4 +46,7 @@
     <string name="selectedDrumBank">selected drum bank</string>
     <string name="soundID">SoundFileId</string>
     <string name="padSelected">padSelected</string>
+    <string name="pan">Pan</string>
+    <string name="pitch">Pitch</string>
+    <string name="volume">Volume</string>
 </resources>
