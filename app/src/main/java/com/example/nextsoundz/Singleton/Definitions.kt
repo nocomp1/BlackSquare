@@ -2,6 +2,18 @@ package com.example.nextsoundz.Singleton
 
 class Definitions {
     companion object {
+
+        /**
+         * push notification keys
+         */
+        const val notificationTitleKey = "title"
+        const val notificationBodyKey = "body"
+        const val notificationImageKey = "media-attachment-url"
+        const val notificationDeepLinkKey = "deeplink"
+        const val notificationCTALabelKey = "call_to_action_label"
+        const val notificationCancelLabelKey = "cancel_label"
+
+
         val QUARTER_NOTE = 0
         val EIGHT_NOTE = 1
         val SIXTENTH_NOTE = 2
@@ -12,7 +24,7 @@ class Definitions {
         val SIXTENTH_NOTE_TRIPLET = 7
         val DOTTED_EIGHT_NOTE = 8
 
-
+////////DRUM PADS//////////////
         const val pad1Id = 1
         const val pad2Id = 2
         const val pad3Id = 3
@@ -56,5 +68,38 @@ class Definitions {
         const val pad19Index: Int = 18
         const val pad20Index: Int = 19
 
+        /**
+         * Pattern ID
+         */
+
+        const val pattern1 :Int = 1
+        const val pattern2 :Int = 2
+        const val pattern3:Int = 3
+        const val pattern4:Int = 4
+        const val pattern5 :Int = 5
+        const val pattern6 :Int = 6
+        const val pattern7 :Int = 7
+        const val pattern8 :Int = 8
+        const val pattern9 :Int = 9
+        const val pattern10 :Int = 10
+        const val pattern11:Int = 11
+        const val pattern12 :Int = 12
+
+        /**
+         * Bar measure value
+         */
+
+        const val oneBar :Int = 1
+        const val twoBars:Int = 2
+        const val fourBars:Int = 4
+        const val eightBars :Int = 8
+
+        /**
+         * Bar measure index
+         */
+        const val oneBarIndex :Int = 0
+        const val twoBarsIdex :Int = 1
+        const val fourBarsIndex:Int = 2
+        const val eightBarsIndex:Int = 3
     }
 }

@@ -10,11 +10,12 @@ class DrumPadSoundPool(context: Context?) {
     private val soundPool: SoundPool
     private val volume = 1.0f
     private lateinit var loadedSound : Map<String, Int>
+    private var metronomeloadedSound : Int? = null
     private lateinit var sounds: Array<Sound>
     private var context: Context?
     private val soundsList = mutableListOf<Sound>()
     var sound: Int = 0
-
+    var metronomeSound: Int = 0
     init {
 
         val soundFilesIds = 10
@@ -50,6 +51,10 @@ class DrumPadSoundPool(context: Context?) {
         ApplicationState.hasLoadedASound = false
     }
 
+
+    /**
+     * Must call one of these load methods first
+     */
     fun getLoadedSoundKit(): Array<Sound> {
 
         if (sounds.isNotEmpty()) {
@@ -78,13 +83,23 @@ class DrumPadSoundPool(context: Context?) {
         ApplicationState.hasLoadedAKit=false
     }
 
+    fun loadMetronomeSound(soundFileId : Int):Int{
+
+        metronomeSound = soundPool.load(context, soundFileId, 1)
+
+       return metronomeSound
+
+    }
+
     //Must call this after calling load sound
     //or will return null
 
     fun getLoadedSoundId(): Map<String, Int> {
         return loadedSound
     }
-
+    fun getMetronomeLoadedSoundId(): Int?{
+        return metronomeloadedSound
+    }
 
 
 

@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -20,12 +21,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".NoteRepeatDialogActivity"
-            android:theme="@style/dialog"></activity>
+            android:theme="@style/dialog">
+            <intent-filter >
+            <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            <!-- Accepts URIs that begin with "http://www.blacksquare.com/notrepeat” -->
+            <data android:scheme="http"
+                android:host="www.blacksquare.com"
+                android:pathPrefix="/notrepeat" />
+            </intent-filter>
+        </activity>
 
         <service
             android:name=".Services.FirebaseMessaging"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

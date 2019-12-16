@@ -153,7 +153,13 @@
                 android:background="@drawable/default_pad"
 
                 />
-
+<TextView
+    android:layout_width="50dp"
+    android:layout_height="wrap_content"
+    android:id="@+id/millisec_clock"
+    android:textColor="@color/textColor"
+    android:text="0:000"
+    android:layout_marginLeft="12dp"/>
         </LinearLayout>
 
 

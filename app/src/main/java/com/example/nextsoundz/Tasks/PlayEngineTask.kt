@@ -7,25 +7,16 @@ import android.media.SoundPool
 import android.os.SystemClock
 import android.util.Log
 import com.example.nextsoundz.MainActivity
-import com.example.nextsoundz.R
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
 import com.example.nextsoundz.Singleton.Metronome
-import java.util.*
 
 
-class PlayEngineTask(applicationContext: Context) : TimerTask() {
+class PlayEngineTask(applicationContext: Context) : Runnable {
 
 
     private lateinit var callback: MetronomeListener
-    private var soundPool: SoundPool = SoundPool.Builder()
-        .setMaxStreams(1)
-        .setAudioAttributes(
-            AudioAttributes.Builder()
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build()
-        )
-        .build()
+    private var soundPool: SoundPool
 
     private var sound = 0
     private var context = applicationContext
@@ -71,90 +62,49 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
         // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         // } else
         // soundPool = SoundPool(1, AudioManager.STREAM_MUSIC, 0)
-
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .build()
 
         sound = soundPool.load(applicationContext, Metronome.getSoundId(), 1)
     }
 
 
-    fun play(): Boolean {
-
-
-        var i = 0
-        // var music: ByteArray? = null
-
-
-        val inputStream = context.getResources().openRawResource(R.raw.sound3)
-//
-//
-//        try {
-//
-//
-////
-////            player.play()
-////
-////            i = inputStream.read(music)
-////
-////            while (i != -1) {
-////                player.write(music, 0, i)
-//
-//            }
-
-
-        // val buff = ByteArray(1230)
-//            inputStream.buffered().use { input ->
-//
-//
-//
-//
-//                while(true) {
-//                    val sz = input.read(music)
-//                    if (sz <= 0) break
-//
-//                    ///at that point we have a sz bytes in the buff to process
-//                    player.write(music, 0, sz)
-//                }
-//            }
-
-
-//            while ((i = `is`.read(music)) != -1)
-//                player.write(music, 0, i)
-
-//        } catch (e: IOException) {
-//            e.printStackTrace()
-//        }
-//
-//        player.stop()
-//        player.release()
-        return true
-    }
-
 
     override fun run() {
 
-
+      //  Log.d("engineCounter", "xxxxxxxxx${ApplicationState.isPlaying}")
         /////////////ENGINE INITIAL START TIME BEFORE WE ENTER OUR ENGINE LOOP///////
         var startTime = SystemClock.uptimeMillis()
         Log.d("engineCounter", "interv time outside loop start time $startTime")
 
         ///MILLISECONDS INTERVAL TIME PERIOD FOR
         // EACH BEAT PER MILLISECONDS(EX: 750 MILLSEC IS 80BPM)/////////////
-        var bpmInterval = startTime + Bpm.getConvertedBeatPerMilliSec()
+        var bpmInterval = startTime + Bpm.getBeatPerMilliSeconds()
         Log.d("engineCounter", "interv time outside loop bpm $bpmInterval")
-        var noteRepeatInterval = startTime + Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeatId)!!
-        Log.d("engineCounter", "interv time outside loop note repeat $noteRepeatInterval")
 
+        var milisecInterval = startTime + 1
+
+
+        var x = 0
 
         //////////////ENGINE LOOP/////////////////
         while (ApplicationState.isPlaying) {
 
-           // Log.d("engineCounter", "engine loop is still runnung")
+            // Log.d("engineCounter", "inside engine loop is still runnung")
 
 
             ////////////MILLISECOND ENGINE COUNTER THAT UPDATES INSIDE OF LOOP //////
             var engineCounter = SystemClock.uptimeMillis()
-
-
+            Log.d("engineCounter", "engineCounter= $engineCounter")
+            var milliSecEngineCounter = SystemClock.uptimeMillis()
+            Log.d("engineCounter", "milliSecEngineCounter= $milliSecEngineCounter")
+            Log.d("engineCounter", "milisecInterval= $milisecInterval")
             //////////////////METRONOME///////////////////////////////////////////////////////////////////
             //               METRONOME
             /////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +119,7 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
                     callback.updateProgressBar()
 
                     ////////////update our next interval since we started the play engine/////////
-                    bpmInterval = engineCounter + Bpm.getConvertedBeatPerMilliSec()
+                    bpmInterval = engineCounter + Bpm.getBeatPerMilliSeconds()
                     // Log.d("engineCounter", "PLAY A CLICK SOUND")
 
 
@@ -177,7 +127,7 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
             } else {
 
                 ///////set a new interval counter when we return back to a active state
-                bpmInterval = engineCounter + Bpm.getConvertedBeatPerMilliSec()
+                bpmInterval = engineCounter + Bpm.getBeatPerMilliSeconds()
 
             }
 
@@ -185,7 +135,22 @@ class PlayEngineTask(applicationContext: Context) : TimerTask() {
             //
             ///////////////////////////////////////////////////////////////////////////////////////
 
-
+//            if (ApplicationState.isMillisecondClockPlaying){
+//
+//            // Log.d("xxxxxx","${milliSecEngineCounter} and ${milisecInterval} passed")
+//                if (milliSecEngineCounter == milisecInterval) {
+//                    x+=1
+//                     ApplicationState.millisecondClock= x
+//                    Log.d("xxxxxx", "${x} millisecond passed")
+//
+//                    milisecInterval = (milliSecEngineCounter + 1L)
+//
+//                   // Log.d("xxxxxx", "what millsecInterval equal now =${milisecInterval} passed")
+//                }
+//        }else{
+//                milisecInterval = milliSecEngineCounter + 1L
+//            }
+//
 
 
 

@@ -1,12 +1,18 @@
 package com.example.nextsoundz.Singleton
 
-object ApplicationState {
+class ApplicationState {
+
+companion object {
 
 
-    var noteRepeatHasChanged: Boolean =false
+    var isMillisecondClockPlaying: Boolean = false
+    var noteRepeatHasChanged: Boolean = false
     var tempoHasChanged: Boolean = false
     val defaultVolume = 0.75f
 
+    /**
+     * Drum pad volume
+     */
     var pad1LftVolume: Float = defaultVolume
     var pad1RftVolume: Float = defaultVolume
 
@@ -37,26 +43,40 @@ object ApplicationState {
     var pad10LftVolume: Float = defaultVolume
     var pad10RftVolume: Float = defaultVolume
 
+    /**
+     * Metronome volume
+     */
+    var metronomeRightVolume : Float = 1.0f
+    var metronomeLeftVolume : Float = 1.0f
 
-    var hasLoadedASound: Boolean =false
+
+
+    var hasLoadedASound: Boolean = false
     var hasLoadedAKit: Boolean = true
-    var isPlaying : Boolean =false
-    var isRecording : Boolean =false
-    var isArmedToRecord : Boolean =false
-    var noteRepeatActive : Boolean = false
-    var pad1Selected :Boolean=false
-    var pad2Selected :Boolean=false
+    var isPlaying: Boolean = false
+    var isRecording: Boolean = false
+    var isArmedToRecord: Boolean = false
+    var noteRepeatActive: Boolean = false
+    var pad1Selected: Boolean = false
+    var pad2Selected: Boolean = false
     //default bar count measure
 
-    var selectedBarMeasure = -1
-    var selectedPattern = -1
-    var selectedInstrumentTrack = -1
-    var selectedDrumBank = -1
-    var projectMeasure :Int = 2
-    var selectedPadId :Int? = null
+
+    /**
+     * Settings screen view ids
+     */
+    var selectedBarMeasureRadioButtonId = -1
+    var selectedPatternRadioButtonId = -1
+    var selectedInstrumentTrackRadioButtonId = -1
+    var selectedDrumBankRadioButtonId = -1
+    var selectedPadId: Int? = null
     var selectedNoteRepeatId = -1
     var selectedNoteRepeat = 0
     var drumScreenInitialLoad = -1
+
+    var selectedBarMeasure = 1
+
+
 
 
 //fun setSelectedBar(bar : Int){
@@ -68,18 +88,7 @@ object ApplicationState {
 //    return selectedBarMeasure
 //}
 
-//    var pattern1Measure :Int = 2
-//    var pattern2Measure :Int = 2
-//    var pattern3Measure :Int = 2
-//    var pattern4Measure :Int = 2
-//    var pattern5Measure :Int = 2
-//    var pattern6Measure :Int = 2
-//    var pattern7Measure :Int = 2
-//    var pattern8Measure :Int = 2
-//    var pattern9Measure :Int = 2
-//    var pattern10Measure :Int = 2
-//    var pattern11Measure :Int = 2
-//    var pattern12Measure :Int = 2
+
 //
 //
 //
@@ -106,5 +115,5 @@ object ApplicationState {
 //
 //
 //    }
-
+}
 }

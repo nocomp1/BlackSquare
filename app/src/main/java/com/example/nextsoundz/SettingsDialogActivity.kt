@@ -13,10 +13,12 @@ import android.widget.TableRow
 import androidx.appcompat.app.AppCompatActivity
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
+import com.example.nextsoundz.Singleton.Definitions
 import com.example.nextsoundz.Singleton.Metronome
 import com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
 import kotlinx.android.synthetic.main.activity_dialog_settings_layout.*
 import java.util.*
+import java.util.zip.Deflater
 
 
 class SettingsDialogActivity : AppCompatActivity() {
@@ -57,7 +59,7 @@ class SettingsDialogActivity : AppCompatActivity() {
         tempo_value.setOnValueChangedListener(NumberPicker.OnValueChangeListener { picker, oldVal, newVal ->
 
             //set the global bpm
-            Bpm.tempoToBeatPerMilliSec(newVal.toLong())
+            Bpm.setProjectTempo(newVal.toLong())
 
             ApplicationState.tempoHasChanged=true
         })
@@ -79,7 +81,7 @@ class SettingsDialogActivity : AppCompatActivity() {
     }
 
     private fun setUpDrumBankChoice() {
-        var selectedChoice = ApplicationState.selectedDrumBank
+        var selectedChoice = ApplicationState.selectedDrumBankRadioButtonId
 
         if ( selectedChoice != -1) {
             findViewById<RadioButton>(selectedChoice).isChecked = true
@@ -94,7 +96,7 @@ class SettingsDialogActivity : AppCompatActivity() {
 
     private fun setUpInstrumentTrackChoice() {
 
-        var selectedChoice = ApplicationState.selectedInstrumentTrack
+        var selectedChoice = ApplicationState.selectedInstrumentTrackRadioButtonId
 
         if ( selectedChoice != -1) {
             findViewById<RadioButton>(selectedChoice).isChecked = true
@@ -108,7 +110,7 @@ class SettingsDialogActivity : AppCompatActivity() {
     }
 
     private fun setUpPatternChoice() {
-        var selectedChoice = ApplicationState.selectedPattern
+        var selectedChoice = ApplicationState.selectedPatternRadioButtonId
 
         if ( selectedChoice != -1) {
             findViewById<RadioButton>(selectedChoice).isChecked = true
@@ -123,7 +125,7 @@ class SettingsDialogActivity : AppCompatActivity() {
 
     private fun setUpBarCountChoice() {
 
-        var selectedChoice = ApplicationState.selectedBarMeasure
+        var selectedChoice = ApplicationState.selectedBarMeasureRadioButtonId
 
         if ( selectedChoice != -1) {
             findViewById<RadioButton>(selectedChoice).isChecked = true
@@ -131,7 +133,7 @@ class SettingsDialogActivity : AppCompatActivity() {
 
             ///Set a default for bar measure
             val barList = getRadioBtnGroupIds(bar_measure_radio_group)
-            findViewById<RadioButton>(barList[0]).isChecked = true
+            findViewById<RadioButton>(barList[Definitions.oneBarIndex]).isChecked = true
         }
 
     }
@@ -180,7 +182,7 @@ class SettingsDialogActivity : AppCompatActivity() {
             bpm = (seconds / timeBetweenClicks)
 
             //set the global bpm
-            Bpm.tempoToBeatPerMilliSec(bpm)
+            Bpm.setProjectTempo(bpm)
             //update Ui
             tempo_value.value = bpm.toInt()
 
@@ -234,15 +236,22 @@ class SettingsDialogActivity : AppCompatActivity() {
 
     override fun onPause() {
 
-        if(bar_measure_radio_group.checkedRadioButtonId != -1)
-        ApplicationState.selectedBarMeasure = bar_measure_radio_group.checkedRadioButtonId
+        if(bar_measure_radio_group.checkedRadioButtonId != -1) {
+            ApplicationState.selectedBarMeasureRadioButtonId =
+                bar_measure_radio_group.checkedRadioButtonId
+            var rb = findViewById<RadioButton>(bar_measure_radio_group.checkedRadioButtonId)
+            if (rb != null) {
+                ApplicationState.selectedBarMeasure = (rb.text).toString().toInt()
+            }
+        }
+
         if(pattern_radio_group.checkedRadioButtonId != -1)
-        ApplicationState.selectedPattern = pattern_radio_group.checkedRadioButtonId
+        ApplicationState.selectedPatternRadioButtonId = pattern_radio_group.checkedRadioButtonId
         if(instrument_tracks_radio_group.checkedRadioButtonId!= -1)
-        ApplicationState.selectedInstrumentTrack =
+        ApplicationState.selectedInstrumentTrackRadioButtonId =
             instrument_tracks_radio_group.checkedRadioButtonId
         if(drum_bank_radio_group.checkedRadioButtonId != -1)
-        ApplicationState.selectedDrumBank = drum_bank_radio_group.checkedRadioButtonId
+        ApplicationState.selectedDrumBankRadioButtonId = drum_bank_radio_group.checkedRadioButtonId
 
 
         super.onPause()

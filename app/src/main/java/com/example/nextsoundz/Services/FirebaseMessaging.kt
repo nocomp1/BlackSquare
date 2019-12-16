@@ -3,66 +3,76 @@ package com.example.nextsoundz.Services
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
+import androidx.core.app.RemoteInput
 import com.example.nextsoundz.Config.Config
 import com.example.nextsoundz.R
 import com.example.nextsoundz.SettingsDialogActivity
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import com.example.nextsoundz.Singleton.Definitions
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+import com.squareup.picasso.Picasso
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
 
-class FirebaseMessaging :  FirebaseMessagingService() {
+class FirebaseMessaging : FirebaseMessagingService() {
+
 
     val notificationId = 0
     val CHANNEL_ID = "SHOES_PUSH_NOTIFICATION"
+    lateinit var notificationManager: NotificationManager
+
+    companion object {
+
+        val CANCEL_NOTIFICATION_KEY: String? = "cancel notification"
+        val CANCEL_NOTIFICATION_VALUE = 100
+    }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage?) {
-         // super.onMessageReceived(remoteMessage)
+        super.onMessageReceived(remoteMessage)
 
 
+        // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
+        Log.d(TAG, "From: " + remoteMessage!!.from)
 
-// Not getting messages here? See why this may be: https://goo.gl/39bRNJ
-        Log.d(TAG, "From: " + remoteMessage!!.getFrom())
-
-// Check if message contains a data payload.
-        if (remoteMessage.getData().size > 0) {
-            Log.d(TAG, "Message data payload: " + remoteMessage.getData())
+        // Check if message contains a data payload.
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d(TAG, "Message data payload: " + remoteMessage.data)
 
             if (/* Check if data needs to be processed by long running job */ true) {
                 // For long-running tasks (10 seconds or more) use Firebase Job Dispatcher.
 
-                          scheduleJob(remoteMessage)
 
             } else {
                 // Handle message within 10 seconds
 
-
-                        // handleNow()
+                // handleNow()
             }
 
         }
 
-// Check if message contains a notification payload.
-        if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification()!!.getBody())
+        // Check if message contains a notification payload.
+        if (remoteMessage.notification != null) {
+            Log.d(TAG, "Message Notification Body: " + remoteMessage.notification!!.body)
         }
 
-// Also if you intend on generating your own notifications as a result of a received FCM
-// message, here is where that should be initiated. See sendNotification method below.
+        // Also if you intend on generating your own notifications as a result of a received FCM
+        // message, here is where that should be initiated. See sendNotification method below.
+        val data = remoteMessage.data
+
+        scheduleJob(data, Picasso.get().load(data.get("media-attachment-url")).get())
+
 
     }
 
@@ -79,83 +89,101 @@ class FirebaseMessaging :  FirebaseMessagingService() {
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the
         // Instance ID token to your app server.
-
-
-       // sendRegistrationToServer(token)
-
         super.onNewToken(token)
     }
 
+    private fun scheduleJob(
+        data: MutableMap<String, String>,
+        imageBitmap: Bitmap
+    ) {
 
+        Config.title = data.get(Definitions.notificationTitleKey)
+        Config.content = data.get(Definitions.notificationBodyKey)
+        Config.imageUrl = data.get(Definitions.notificationImageKey)
+        Config.deepLink = data.get(Definitions.notificationDeepLinkKey)
 
-
-
-
-    private fun scheduleJob(remoteMessage: RemoteMessage) {
-
-        val data = remoteMessage.getData()
-        Config.title = data.get("title")
-        Config.content = data.get("content")
-        Config.imageUrl = data.get("imageUrl")
-        Config.gameUrl = data.get("gameUrl")
-
-        if (remoteMessage.data != null){
-
-            Observable.just(pushNotification())
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { builder ->
-                    with(NotificationManagerCompat.from(this)) {
-                        // notificationId is a unique int for each notification that you must define
-
-                        notify(notificationId, builder!!.build())
-                    }
-                }
-
-
-        }
-
-    }
-
-
-
-
-    fun pushNotification(): NotificationCompat.Builder? {
-
+        Config.cta1Label = data.get(Definitions.notificationCTALabelKey)
+        Config.cancelLabel = data.get(Definitions.notificationCancelLabelKey)
+        Config.cta1Action = data.get("custom key 3")
+        Config.cta2Action = data.get("custom key 4")
 
         //Create a notification channel
         createNotificationChannel()
 
-
         // Create an explicit intent for an Activity in your app
         //set the notification tap action
+        ///////Intents///////
         val intent = Intent(this, SettingsDialogActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+        val cancelIntent = Intent(this, CancelNotification::class.java)
 
 
+        //////////////////CALL TO ACTION //////////////////////////
+        // Key for the string that's delivered in the action's intent.
+        ///This is for the user being able to respond inside of the
+        //notification
+        val KEY_TEXT_REPLY = "key_text_reply"
+        var cta1Label: String? = Config.cta1Label
+        var cancelLabel: String? = Config.cancelLabel
+        var remoteInput: RemoteInput = RemoteInput.Builder(KEY_TEXT_REPLY).run {
+            setLabel(cta1Label)
+            build()
+        }
+
+        // Build a PendingIntent for the cta1Label action to trigger.
+        //Create the deeplink uri from the string
+        val deeplink = Uri.parse(Config.deepLink)
+        val ctaIntent = Intent(Intent.ACTION_VIEW, deeplink)
 
 
-        //Build your notification
+        /////pending intents////
+        var cta1LabelPendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, ctaIntent, 0)
+
+        ////IF WE WANT TO ADD A CANCEL TO THE NOTIFICATION/////
+
+//        var cancelIntentDestination: PendingIntent = PendingIntent.getActivity(
+//            this,
+//            CANCEL_NOTIFICATION_VALUE,
+//            cancelIntent,
+//            PendingIntent.FLAG_UPDATE_CURRENT
+//        )
+//        //add our id so we can dismiss the notification
+//        cancelIntent.putExtra(CANCEL_NOTIFICATION_KEY, CANCEL_NOTIFICATION_VALUE)
+
+
+        // Create the reply action and add the remote input.
+        var action: NotificationCompat.Action =
+            NotificationCompat.Action.Builder(
+                R.drawable.ic_search,
+                cta1Label, cta1LabelPendingIntent
+            )
+                .addRemoteInput(remoteInput)
+                .build()
+
+        //Build notification
         var notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_search)
-            .setContentTitle("Search")
-            .setContentText("What are you searching for")
-            .setLargeIcon(getBitmapFromURL("https://cdn.jackrabbit.com/media/catalog/product/cache/1/small_image/397x196/9df78eab33525d08d6e5fb8d27136e95/w/o/womens-brooks-adrenaline-gts-20-running-shoe-color-greypale-peach-regular-width-size-9-609465416429-01.2839_1.jpg"))
+            .setContentTitle(Config.title)
+            .setContentText(Config.content)
+            .setLargeIcon(imageBitmap)
             .setStyle(
                 NotificationCompat.BigPictureStyle()
-                    .bigPicture(getBitmapFromURL("https://cdn.jackrabbit.com/media/catalog/product/cache/1/small_image/397x196/9df78eab33525d08d6e5fb8d27136e95/w/o/womens-brooks-adrenaline-gts-20-running-shoe-color-greypale-peach-regular-width-size-9-609465416429-01.2839_1.jpg"))
+                    .bigPicture(imageBitmap)
                     .bigLargeIcon(null)
             )
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            // Set the intent that will fire when the user taps the notification
-            .setContentIntent(pendingIntent)
+            .addAction(R.drawable.ic_search, cta1Label, cta1LabelPendingIntent)
+
+                ////IF WE WANT TO ADD CANCEL BUTTON
+               // .addAction(R.drawable.ic_search, cancelLabel, cancelIntentDestination)
             .setAutoCancel(true)
 
-        return notification
+        // Register the channel with the system
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(CANCEL_NOTIFICATION_VALUE, notification.build())
     }
-
 
     private fun createNotificationChannel() {
 
@@ -163,41 +191,34 @@ class FirebaseMessaging :  FirebaseMessagingService() {
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.atmospheric_tap)
-            val descriptionText = getString(R.string.app_name)
+            val descriptionText = "BlackSquare"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
             // Register the channel with the system
-            val notificationManager: NotificationManager =
+            val notificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
 
+    //////Inner class to dissmis the notification
+    class CancelNotification : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent != null) {
+                val noti_id = intent.getIntExtra(CANCEL_NOTIFICATION_KEY, CANCEL_NOTIFICATION_VALUE)
 
+                if (noti_id > 0) {
+                    val notificationManager: NotificationManager? =
+                        context!!.getSystemService(NotificationManager::class.java)
+                    notificationManager!!.cancel(noti_id)
+                }
+            }
 
-    fun getBitmapFromURL(src: String): Bitmap? {
-
-        //val url = URL("http://image10.bizrate-images.com/resize?sq=60&uid=2216744464")
-//val bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-
-
-        try {
-            val url = URL(src)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.setDoInput(true)
-            connection.connect()
-            val input = connection.getInputStream()
-            return BitmapFactory.decodeStream(input)
-        } catch (e: IOException) {
-            // Log exception
-            return null
         }
 
+
     }
-
-
-
 
 }

@@ -183,7 +183,7 @@
                     android:background="@drawable/radio_button_background"
                     android:button="@android:color/transparent"
                     android:checked="false"
-                    android:text="2"
+                    android:text="1"
                     android:clickable="true"
                     android:onClick="onBarSelected"
                     android:textAlignment="center" />
@@ -197,7 +197,7 @@
                     android:button="@android:color/transparent"
                     android:checked="false"
                     android:onClick="onBarSelected"
-                    android:text="4"
+                    android:text="2"
                     android:textAlignment="center" />
 
                 <RadioButton
@@ -209,7 +209,7 @@
                     android:button="@android:color/transparent"
                     android:checked="false"
                     android:onClick="onBarSelected"
-                    android:text="6"
+                    android:text="4"
                     android:textAlignment="center" />
                 <RadioButton
                     android:id="@+id/five_bar_measure"

@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
@@ -25,14 +27,18 @@ import com.example.nextsoundz.Adapters.TabsViewPagerAdapter
 import com.example.nextsoundz.Fragments.*
 import com.example.nextsoundz.Listeners.FabGestureDetectionListener
 import com.example.nextsoundz.Managers.DrumPadSoundPool
-import com.example.nextsoundz.Managers.SoundResManager
 import com.example.nextsoundz.Singleton.ApplicationState
 import com.example.nextsoundz.Singleton.Bpm
+import com.example.nextsoundz.Singleton.Definitions
 import com.example.nextsoundz.Singleton.Metronome
 import com.example.nextsoundz.Tasks.PlayEngineTask
 import com.example.nextsoundz.ViewModels.SoundsViewModel
+import com.google.firebase.messaging.FirebaseMessaging
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
@@ -41,6 +47,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
     private lateinit var soundsViewModel: SoundsViewModel
+    private lateinit var metronomeSoundPool: DrumPadSoundPool
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
     private var isMetronomeOn: Boolean = true
@@ -49,38 +56,46 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     lateinit var playEngineTask: PlayEngineTask
     lateinit var mygestureDetector: GestureDetector
     var GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
+    var beatCount =0
+    var milliPerBeat = 0L
 
-    val maxMetronomeIncrement = 25
     private var SETTINGS_REQUEST_CODE: Int = 200
     private var LOAD_SOUND_REQUEST_CODE: Int = 300
-
+    var engineClock: Disposable? = null
     private lateinit var volumeSlider: SeekBar
+    private lateinit var soundPool: SoundPool
+    var metronomeInterval: Long? = null
+    private var sound = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //Subscribe app to channel "all" for cloud messages
+        //post to topics/app
+        FirebaseMessaging.getInstance().subscribeToTopic("all")
 
         //////Setting up project shared preferences/////////
         sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
 
+        //////// Getting and setting our project tempo///////
+        projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 100L)
+        Bpm.setProjectTempo(projectTempo)
 
         //////// Setting state of the metronome/////////
         isMetronomeOn = sharedPref.getBoolean(getString(R.string.isMetronomeOn), true)
         metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
+        setUpMetronomeSoundPool()
+        loadMetronomeSound()
+        metronomeInterval = Bpm.getBeatPerMilliSeconds()
 
         playEngineTask = PlayEngineTask(application)
 
         ///// callback to increment progress bar per beat
         playEngineTask.setProgressListener(this)
-
-
-        //////// Getting and setting our project tempo///////
-        projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 100L)
-        Bpm.tempoToBeatPerMilliSec(projectTempo)
 
 
         //full screen
@@ -141,6 +156,120 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         setUpMenuforMainVolumeslider()
 
 
+    }
+
+    private fun setUpMetronomeSoundPool() {
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .build()
+    }
+
+    /**
+     * call this method after changing the sound
+     */
+    fun loadMetronomeSound() {
+        sound = soundPool.load(this, Metronome.getSoundId(), 1)
+    }
+
+
+    private fun playMetronomeSound(millisecond: Long) {
+
+        if (Metronome.isActive()) {
+            if (millisecond == metronomeInterval) {
+                soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
+
+                //always updating progress every beat
+                updateProgressBar()
+                metronomeInterval = millisecond + Bpm.getBeatPerMilliSeconds()
+            }
+        }
+    }
+
+    override fun updateProgressBar() {
+        var maxMetronomeIncrement: Int?
+        Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
+
+        when (ApplicationState.selectedBarMeasure) {
+
+
+            Definitions.oneBar -> {
+                maxMetronomeIncrement = 25
+                fabProgress.max = 100
+                if (fabProgress.progress <= 100) {
+                    if (fabProgress.progress == 100) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+            }
+
+            Definitions.twoBars -> {
+                maxMetronomeIncrement = 10
+                fabProgress.max = 80
+                if (fabProgress.progress <= 80) {
+                    if (fabProgress.progress == 80) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+            }
+
+            Definitions.fourBars -> {
+                maxMetronomeIncrement = 10
+                fabProgress.max = 160
+                if (fabProgress.progress <= 160) {
+                    if (fabProgress.progress == 160) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+
+
+            }
+            Definitions.eightBars -> {
+                maxMetronomeIncrement = 10
+                fabProgress.max = 320
+                if (fabProgress.progress <= 320) {
+                    if (fabProgress.progress == 320) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+
+            }
+
+
+        }
+
+
+    }
+
+
+    private fun startUIclock(milliseconds: Long) {
+
+
+
+        if (milliPerBeat == Bpm.getBeatPerMilliSeconds()){
+            beatCount++
+            milliPerBeat = 0L
+
+
+        }
+        if (beatCount > (ApplicationState.selectedBarMeasure*4)){
+            beatCount =1
+        }
+        milliPerBeat++
+        var uiClock = getString(R.string.ui_clock, beatCount, milliPerBeat)
+        millisec_clock.text = uiClock
 
     }
 
@@ -149,13 +278,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         seekbar_slider_menu_toggle.setOnClickListener {
 
 
-            val popupMenu = PopupMenu(this,seekbar_slider_menu_toggle)
+            val popupMenu = PopupMenu(this, seekbar_slider_menu_toggle)
             //Inflating the Popup using xml file
-            popupMenu.getMenuInflater().inflate(R.menu.main_seekbar_popup_menu, popupMenu.getMenu())
+            popupMenu.menuInflater.inflate(R.menu.main_seekbar_popup_menu, popupMenu.menu)
 
             popupMenu.setOnMenuItemClickListener {
 
-                Toast.makeText(this,"You Clicked : " + it.getTitle(), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
 
                 true
             }
@@ -220,30 +349,44 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+    override fun onPause() {
+        super.onPause()
+
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+
+    }
 
     fun startPlayEngine() {
 
+        engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                playMetronomeSound(it)
+                startUIclock(it)
 
-        playEngineExecutor = Executors.newScheduledThreadPool(1)
-        playEngineExecutor.schedule(playEngineTask, 0, TimeUnit.MILLISECONDS)
 
+            }
 
     }
+
 
     fun stopPlayEngine() {
 
-        playEngineExecutor.shutdownNow()
+        engineClock!!.dispose()
+        //Reset the metronome interval
+        metronomeInterval = Bpm.getBeatPerMilliSeconds()
+
+        //reset uiClock
+        beatCount =0
+        milliPerBeat = 0L
 
 
-    }
-
-    override fun onDestroy() {
-
-//            if (Metronome.isActive()) {
-//                playEngineExecutor.shutdownNow()
-//            }
-
-        super.onDestroy()
     }
 
 
@@ -273,45 +416,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
 
-    override fun onResume() {
-
-//        //Resume playing our Metronome when user returns
-//        if (ApplicationState.isPlaying) {
-//            if (Metronome.isActive()) {
-//                startPlayEngine()
-//            } else {
-//
-//                //reset progress to 0
-//                fabProgress.progress = 0
-//            }
-//        }
-//
-//
-//        when (measureCount) {
-//
-//            4 -> maxProgress = 100
-//
-//
-//            8 -> maxProgress = 200
-//
-//
-//        }
-
-        super.onResume()
-    }
-
-    override fun onPause() {
-//        //Resume playing our Metronome when user returns
-//        if (ApplicationState.isPlaying) {
-//            if (Metronome.isActive()) {
-//                stopPlayEngine()
-//            }
-//        }
-
-        super.onPause()
-    }
-
-
     fun onPlayStopTapped(view: View) {
 
         if (!ApplicationState.isPlaying) {
@@ -321,15 +425,15 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                 android.graphics.PorterDuff.Mode.MULTIPLY
             )
             play_stop_btn.setImageResource(R.drawable.play_to_stop_anim)
-            //fab.setBackgroundResource(R.drawable.selected_menu_btn)
+
             (play_stop_btn.drawable as AnimatedVectorDrawable).start()
+
+
+            ///////Set the play state//////
             ApplicationState.isPlaying = true
+            startPlayEngine()
 
 
-
-            if (Metronome.isActive()) {
-                startPlayEngine()
-            }
 
             if (!ApplicationState.isRecording) {
 
@@ -341,7 +445,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             // fab.setBackgroundResource(R.drawable.default_pad)
             play_stop_btn.setImageResource(R.drawable.stop_to_play_anim)
             (play_stop_btn.drawable as AnimatedVectorDrawable).start()
+
+
+
             ApplicationState.isPlaying = false
+            ApplicationState.isMillisecondClockPlaying = false
+
+
             fabProgress.progress = 0
 
             if (Metronome.isActive()) {
@@ -393,27 +503,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     fun onLoadTapped(view: View) {
         val intent = Intent(applicationContext, LoadDrumSoundDialogActivity::class.java)
         startActivityForResult(intent, LOAD_SOUND_REQUEST_CODE)
-    }
-
-
-    override fun updateProgressBar() {
-
-//        var mediaPlayer: MediaPlayer? = MediaPlayer.create(this, R.raw.wood)
-//        mediaPlayer?.start()
-//
-//        mediaPlayer!!.setOnCompletionListener { mp -> mp.release() }
-
-
-        fabProgress.max = 100
-        if (fabProgress.progress <= 100) {
-            if (fabProgress.progress == 100) {
-                fabProgress.progress = 0
-            }
-            fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-
-            Log.d("xxx", "progress ${fabProgress.progress}")
-        }
-
     }
 
 

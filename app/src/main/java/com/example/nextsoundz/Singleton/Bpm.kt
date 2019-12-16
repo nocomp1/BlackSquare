@@ -8,7 +8,7 @@ object Bpm {
     var targetNoteRepeatInterval = -1L
     var currentEngineStartTime = -1L
 
-    fun getConvertedBeatPerMilliSec(): Long {
+    fun getBeatPerMilliSeconds(): Long {
 
         //milliseconds per beat
         val milliSecPerBeat = secondsInAminute / userBpm
@@ -18,7 +18,11 @@ object Bpm {
 
     }
 
-    fun tempoToBeatPerMilliSec(tempo: Long){
+
+    /**
+     * set this first
+     */
+    fun setProjectTempo(tempo: Long){
         userBpm = tempo
     }
 
@@ -56,5 +60,9 @@ object Bpm {
         return noteRepeatInerval
     }
 
+    fun getPatternTimeInMilliSeconds(measure :Int): Long {
+
+        return getBeatPerMilliSeconds() * measure
+    }
 
 }
