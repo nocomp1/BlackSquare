@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.graphics.Typeface
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.AudioAttributes
 import android.media.SoundPool
@@ -33,6 +35,7 @@ import com.example.nextsoundz.Singleton.Definitions
 import com.example.nextsoundz.Singleton.Metronome
 import com.example.nextsoundz.Tasks.PlayEngineTask
 import com.example.nextsoundz.ViewModels.SoundsViewModel
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.messaging.FirebaseMessaging
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -46,6 +49,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
     PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
+    private var mFirebaseAnalytics: FirebaseAnalytics? = null
     private lateinit var soundsViewModel: SoundsViewModel
     private lateinit var metronomeSoundPool: DrumPadSoundPool
     private var metronomeSoundId = R.raw.wood
@@ -56,7 +60,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     lateinit var playEngineTask: PlayEngineTask
     lateinit var mygestureDetector: GestureDetector
     var GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
-    var beatCount =0
+    var beatCount = 0
     var milliPerBeat = 0L
 
     private var SETTINGS_REQUEST_CODE: Int = 200
@@ -75,6 +79,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //Subscribe app to channel "all" for cloud messages
         //post to topics/app
         FirebaseMessaging.getInstance().subscribeToTopic("all")
+        // Obtain the FirebaseAnalytics instance.
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
+
 
         //////Setting up project shared preferences/////////
         sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
@@ -97,7 +104,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         ///// callback to increment progress bar per beat
         playEngineTask.setProgressListener(this)
 
-
         //full screen
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -105,10 +111,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         )
         supportActionBar?.hide()
 
-
         /////Set up MIDI  capabilities
         setUpMidi()
-
 
         ////Set up our Tabs
         val adapter = TabsViewPagerAdapter(supportFragmentManager)
@@ -119,7 +123,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         adapter.addFragment(SongFragment(), "Song")
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
-
 
         //Setting up View model to communicate to our fragments
         this.let {
@@ -155,7 +158,44 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //Selector menu for volume slider
         setUpMenuforMainVolumeslider()
 
+        ////////Ui clock/////////
+        val myTypeface = Typeface.createFromAsset(this.assets,
+            "Digital3.ttf")
+        millisec_clock.typeface = myTypeface
+        resetUiClock()
 
+
+        isPhoneSetToDarkTheme()
+    }
+
+    private fun isPhoneSetToDarkTheme() {
+
+        val mode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+        when (mode) {
+            Configuration.UI_MODE_NIGHT_YES -> {
+                Toast.makeText(this, "MODE_NIGHT_YES", Toast.LENGTH_SHORT).show()
+                val bundle = Bundle()
+                bundle.putInt("dark_theme_enabled_count", 1)
+                mFirebaseAnalytics?.logEvent("app_dark_theme_is_enabled", bundle)
+            }
+            Configuration.UI_MODE_NIGHT_NO -> {
+                Toast.makeText(this, "UI_MODE_NIGHT_NO", Toast.LENGTH_SHORT).show()
+                val bundle = Bundle()
+                bundle.putInt("dark_theme_disabled_count", 1)
+                mFirebaseAnalytics?.logEvent("app_dark_theme_is_not_enabled", bundle)
+
+            }
+            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                Toast.makeText(this, "UI_MODE_NIGHT_UNDEFINED", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+//        switch (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) {
+//            case Configuration.UI_MODE_NIGHT_YES:
+//            break;
+//            case Configuration.UI_MODE_NIGHT_NO:
+//            break;
+//        }
     }
 
     private fun setUpMetronomeSoundPool() {
@@ -170,12 +210,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     /**
+     * Metronome
      * call this method after changing the sound
      */
     fun loadMetronomeSound() {
         sound = soundPool.load(this, Metronome.getSoundId(), 1)
     }
-
 
     private fun playMetronomeSound(millisecond: Long) {
 
@@ -253,26 +293,46 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-
+    /**
+     * UICLOCK
+     */
     private fun startUIclock(milliseconds: Long) {
 
-
-
-        if (milliPerBeat == Bpm.getBeatPerMilliSeconds()){
+        if (milliPerBeat == Bpm.getBeatPerMilliSeconds()) {
             beatCount++
             milliPerBeat = 0L
 
 
         }
-        if (beatCount > (ApplicationState.selectedBarMeasure*4)){
-            beatCount =1
+        if (beatCount > (ApplicationState.selectedBarMeasure * 4)) {
+            beatCount = 1
         }
         milliPerBeat++
-        var uiClock = getString(R.string.ui_clock, beatCount, milliPerBeat)
-        millisec_clock.text = uiClock
+
+        val millis = String.format("%03d", milliPerBeat)
+        val beats = String.format("%02d", beatCount)
+        val uiClock = StringBuilder()
+        uiClock.append(beats)
+        uiClock.append(":")
+        uiClock.append(millis)
+
+        millisec_clock.text = uiClock.toString()
 
     }
+    private fun resetUiClock() {
+        beatCount = 0
+        milliPerBeat = 0L
+        val uiClock = StringBuilder()
+        uiClock.append("00")
+        uiClock.append(":")
+        uiClock.append("000")
 
+        millisec_clock.text = uiClock.toString()
+    }
+
+    /**
+     * Multi horizontal slider control
+     */
     private fun setUpMenuforMainVolumeslider() {
 
         seekbar_slider_menu_toggle.setOnClickListener {
@@ -349,18 +409,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    override fun onPause() {
-        super.onPause()
-
-
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-
-    }
-
+    /**
+     * Main play engine
+     */
     fun startPlayEngine() {
 
         engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
@@ -383,11 +434,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         metronomeInterval = Bpm.getBeatPerMilliSeconds()
 
         //reset uiClock
-        beatCount =0
-        milliPerBeat = 0L
+        resetUiClock()
 
 
     }
+
 
 
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {

@@ -148,18 +148,20 @@
                 android:id="@+id/seekbar_slider_menu_toggle"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
-
+                android:layout_marginLeft="12dp"
                 android:text="V"
                 android:background="@drawable/default_pad"
+                android:elevation="15dp"
 
                 />
 <TextView
-    android:layout_width="50dp"
+    android:layout_width="60dp"
     android:layout_height="wrap_content"
     android:id="@+id/millisec_clock"
     android:textColor="@color/textColor"
-    android:text="0:000"
-    android:layout_marginLeft="12dp"/>
+    android:textSize="18sp"
+    android:text="00:456"
+    android:layout_marginStart="20dp"/>
         </LinearLayout>
 
 
