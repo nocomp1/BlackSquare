@@ -95,10 +95,10 @@
 
             <Button
                 android:id="@+id/note_repeat_btn"
-                android:layout_width="55dp"
+                android:layout_width="35dp"
                 android:layout_height="35dp"
                 android:layout_marginStart="10dp"
-                android:text="Note"
+                android:text="NR"
                 android:background="@drawable/default_pad"
                 android:layout_margin="4dp"
                 />
@@ -137,7 +137,7 @@
 
                     android:thumb="@drawable/ic_volume_slider_knob"
                     android:id="@+id/main_ui_volume_seek_slider"
-                    android:layout_width="170dp"
+                    android:layout_width="160dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
                     android:max="100"
@@ -155,13 +155,13 @@
 
                 />
 <TextView
-    android:layout_width="60dp"
+    android:layout_width="75dp"
     android:layout_height="wrap_content"
     android:id="@+id/millisec_clock"
     android:textColor="@color/textColor"
     android:textSize="18sp"
-    android:text="00:456"
-    android:layout_marginStart="20dp"/>
+    android:text="00:1456"
+    android:layout_marginStart="16dp"/>
         </LinearLayout>
 
 

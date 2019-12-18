@@ -14,6 +14,9 @@ import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -49,6 +52,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
     PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
+
     private var mFirebaseAnalytics: FirebaseAnalytics? = null
     private lateinit var soundsViewModel: SoundsViewModel
     private lateinit var metronomeSoundPool: DrumPadSoundPool
@@ -59,19 +63,15 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     lateinit var playEngineExecutor: ScheduledExecutorService
     lateinit var playEngineTask: PlayEngineTask
     lateinit var mygestureDetector: GestureDetector
-    var GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
     var beatCount = 0
     var milliPerBeat = 0L
-
-    private var SETTINGS_REQUEST_CODE: Int = 200
-    private var LOAD_SOUND_REQUEST_CODE: Int = 300
     var engineClock: Disposable? = null
     private lateinit var volumeSlider: SeekBar
     private lateinit var soundPool: SoundPool
     var metronomeInterval: Long? = null
     private var sound = 0
-
-
+    private var currentBarMeasure: Int? = null
+    private var currentTempo: Long?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -150,7 +150,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //set our callback so we can deal with our gestures in this activity
         fabGestureDetectionListener.setFabGestureListener(this)
 
-
         //Main UI volume slider
         volumeSlider = main_ui_volume_seek_slider
         volumeSlider.setOnSeekBarChangeListener(this)
@@ -159,8 +158,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         setUpMenuforMainVolumeslider()
 
         ////////Ui clock/////////
-        val myTypeface = Typeface.createFromAsset(this.assets,
-            "Digital3.ttf")
+        val myTypeface = Typeface.createFromAsset(
+            this.assets,
+            "Digital3.ttf"
+        )
         millisec_clock.typeface = myTypeface
         resetUiClock()
 
@@ -173,29 +174,57 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         val mode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
         when (mode) {
             Configuration.UI_MODE_NIGHT_YES -> {
-                Toast.makeText(this, "MODE_NIGHT_YES", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, "MODE_NIGHT_YES", Toast.LENGTH_SHORT).show()
                 val bundle = Bundle()
                 bundle.putInt("dark_theme_enabled_count", 1)
                 mFirebaseAnalytics?.logEvent("app_dark_theme_is_enabled", bundle)
+
+                //Logging for Audience
+                mFirebaseAnalytics?.setUserProperty(
+                    DARK_THEME_ENABLED_USER_PROPERTY,
+                    DARK_THEME_ENABLED_VALUE
+                )
             }
             Configuration.UI_MODE_NIGHT_NO -> {
-                Toast.makeText(this, "UI_MODE_NIGHT_NO", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, "UI_MODE_NIGHT_NO", Toast.LENGTH_SHORT).show()
                 val bundle = Bundle()
                 bundle.putInt("dark_theme_disabled_count", 1)
                 mFirebaseAnalytics?.logEvent("app_dark_theme_is_not_enabled", bundle)
 
+                //Logging for Audience
+                mFirebaseAnalytics?.setUserProperty(
+                    DARK_THEME_ENABLED_USER_PROPERTY,
+                    DARK_THEME_DISABLED_VALUE
+                )
             }
             Configuration.UI_MODE_NIGHT_UNDEFINED -> {
                 Toast.makeText(this, "UI_MODE_NIGHT_UNDEFINED", Toast.LENGTH_SHORT).show()
             }
         }
 
-//        switch (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) {
-//            case Configuration.UI_MODE_NIGHT_YES:
-//            break;
-//            case Configuration.UI_MODE_NIGHT_NO:
-//            break;
-//        }
+
+    }
+
+    /**
+     * Metronome
+     * call this method after changing the sound
+     */
+
+    fun loadMetronomeSound() {
+        sound = soundPool.load(this, Metronome.getSoundId(), 1)
+    }
+
+    private fun playMetronomeSound(millisecond: Long) {
+
+        if (Metronome.isActive()) {
+            if ((millisecond == metronomeInterval)||(millisecond == 0L) ) {
+                soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
+
+                //always updating progress every beat
+                updateProgressBar()
+                metronomeInterval = millisecond + Bpm.getBeatPerMilliSeconds()
+            }
+        }
     }
 
     private fun setUpMetronomeSoundPool() {
@@ -210,24 +239,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     /**
-     * Metronome
-     * call this method after changing the sound
+     * Main progress bar
      */
-    fun loadMetronomeSound() {
-        sound = soundPool.load(this, Metronome.getSoundId(), 1)
-    }
 
-    private fun playMetronomeSound(millisecond: Long) {
-
-        if (Metronome.isActive()) {
-            if (millisecond == metronomeInterval) {
-                soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
-
-                //always updating progress every beat
-                updateProgressBar()
-                metronomeInterval = millisecond + Bpm.getBeatPerMilliSeconds()
-            }
-        }
+    fun resetProgressBar() {
+        fabProgress.progress = 0
     }
 
     override fun updateProgressBar() {
@@ -296,9 +312,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     /**
      * UICLOCK
      */
-    private fun startUIclock(milliseconds: Long) {
+    private fun updateUiClockEveryMilliSec(milliseconds: Long) {
 
-        if (milliPerBeat == Bpm.getBeatPerMilliSeconds()) {
+        if ((milliPerBeat == Bpm.getBeatPerMilliSeconds()) || (milliPerBeat == 0L) ){
             beatCount++
             milliPerBeat = 0L
 
@@ -309,25 +325,34 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
         milliPerBeat++
 
-        val millis = String.format("%03d", milliPerBeat)
+        val millis = String.format("%04d", milliPerBeat)
         val beats = String.format("%02d", beatCount)
-        val uiClock = StringBuilder()
-        uiClock.append(beats)
-        uiClock.append(":")
-        uiClock.append(millis)
+        val uIClock = SpannableStringBuilder(beats)
+        uIClock.setSpan(
+            ForegroundColorSpan(ContextCompat.getColor(this,R.color.colorAccent)),
+            0, 2,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-        millisec_clock.text = uiClock.toString()
+        uIClock.append(" : ")
+        uIClock.append(millis)
+
+
+        millisec_clock.text = uIClock
 
     }
+
     private fun resetUiClock() {
         beatCount = 0
         milliPerBeat = 0L
-        val uiClock = StringBuilder()
-        uiClock.append("00")
-        uiClock.append(":")
-        uiClock.append("000")
+        val uIClock = SpannableStringBuilder("00")
+        uIClock.setSpan(
+            ForegroundColorSpan(ContextCompat.getColor(this,R.color.colorAccent)),
+            0, 2,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        uIClock.append(" : ")
+        uIClock.append("0000")
 
-        millisec_clock.text = uiClock.toString()
+        millisec_clock.text = uIClock
     }
 
     /**
@@ -353,6 +378,28 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+    //Volume Slider input from user --> to fragments
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        DrumScreenHomeFragment().onProgressChanged(seekBar, progress, fromUser)
+
+
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        DrumScreenHomeFragment().onStartTrackingTouch(seekBar)
+        Log.d(" onStartTrackTouch", seekBar.toString())
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        DrumScreenHomeFragment().onStopTrackingTouch(seekBar)
+        Log.d(" onStopTrackiTouch", seekBar.toString())
+    }
+
+
+    /**
+     * Midi
+     */
 
     @TargetApi(23)
     private fun setUpMidi() {
@@ -379,6 +426,39 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+    /**
+     * Main play engine
+     */
+
+    fun startPlayEngine() {
+
+        engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                playMetronomeSound(it)
+                updateUiClockEveryMilliSec(it)
+            }
+
+    }
+
+
+    fun stopPlayEngine() {
+
+        engineClock!!.dispose()
+        //Reset the metronome interval
+        metronomeInterval = Bpm.getBeatPerMilliSeconds()
+
+        //reset uiClock
+        resetUiClock()
+        //reset progress bar
+        resetProgressBar()
+
+    }
+
+    /**
+     * Touch and click events
+     */
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event!!.action) {
 
@@ -403,46 +483,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     ) {
 
         Log.d(
-            GESTURETAGBUTTON,
+            Companion.GESTURETAGBUTTON,
             "on fling\t Veloxity x \t\t" + velocityX + "\t\tveloxity y\t\t" + velocityY
         )
 
     }
 
-    /**
-     * Main play engine
-     */
-    fun startPlayEngine() {
-
-        engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                playMetronomeSound(it)
-                startUIclock(it)
-
-
-            }
-
-    }
-
-
-    fun stopPlayEngine() {
-
-        engineClock!!.dispose()
-        //Reset the metronome interval
-        metronomeInterval = Bpm.getBeatPerMilliSeconds()
-
-        //reset uiClock
-        resetUiClock()
-
-
-    }
-
-
-
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {
-        Log.d(GESTURETAGBUTTON, "single confirmed")
+        Log.d(Companion.GESTURETAGBUTTON, "single confirmed")
 
         if (ApplicationState.noteRepeatActive) {
             note_repeat_btn.setBackgroundResource(R.drawable.default_pad)
@@ -459,11 +507,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     override fun onFabDoubleTap(e: MotionEvent?) {
-        Log.d(GESTURETAGBUTTON, "double  tap ")
+        // Log.d(GESTURETAGBUTTON, "double  tap ")
 
         ///Note repeat menu double tapped
         val intent = Intent(applicationContext, NoteRepeatDialogActivity::class.java)
-        startActivityForResult(intent, LOAD_SOUND_REQUEST_CODE)
+        startActivityForResult(intent, Companion.LOAD_SOUND_REQUEST_CODE)
     }
 
 
@@ -513,6 +561,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+
     fun onRecordTapped(view: View) {
 
         //start recording
@@ -546,14 +595,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     fun onSettingsTapped(view: View) {
 
         val intent = Intent(applicationContext, SettingsDialogActivity::class.java)
-        startActivityForResult(intent, SETTINGS_REQUEST_CODE)
+        startActivityForResult(intent, Companion.SETTINGS_REQUEST_CODE)
     }
 
     fun onUndoTapped(view: View) {}
 
     fun onLoadTapped(view: View) {
         val intent = Intent(applicationContext, LoadDrumSoundDialogActivity::class.java)
-        startActivityForResult(intent, LOAD_SOUND_REQUEST_CODE)
+        startActivityForResult(intent, Companion.LOAD_SOUND_REQUEST_CODE)
     }
 
 
@@ -570,23 +619,39 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         return false
     }
 
+    /**
+     * LifeCycle Events
+     */
 
-    //Volume Slider input from user --> to fragments
+    override fun onPause() {
+        super.onPause()
+        currentBarMeasure = ApplicationState.selectedBarMeasure
+        currentTempo = Bpm.getProjectTempo()
+    }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        DrumScreenHomeFragment().onProgressChanged(seekBar, progress, fromUser)
-
+    override fun onResume() {
+        super.onResume()
+        Log.d("mainActivity", "onResume is triggerd")
+        //restart the play engine if bar has changed
+        if (currentBarMeasure == null) {
+            return
+        }
+        if ((currentBarMeasure != ApplicationState.selectedBarMeasure) || (currentTempo != Bpm.getProjectTempo()) ){
+            if (ApplicationState.isPlaying) {
+                stopPlayEngine()
+                startPlayEngine()
+            }
+        }
 
     }
 
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
-        DrumScreenHomeFragment().onStartTrackingTouch(seekBar)
-        Log.d(" onStartTrackTouch", seekBar.toString())
-    }
-
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        DrumScreenHomeFragment().onStopTrackingTouch(seekBar)
-        Log.d(" onStopTrackiTouch", seekBar.toString())
+    companion object {
+        const val DARK_THEME_ENABLED_USER_PROPERTY = "UsesDarkMode"
+        const val GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
+        const val DARK_THEME_ENABLED_VALUE = "true"
+        const val DARK_THEME_DISABLED_VALUE = "false"
+        const val SETTINGS_REQUEST_CODE: Int = 200
+        const val LOAD_SOUND_REQUEST_CODE: Int = 300
     }
 
 

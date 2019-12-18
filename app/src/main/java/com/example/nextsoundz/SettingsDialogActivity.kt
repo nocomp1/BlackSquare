@@ -44,7 +44,7 @@ class SettingsDialogActivity : AppCompatActivity() {
         ///////Setting the bpm/tempo min/max values to choose
         ///////and setting the bpm/temp for the project
         tempo_value.minValue = 40
-        tempo_value.maxValue = 300
+        tempo_value.maxValue = 180
         tempo_value.value = Bpm.getProjectTempo().toInt()
 
         /// Setting our  switch state
