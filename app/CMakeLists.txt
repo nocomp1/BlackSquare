@@ -1,30 +1,29 @@
-## Sets the minimum version of CMake required to build your native library.
-## This ensures that a certain set of CMake features is available to
-## your build.
-#
-#cmake_minimum_required(VERSION 3.4.1)
-#
-#set (OBOE_DIR /Users/3006142/Desktop/oboe)
-#add_subdirectory(${OBOE_DIR} ./oboe)
-#include_directories(${OBOE_DIR}/include)
-#target_link_libraries(native-lib log oboe)
-#
-## Specifies a library name, specifies whether the library is STATIC or
-## SHARED, and provides relative paths to the source code. You can
-## define multiple libraries by adding multiple add_library() commands,
-## and CMake builds them for you. When you build your app, Gradle
-## automatically packages shared libraries with your APK.
-#
-#add_library( # Specifies the name of the library.
-#        native-lib
-#
-#        # Sets the library as a shared library.
-#        SHARED
-#
-#        # Provides a relative path to your source file(s).
-#        src/main/cpp/native-lib.cpp )
-#
-## Specifies a path to native header files.
-#include_directories(src/main/cpp/include/)
-#
-#
+
+
+cmake_minimum_required(VERSION 3.4.1)
+add_library( # Specifies the name of the library.
+        native-lib
+
+        # Sets the library as a shared library.
+        SHARED
+
+        # Provides a relative path to your source file(s).
+        src/main/cpp/native-lib.cpp )
+### INCLUDE OBOE LIBRARY ###
+
+# Set the path to the Oboe library directory
+set (OBOE_DIR /Users/3006142/Desktop/oboe)
+
+# Add the Oboe library as a subproject. Since Oboe is an out-of-tree source library we must also
+# specify a binary directory
+add_subdirectory(${OBOE_DIR} ./oboe-bin)
+
+# Include the Oboe headers and shared sample code
+include_directories(${OBOE_DIR}/include)
+
+target_link_libraries(native-lib log oboe)
+# Debug utilities
+set (DEBUG_UTILS_PATH "${OBOE_DIR}/samples/debug-utils")
+set (DEBUG_UTILS_SOURCES ${DEBUG_UTILS_PATH}/trace.cpp)
+include_directories(${DEBUG_UTILS_PATH})
+

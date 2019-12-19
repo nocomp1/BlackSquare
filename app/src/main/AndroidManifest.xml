@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.nextsoundz">
+    package="com.example.blacksquare">
 
     <uses-feature
         android:name="android.software.midi"
@@ -20,7 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".NoteRepeatDialogActivity"
+        <activity android:name="com.example.blacksquare.NoteRepeatDialogActivity"
             android:theme="@style/dialog">
             <intent-filter >
             <action android:name="android.intent.action.VIEW" />
@@ -34,7 +34,7 @@
         </activity>
 
         <service
-            android:name=".Services.FirebaseMessaging"
+            android:name="com.example.blacksquare.Services.FirebaseMessaging"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
@@ -43,15 +43,15 @@
         </service>
 
         <activity
-            android:name=".LoadDrumSoundDialogActivity"
+            android:name="com.example.blacksquare.LoadDrumSoundDialogActivity"
             android:label="@string/title_activity_load_drum_sound"
             android:theme="@style/dialog" />
         <activity
-            android:name=".SettingsDialogActivity"
+            android:name="com.example.blacksquare.SettingsDialogActivity"
             android:label="@string/title_activity_load_drum_sound"
             android:theme="@style/dialog" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.blacksquare.MainActivity"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

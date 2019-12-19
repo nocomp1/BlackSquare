@@ -33,7 +33,7 @@
 
             </LinearLayout>
 
-            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
                 android:id="@+id/note_repeat_radio_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -155,7 +155,7 @@
                 </TableRow>
 
 
-            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
 
         </LinearLayout>

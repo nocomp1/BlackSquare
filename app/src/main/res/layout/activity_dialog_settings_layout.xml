@@ -160,7 +160,7 @@
         android:id="@+id/delete"/>
 
 </LinearLayout>
-            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
                 android:id="@+id/bar_measure_radio_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -223,9 +223,9 @@
                     android:text="8"
                     android:textAlignment="center" />
             </TableRow>
-            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
-            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
                 android:id="@+id/pattern_radio_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -380,7 +380,7 @@
                 </TableRow>
 
 
-            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
 
         </LinearLayout>
@@ -420,7 +420,7 @@
             android:orientation="vertical">
 
 
-            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
                 android:id="@+id/instrument_tracks_radio_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -622,7 +622,7 @@
             </TableRow>
 
 
-            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
 
         </LinearLayout>
@@ -664,7 +664,7 @@
             android:layout_gravity="center"
             android:orientation="vertical">
 
-            <com.example.nextsoundz.Views.ToggleButtonGroupTableLayout
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
                 android:id="@+id/drum_bank_radio_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -697,7 +697,7 @@
                     android:textAlignment="center" />
 
             </TableRow>
-            </com.example.nextsoundz.Views.ToggleButtonGroupTableLayout>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
 
 
