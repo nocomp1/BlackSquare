@@ -27,11 +27,13 @@ import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.DrumPadSoundPool
+import com.example.blacksquare.Managers.SoundResManager
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
@@ -40,12 +42,9 @@ import com.example.blacksquare.Tasks.PlayEngineTask
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.messaging.FirebaseMessaging
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.System.*
+import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
@@ -53,7 +52,9 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
     PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
 
-
+    private lateinit var soundPool2: DrumPadSoundPool
+    private var uiClockSecondsCount: Long = 0
+    private var secondMilliInterval: Long = 1000
     private var mFirebaseAnalytics: FirebaseAnalytics? = null
     private lateinit var soundsViewModel: SoundsViewModel
     private lateinit var metronomeSoundPool: DrumPadSoundPool
@@ -72,14 +73,18 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     var metronomeInterval: Long? = null
     private var sound = 0
     private var currentBarMeasure: Int? = null
-    private var currentTempo: Long?=null
+    private var currentTempo: Long? = null
+    external fun stringFromJNI()
+    // external fun startEngine()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
-
+        //////Sound Pool for playback///////
+        val drumPadSoundPool = DrumPadSoundPool(this)
+        soundPool2 = drumPadSoundPool //startEngine()
+        soundPool2.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
 
         //Subscribe app to channel "all" for cloud messages
         //post to topics/app
@@ -92,7 +97,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
 
         //////// Getting and setting our project tempo///////
-        projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 100L)
+        projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 120L)
         Bpm.setProjectTempo(projectTempo)
 
         //////// Setting state of the metronome/////////
@@ -129,11 +134,28 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
 
-        //Setting up View model to communicate to our fragments
-        this.let {
-            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-        }
+//        //Setting up View model to communicate to our fragments
+//        this.let {
+//            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+//        }
+///
+//
+        // Set up our live data observers
 
+        this.let {
+            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+
+            ////Observer to communicate with the clock from main activity
+            sharedViewModel.drumPadSequenceNoteList.observe(this, Observer {
+                it?.let {
+
+                    Log.d("pad1playback", "sharedViewModel= $it")
+
+                }
+            })
+
+
+        }
 
         //Set up icon for tabs
 //        val viewDrums = layoutInflater.inflate(R.layout.home_custom_tab,null)
@@ -174,6 +196,123 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         isPhoneSetToDarkTheme()
     }
 
+    /**
+     * Pad Playback methods
+     */
+    private var pad1SequenceListIndex = 0
+    private var pad2SequenceListIndex = 0
+    private var pad3SequenceListIndex = 0
+    private var pad4SequenceListIndex = 0
+    fun pad1Playback() {
+
+        if ((ApplicationState.pad1HitList.isNotEmpty())
+
+        ) {
+            if (pad1SequenceListIndex < ApplicationState.pad1HitList.size) {
+                if (ApplicationState.pad1HitList[pad1SequenceListIndex].soundPlayTimeStamp ==
+                    ApplicationState.uiSequenceMillisecCounter
+                ) {
+                    soundPool2.startSound(
+                        ApplicationState.pad1HitList[pad1SequenceListIndex].soundId,
+                        ApplicationState.pad1LftVolume,
+                        ApplicationState.pad1RftVolume
+                    )
+                    //move to the next index
+                    pad1SequenceListIndex++
+                }
+            }
+            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
+                pad1SequenceListIndex = 0
+            }
+        }
+    }
+
+    fun pad2Playback() {
+
+        if ((ApplicationState.pad2HitList.isNotEmpty())
+        //||(pad1SequenceListIndex < ApplicationState.padSequenceList.size)
+        ) {
+            if (pad2SequenceListIndex < ApplicationState.pad2HitList.size) {
+                if (ApplicationState.pad2HitList[pad2SequenceListIndex].soundPlayTimeStamp ==
+                    ApplicationState.uiSequenceMillisecCounter
+                ) {
+
+                    soundPool2.startSound(
+                        ApplicationState.pad2HitList[pad2SequenceListIndex].soundId,
+                        ApplicationState.pad2LftVolume,
+                        ApplicationState.pad2RftVolume
+                    )
+                    //move to the next index
+                    pad2SequenceListIndex++
+                }
+            }
+
+            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
+                pad2SequenceListIndex = 0
+            }
+
+        }
+    }
+    fun pad3Playback() {
+
+        if ((ApplicationState.pad3HitList.isNotEmpty())
+        //||(pad1SequenceListIndex < ApplicationState.padSequenceList.size)
+        ) {
+            if (pad3SequenceListIndex < ApplicationState.pad3HitList.size) {
+                if (ApplicationState.pad3HitList[pad3SequenceListIndex].soundPlayTimeStamp ==
+                    ApplicationState.uiSequenceMillisecCounter
+                ) {
+
+                    soundPool2.startSound(
+                        ApplicationState.pad3HitList[pad3SequenceListIndex].soundId,
+                        ApplicationState.pad3LftVolume,
+                        ApplicationState.pad3RftVolume
+                    )
+                    //move to the next index
+                    pad3SequenceListIndex++
+                }
+            }
+
+            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
+                pad3SequenceListIndex = 0
+            }
+
+        }
+    }
+    fun pad4Playback() {
+
+        if ((ApplicationState.pad4HitList.isNotEmpty())
+        ) {
+            if (pad4SequenceListIndex < ApplicationState.pad4HitList.size) {
+                if (ApplicationState.pad4HitList[pad4SequenceListIndex].soundPlayTimeStamp ==
+                    ApplicationState.uiSequenceMillisecCounter
+                ) {
+
+                    soundPool2.startSound(
+                        ApplicationState.pad4HitList[pad4SequenceListIndex].soundId,
+                        ApplicationState.pad4LftVolume,
+                        ApplicationState.pad4RftVolume
+                    )
+                    //move to the next index
+                    pad4SequenceListIndex++
+                }
+            }
+
+            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
+                pad4SequenceListIndex = 0
+            }
+
+        }
+    }
+
+
+
+
+
+
+
+
+
     external fun add(a: Int, b: Int): Int
 
     private fun isPhoneSetToDarkTheme() {
@@ -181,7 +320,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         val mode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
         when (mode) {
             Configuration.UI_MODE_NIGHT_YES -> {
-                Toast.makeText(this, stringFromJNI().toString(), Toast.LENGTH_SHORT).show()
+              //  Toast.makeText(this, stringFromJNI().toString(), Toast.LENGTH_SHORT).show()
                 val bundle = Bundle()
                 bundle.putInt("dark_theme_enabled_count", 1)
                 mFirebaseAnalytics?.logEvent("app_dark_theme_is_enabled", bundle)
@@ -221,17 +360,24 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         sound = soundPool.load(this, Metronome.getSoundId(), 1)
     }
 
-    private fun playMetronomeSound(millisecond: Long) {
+    private fun playMetronomeSound() {
+
 
         if (Metronome.isActive()) {
-            if ((millisecond == metronomeInterval)||(millisecond == 0L) ) {
+            if ((ApplicationState.metronomeMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.metronomeMillisecCounter == 0L)) {
+
+                //Play the sound
                 soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
 
-                //always updating progress every beat
-                updateProgressBar()
-                metronomeInterval = millisecond + Bpm.getBeatPerMilliSeconds()
+                //reset the counter
+                ApplicationState.metronomeMillisecCounter = 0L
+
             }
-        }else{ metronomeInterval = millisecond + Bpm.getBeatPerMilliSeconds()}
+        } else {
+            ApplicationState.metronomeMillisecCounter = 0L
+        }
+
+        ApplicationState.metronomeMillisecCounter++
     }
 
     private fun setUpMetronomeSoundPool() {
@@ -246,119 +392,167 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     /**
-     * Main progress bar
+     * Main progress bar --- This is called every millisecond and updated every beat
      */
+
+    override fun updateProgressBar() {
+
+
+        //increase every beat
+        if ((ApplicationState.uiProgressBarMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.uiProgressBarMillisecCounter == 0L)) {
+
+            var maxMetronomeIncrement: Int?
+            Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
+
+            when (ApplicationState.selectedBarMeasure) {
+
+                Definitions.oneBar -> {
+                    maxMetronomeIncrement = 25
+                    fabProgress.max = 100
+                    if (fabProgress.progress <= 100) {
+                        if (fabProgress.progress == 100) {
+                            fabProgress.progress = 0
+                        }
+                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                        Log.d("xxx", "progress ${fabProgress.progress}")
+                    }
+                }
+
+                Definitions.twoBars -> {
+                    maxMetronomeIncrement = 10
+                    fabProgress.max = 80
+                    if (fabProgress.progress <= 80) {
+                        if (fabProgress.progress == 80) {
+                            fabProgress.progress = 0
+                        }
+                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                        Log.d("xxx", "progress ${fabProgress.progress}")
+                    }
+                }
+
+                Definitions.fourBars -> {
+                    maxMetronomeIncrement = 10
+                    fabProgress.max = 160
+                    if (fabProgress.progress <= 160) {
+                        if (fabProgress.progress == 160) {
+                            fabProgress.progress = 0
+                        }
+                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                        Log.d("xxx", "progress ${fabProgress.progress}")
+                    }
+
+
+                }
+                Definitions.eightBars -> {
+                    maxMetronomeIncrement = 10
+                    fabProgress.max = 320
+                    if (fabProgress.progress <= 320) {
+                        if (fabProgress.progress == 320) {
+                            fabProgress.progress = 0
+                        }
+                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                        Log.d("xxx", "progress ${fabProgress.progress}")
+                    }
+
+                }
+
+
+            }
+            //Reset counter
+            ApplicationState.uiProgressBarMillisecCounter = 0L
+        }
+
+        ApplicationState.uiProgressBarMillisecCounter++
+
+    }
 
     fun resetProgressBar() {
         fabProgress.progress = 0
     }
 
-    override fun updateProgressBar() {
-        var maxMetronomeIncrement: Int?
-        Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
-
-        when (ApplicationState.selectedBarMeasure) {
-
-            Definitions.oneBar -> {
-                maxMetronomeIncrement = 25
-                fabProgress.max = 100
-                if (fabProgress.progress <= 100) {
-                    if (fabProgress.progress == 100) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-            }
-
-            Definitions.twoBars -> {
-                maxMetronomeIncrement = 10
-                fabProgress.max = 80
-                if (fabProgress.progress <= 80) {
-                    if (fabProgress.progress == 80) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-            }
-
-            Definitions.fourBars -> {
-                maxMetronomeIncrement = 10
-                fabProgress.max = 160
-                if (fabProgress.progress <= 160) {
-                    if (fabProgress.progress == 160) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-
-
-            }
-            Definitions.eightBars -> {
-                maxMetronomeIncrement = 10
-                fabProgress.max = 320
-                if (fabProgress.progress <= 320) {
-                    if (fabProgress.progress == 320) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-
-            }
-
-
-        }
-
-
-    }
-
     /**
      * UICLOCK
      */
-    private fun updateUiClockEveryMilliSec(milliseconds: Long) {
+    override fun updateUiClockEveryMilliSec() {
 
-        if ((milliPerBeat == Bpm.getBeatPerMilliSeconds()) || (milliPerBeat == 0L) ){
+
+        //For sequence time reached reset counter
+        if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
+
+            // Log.d("sequencetime","sequencetime= ${ApplicationState.uiSequenceMillisecCounter}")
+            // Log.d(" sequenceTime", Bpm.getPatternTimeInMilliSecs().toString())
+            ApplicationState.uiSequenceMillisecCounter = 0
+        }
+
+
+        // start our clock and beat count at 1 and increment from there
+        if ((ApplicationState.uiClockMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.uiClockMillisecCounter == 0L)) {
             beatCount++
-            milliPerBeat = 0L
-
-
+            ApplicationState.uiClockMillisecCounter = 0L
         }
+
+
         if (beatCount > (ApplicationState.selectedBarMeasure * 4)) {
+            //resetting the beat count
             beatCount = 1
-        }
-        milliPerBeat++
 
-        val millis = String.format("%04d", milliPerBeat)
+            //always updating progress every beat
+            updateProgressBar()
+
+
+        }
+
+
+        val seconds = String.format("%02d", uiClockSecondsCount)
+        val milliSecPerBeat = String.format("%04d", ApplicationState.uiClockMillisecCounter)
         val beats = String.format("%02d", beatCount)
         val uIClock = SpannableStringBuilder(beats)
         uIClock.setSpan(
-            ForegroundColorSpan(ContextCompat.getColor(this,R.color.colorAccent)),
+            ForegroundColorSpan(ContextCompat.getColor(this, R.color.colorAccent)),
             0, 2,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
 
         uIClock.append(" : ")
-        uIClock.append(millis)
+        //uIClock.append(oneHundmillis)
+        uIClock.append(milliSecPerBeat)
 
 
-        millisec_clock.text = uIClock
+        //post to ui thread
+        millisec_clock.post {
+            millisec_clock.text = uIClock
+        }
 
+        //update counters
+        ApplicationState.uiClockMillisecCounter++
+        ApplicationState.uiSequenceMillisecCounter++
+
+        //call these functions every millisecond
+        playMetronomeSound()
+        updateProgressBar()
+        //soundsViewModel.drumPadSequenceNoteList.postValue(ApplicationState.uiSequenceMillisecCounter)
+        pad1Playback()
+        pad2Playback()
+        pad3Playback()
+        pad4Playback()
     }
 
     private fun resetUiClock() {
         beatCount = 0
-        milliPerBeat = 0L
+        ApplicationState.uiClockMillisecCounter = 0L
         val uIClock = SpannableStringBuilder("00")
         uIClock.setSpan(
-            ForegroundColorSpan(ContextCompat.getColor(this,R.color.colorAccent)),
+            ForegroundColorSpan(ContextCompat.getColor(this, R.color.colorAccent)),
             0, 2,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
         uIClock.append(" : ")
         uIClock.append("0000")
 
-        millisec_clock.text = uIClock
+        //post to ui thread
+        millisec_clock.post {
+            millisec_clock.text = uIClock
+        }
     }
 
     /**
@@ -374,12 +568,16 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             popupMenu.setOnMenuItemClickListener {
 
-               // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
-                if (it.title == getString(R.string.volume)){ seekbar_slider_menu_toggle.text = "V" }
-                if (it.title == getString(R.string.pan)){ seekbar_slider_menu_toggle.text = "P" }
-                if (it.title == getString(R.string.pitch)){ seekbar_slider_menu_toggle.text = "Pi" }
-
-
+                // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
+                if (it.title == getString(R.string.volume)) {
+                    seekbar_slider_menu_toggle.text = "V"
+                }
+                if (it.title == getString(R.string.pan)) {
+                    seekbar_slider_menu_toggle.text = "P"
+                }
+                if (it.title == getString(R.string.pitch)) {
+                    seekbar_slider_menu_toggle.text = "Pi"
+                }
 
                 true
             }
@@ -429,11 +627,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
                 TODO("VERSION.SDK_INT < M")
             }
-
-
         }
-
-
     }
 
     /**
@@ -441,29 +635,43 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      */
 
     fun startPlayEngine() {
+//
+//        engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
+//            .subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe {
+//                playMetronomeSound(it)
+//                updateUiClockEveryMilliSec(it)
+//            }
 
-        engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                playMetronomeSound(it)
-                updateUiClockEveryMilliSec(it)
-            }
+
+        playEngineExecutor = Executors.newScheduledThreadPool(1)
+        playEngineExecutor.scheduleAtFixedRate(playEngineTask, 0, 1000000, TimeUnit.NANOSECONDS)
 
     }
 
 
     fun stopPlayEngine() {
 
-        engineClock!!.dispose()
+        playEngineExecutor.shutdownNow()
+
+
+        //  engineClock!!.dispose()
         //Reset the metronome interval
-        metronomeInterval = Bpm.getBeatPerMilliSeconds()
+        // metronomeInterval = Bpm.getBeatPerMilliSeconds()
 
         //reset uiClock
         resetUiClock()
         //reset progress bar
         resetProgressBar()
-
+        //reset counters
+        ApplicationState.metronomeMillisecCounter = 0L
+        ApplicationState.uiProgressBarMillisecCounter = 0L
+        ApplicationState.uiSequenceMillisecCounter = 0L
+        pad1SequenceListIndex = 0
+        pad2SequenceListIndex = 0
+        pad3SequenceListIndex = 0
+        pad4SequenceListIndex = 0
     }
 
     /**
@@ -608,7 +816,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         startActivityForResult(intent, Companion.SETTINGS_REQUEST_CODE)
     }
 
-    fun onUndoTapped(view: View) {}
+    fun onUndoTapped(view: View) {
+        ApplicationState.pad1HitList.clear()
+        ApplicationState.pad2HitList.clear()
+        ApplicationState.pad3HitList.clear()
+        ApplicationState.pad4HitList.clear()
+       // ApplicationState.multiPadSequenceList = null
+    }
 
     fun onLoadTapped(view: View) {
         val intent = Intent(applicationContext, LoadDrumSoundDialogActivity::class.java)
@@ -646,22 +860,26 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         if (currentBarMeasure == null) {
             return
         }
-        if ((currentBarMeasure != ApplicationState.selectedBarMeasure) || (currentTempo != Bpm.getProjectTempo()) ){
+        if ((currentBarMeasure != ApplicationState.selectedBarMeasure)
+        //|| (currentTempo != Bpm.getProjectTempo())
+        ) {
             if (ApplicationState.isPlaying) {
                 stopPlayEngine()
                 startPlayEngine()
             }
         }
 
-        if (!Metronome.isActive()){
+        if (!Metronome.isActive()) {
             if (ApplicationState.isPlaying) {
-                resetProgressBar()
+                //resetProgressBar()
             }
         }
 
     }
 
     companion object {
+
+
         const val DARK_THEME_ENABLED_USER_PROPERTY = "UsesDarkMode"
         const val GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
         const val DARK_THEME_ENABLED_VALUE = "true"
@@ -670,14 +888,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         const val LOAD_SOUND_REQUEST_CODE: Int = 300
 
         init {
-            System.loadLibrary("native-lib")
+           // System.loadLibrary("native-lib")
         }
 
 
     }
-
-
-    external fun stringFromJNI()
-
 }
+
+
+
 

@@ -7,13 +7,11 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
 import com.example.blacksquare.Listeners.RepeatListener
@@ -21,6 +19,7 @@ import com.example.blacksquare.LoadDrumSoundDialogActivity
 import com.example.blacksquare.Managers.DrumPadSoundPool
 import com.example.blacksquare.Managers.SoundResManager
 import com.example.blacksquare.Models.PadClickListenerModel
+import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.R
 import com.example.blacksquare.SettingsDialogActivity
 import com.example.blacksquare.Singleton.ApplicationState
@@ -41,7 +40,9 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     private var LOAD_REQUEST_CODE: Int = 100
     private var SETTINGS_REQUEST_CODE: Int = 200
     private val padList = mutableListOf<PadClickListenerModel>()
+   // private val padSequenceList = arrayOf<ArrayList<PadSequenceTimeStamp>>()
     private lateinit var volumeSeekBar: SeekBar
+    private lateinit var soundsViewModel: SoundsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +55,12 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        //Setting up View model to communicate to our fragments
+        this.let {
+            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+        }
+
 
         sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE) ?: return
 
@@ -78,18 +85,20 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
         ///Set up our live data observers
 
-        activity?.let {
-            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-
-            ////Observer for SoundPool
-            sharedViewModel.drumPadSoundPool.observe(this, Observer {
-                it?.let {
-
-                }
-            })
-
-
-        }
+//        activity?.let {
+//            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+//
+//            ////Observer to communicate with the clock from main activity
+//            sharedViewModel.drumPadSequenceNoteList.observe(this, Observer {
+//                it?.let {
+//                    pad1Playback()
+//                    Log.d("pad1playback","sharedViewModel= $it")
+//
+//                }
+//            })
+//
+//
+//        }
     }
 
     private fun loadAsoundKit(soundKitFilesIds: Map<Int, Int>) {
@@ -275,7 +284,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                 playSound(
                     soundId,
                     padLftVolume,
-                    padRtVolume
+                    padRtVolume,
+                    padId
                 )
 
             }
@@ -290,7 +300,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                 playSound(
                     soundLoadedMap[getString(R.string.soundID)],
                     padLftVolume,
-                    padRtVolume
+                    padRtVolume,
+                    padId
                 )
             }
 
@@ -300,14 +311,37 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     }
 
-    private fun playSound(soundId: Int?, padLftVolume: Float, padRftVolume: Float) {
+
+    private fun playSound(soundId: Int?, padLftVolume: Float, padRftVolume: Float, padId: Int) {
+
         soundPool.startSound(
             soundId,
             padLftVolume,
             padRftVolume
         )
-        var soundPlayTimeStamp = SystemClock.uptimeMillis()
-        Log.d("timestamp", "time we pressed the pad= $soundPlayTimeStamp")
+
+        //If we are recording log timestamp of note
+        if ((ApplicationState.isRecording) && (ApplicationState.isPlaying)) {
+
+            var soundPlayTimeStamp = ApplicationState.uiSequenceMillisecCounter
+            Log.d("timestamp", "time we pressed the pad= ${soundPlayTimeStamp} on pad $padId")
+           // ApplicationState.padSequenceList = arrayListOf()
+
+
+
+            val index = padId-1
+
+            when (padId) {
+
+                1 -> {ApplicationState.pad1HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp))}
+                2 -> {ApplicationState.pad2HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp)) }
+                3 -> {ApplicationState.pad3HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp)) }
+                4 -> {ApplicationState.pad4HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp)) }
+
+            }
+        }
+
+
     }
 
     private fun setPadSelected(padId: Int, padLftVolume: Float, padRftVolume: Float): Boolean {

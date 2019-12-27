@@ -29,7 +29,7 @@ public class RepeatListener implements OnTouchListener {
         public void run() {
             if(touchedView.isEnabled()) {
                 handler.postDelayed(this, normalInterval);
-                clickListener.onClick(touchedView);
+                //clickListener.onClick(touchedView);
             } else {
                 // if the view was disabled by the clickListener, remove the callback
                 handler.removeCallbacks(handlerRunnable);
@@ -71,7 +71,7 @@ public class RepeatListener implements OnTouchListener {
                 handler.removeCallbacks(handlerRunnable);
                 touchedView.setPressed(false);
                 touchedView = null;
-                return true;
+                return false;
         }
 
         return false;

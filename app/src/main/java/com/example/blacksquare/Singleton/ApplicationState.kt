@@ -1,5 +1,7 @@
 package com.example.blacksquare.Singleton
 
+import com.example.blacksquare.Objects.PadSequenceTimeStamp
+
 class ApplicationState {
 
 companion object {
@@ -76,8 +78,26 @@ companion object {
 
     var selectedBarMeasure = 1
 
+    /**
+     *Millisecond counters
+     */
+    var metronomeMillisecCounter : Long = 0L
+    var uiClockMillisecCounter : Long = 0L
+    var uiSequenceMillisecCounter : Long = 0L
+    var uiProgressBarMillisecCounter : Long = 0L
 
 
+    /**
+     * Arraylist of notes triggered for each pad
+     */
+    val pad1HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
+    val pad2HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
+    val pad3HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
+    val pad4HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
+    /**
+     * Arraylist of all pads with list of triggered for each pad
+     */
+    var multiPadSequenceList : Map<Int,ArrayList<PadSequenceTimeStamp>>?=null
 
 //fun setSelectedBar(bar : Int){
 //
