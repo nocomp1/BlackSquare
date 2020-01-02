@@ -1,5 +1,6 @@
 package com.example.blacksquare.Singleton
 
+import android.util.ArrayMap
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 
 class ApplicationState {
@@ -7,6 +8,7 @@ class ApplicationState {
 companion object {
 
 
+    var undoLastSequence: Boolean = false
     var isMillisecondClockPlaying: Boolean = false
     var noteRepeatHasChanged: Boolean = false
     var tempoHasChanged: Boolean = false
@@ -81,6 +83,7 @@ companion object {
     /**
      *Millisecond counters
      */
+
     var metronomeMillisecCounter : Long = 0L
     var uiClockMillisecCounter : Long = 0L
     var uiSequenceMillisecCounter : Long = 0L
@@ -90,50 +93,20 @@ companion object {
     /**
      * Arraylist of notes triggered for each pad
      */
-    val pad1HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
-    val pad2HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
-    val pad3HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
-    val pad4HitList:ArrayList<PadSequenceTimeStamp> = arrayListOf()
+    var padHitTimeStampArrayList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
+    var pad1HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
+    var pad2HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
+    var pad3HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
+    var pad4HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
+
     /**
-     * Arraylist of all pads with list of triggered for each pad
+     * Sequence Arraylist for each pad for undo action
      */
-    var multiPadSequenceList : Map<Int,ArrayList<PadSequenceTimeStamp>>?=null
+    var padHitUndoArrayList : ArrayList<ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>>? = ArrayList()
+    var undoPad1HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
+    var undoPad2HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
+    var undoPad3HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
+    var undoPad4HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
 
-//fun setSelectedBar(bar : Int){
-//
-//     selectedBarMeasure = bar
-//}
-//fun getSelectedBar (): Int{
-//
-//    return selectedBarMeasure
-//}
-
-
-//
-//
-//
-//    fun setProjectMeasureCount(bar : Int,patternNumber : Int){
-//
-//        projectMeasure = bar
-//
-//        when (patternNumber){
-//
-//            1 ->  pattern1Measure = bar
-//            2 ->  pattern2Measure = bar
-//            3 ->  pattern3Measure = bar
-//            4 ->  pattern4Measure = bar
-//            5 ->  pattern5Measure = bar
-//            6 ->  pattern6Measure = bar
-//            7 ->  pattern7Measure = bar
-//            8 ->  pattern8Measure = bar
-//            9 ->  pattern9Measure = bar
-//            10 ->  pattern10Measure = bar
-//            11 ->  pattern11Measure = bar
-//            12 ->  pattern12Measure = bar
-//
-//        }
-//
-//
-//    }
 }
 }

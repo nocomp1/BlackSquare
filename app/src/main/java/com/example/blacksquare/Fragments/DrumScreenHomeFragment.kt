@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.util.ArrayMap
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -40,7 +41,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     private var LOAD_REQUEST_CODE: Int = 100
     private var SETTINGS_REQUEST_CODE: Int = 200
     private val padList = mutableListOf<PadClickListenerModel>()
-   // private val padSequenceList = arrayOf<ArrayList<PadSequenceTimeStamp>>()
+    // private val padSequenceList = arrayOf<ArrayList<PadSequenceTimeStamp>>()
     private lateinit var volumeSeekBar: SeekBar
     private lateinit var soundsViewModel: SoundsViewModel
 
@@ -50,7 +51,11 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         val pager: ViewPager? = viewPager
         pager?.offscreenPageLimit = 5
 
-
+        //Initializing the timestamp arrays to stop a weird repeating when initialized when triggered
+        ApplicationState.pad1HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
+        ApplicationState.pad2HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
+        ApplicationState.pad3HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
+        ApplicationState.pad4HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -82,6 +87,22 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         //Load Default kit
         loadAsoundKit(SoundResManager.getDefaultKitFilesIds())
 
+
+        //List of pad time stamps
+        padArrayMapArrayList.add(pad1HitMap)
+        padArrayMapArrayList.add(pad2HitMap)
+        padArrayMapArrayList.add(pad3HitMap)
+        padArrayMapArrayList.add(pad4HitMap)
+
+        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad1Index, pad1HitMap)
+        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad2Index, pad1HitMap)
+        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad3Index, pad1HitMap)
+        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad4Index, pad1HitMap)
+
+//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
+//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
+//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
+//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
 
         ///Set up our live data observers
 
@@ -285,7 +306,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                     soundId,
                     padLftVolume,
                     padRtVolume,
-                    padId
+                    padIndex
                 )
 
             }
@@ -312,7 +333,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     }
 
 
-    private fun playSound(soundId: Int?, padLftVolume: Float, padRftVolume: Float, padId: Int) {
+    private fun playSound(soundId: Int?, padLftVolume: Float, padRftVolume: Float, padIndex: Int) {
 
         soundPool.startSound(
             soundId,
@@ -323,24 +344,87 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         //If we are recording log timestamp of note
         if ((ApplicationState.isRecording) && (ApplicationState.isPlaying)) {
 
-            var soundPlayTimeStamp = ApplicationState.uiSequenceMillisecCounter
-            Log.d("timestamp", "time we pressed the pad= ${soundPlayTimeStamp} on pad $padId")
-           // ApplicationState.padSequenceList = arrayListOf()
+            val soundPlayTimeStamp = ApplicationState.uiSequenceMillisecCounter
+            // Log.d("timestamp", "time we pressed the pad= ${soundPlayTimeStamp} on pad $padId")
+            // ApplicationState.padSequenceList = arrayListOf()
+
+            addTimeStampToList(padIndex, soundId, soundPlayTimeStamp)
+//            when (padIndex) {
+//
+//                1 -> {
+//
+//
+//                   // ApplicationState.pad1HitTimeStampList?.put(soundPlayTimeStamp , PadSequenceTimeStamp(soundId, padId, soundPlayTimeStamp))
+//
+//                }
+//                2 -> {ApplicationState.pad2HitTimeStampList?.put(soundPlayTimeStamp , PadSequenceTimeStamp(soundId, padId, soundPlayTimeStamp))}
+//                3 -> {ApplicationState.pad3HitTimeStampList?.put(soundPlayTimeStamp , PadSequenceTimeStamp(soundId, padId, soundPlayTimeStamp))}
+//                4 -> {ApplicationState.pad4HitTimeStampList?.put(soundPlayTimeStamp , PadSequenceTimeStamp(soundId, padId, soundPlayTimeStamp))}
+//
+//            }
+        }
+
+    }
+
+    val padArrayMapArrayList = arrayListOf<ArrayMap<Long, PadSequenceTimeStamp>>()
+    val pad1HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+    val pad2HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+    val pad3HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+    val pad4HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
 
 
+    private fun addTimeStampToList(
+        padIndex: Int,
+        soundId: Int?,
+        soundPlayTimeStamp: Long
+    ) {
 
-            val index = padId-1
 
-            when (padId) {
+        val numberOfPads = padArrayMapArrayList.size
+        var padHitIndex = 0
 
-                1 -> {ApplicationState.pad1HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp))}
-                2 -> {ApplicationState.pad2HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp)) }
-                3 -> {ApplicationState.pad3HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp)) }
-                4 -> {ApplicationState.pad4HitList.add(PadSequenceTimeStamp(soundId, padLftVolume, padRftVolume, padId, soundPlayTimeStamp)) }
+        //Make sure we have an equal amount of pads inside both array list
+        if (ApplicationState.padHitTimeStampArrayList!!.size.equals(numberOfPads)) {
+           //Loop through and set the array map to the corresponding pad index
+            while (padHitIndex < numberOfPads) {
+
+                if (padHitIndex.equals(padIndex)) {
+
+                    //get the pad
+                    val pad = padArrayMapArrayList.get(padHitIndex)
+                    //log the time stamp for that pad to the array map
+                    pad.put(
+                        soundPlayTimeStamp,
+                        PadSequenceTimeStamp(soundId, padIndex, soundPlayTimeStamp)
+                    )
+                    //add the array map to that pad index in the pad array list
+                    ApplicationState.padHitTimeStampArrayList!!.set(padHitIndex, pad)
+
+                    Log.d(
+                        "timestamp",
+                        "number hits for first pad = ${ApplicationState.padHitTimeStampArrayList!![padHitIndex].size} "
+                    )
+
+                } else {
+
+                    //Get the array map and fill dummy data to keep index inline for pads not triggered
+                    val pad = padArrayMapArrayList.get(padHitIndex)
+                    pad.put(-1, PadSequenceTimeStamp(-1, -1, -1))
+
+                    ApplicationState.padHitTimeStampArrayList!!.set(padHitIndex, pad)
+                    Log.d(
+                        "timestamp",
+                        "dummy data timestamp = ${ApplicationState.padHitTimeStampArrayList!![padHitIndex].size} "
+                    )
+
+                }
+
+                padHitIndex++
+
 
             }
         }
-
+        Log.d("timestamp", "number of pads = ${ApplicationState.padHitTimeStampArrayList!!.size} ")
 
     }
 
