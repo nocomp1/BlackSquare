@@ -7,7 +7,11 @@ class ApplicationState {
 
 companion object {
 
-
+    /**
+     *
+     * Application boolean flags
+     */
+    var drumNoteHasBeenRecorded: Boolean=false
     var undoLastSequence: Boolean = false
     var isMillisecondClockPlaying: Boolean = false
     var noteRepeatHasChanged: Boolean = false
@@ -88,12 +92,12 @@ companion object {
     var uiClockMillisecCounter : Long = 0L
     var uiSequenceMillisecCounter : Long = 0L
     var uiProgressBarMillisecCounter : Long = 0L
-
+    var millisecSequenceIndexCunter = 0L
 
     /**
      * Arraylist of notes triggered for each pad
      */
-    var padHitTimeStampArrayList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
+    var padHitSequenceArrayList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
     var pad1HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
     var pad2HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
     var pad3HitTimeStampList:ArrayMap<Long,PadSequenceTimeStamp>? = ArrayMap()
@@ -102,7 +106,7 @@ companion object {
     /**
      * Sequence Arraylist for each pad for undo action
      */
-    var padHitUndoArrayList : ArrayList<ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>>? = ArrayList()
+    var padHitUndoSequenceList : ArrayList<ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>>? = ArrayList()
     var undoPad1HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
     var undoPad2HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
     var undoPad3HitTimeStampList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()

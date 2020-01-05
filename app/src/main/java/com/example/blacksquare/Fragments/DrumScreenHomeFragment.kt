@@ -45,7 +45,20 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     private lateinit var volumeSeekBar: SeekBar
     private lateinit var soundsViewModel: SoundsViewModel
 
+    //List of pad time stamps
+    var pad1HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+    val pad2HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+    val pad3HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+    val pad4HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+
+    init {
+
+
+
+
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         val pager: ViewPager? = viewPager
@@ -56,6 +69,11 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         ApplicationState.pad2HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
         ApplicationState.pad3HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
         ApplicationState.pad4HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
+
+
+
+
+
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -88,21 +106,24 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         loadAsoundKit(SoundResManager.getDefaultKitFilesIds())
 
 
-        //List of pad time stamps
-        padArrayMapArrayList.add(pad1HitMap)
-        padArrayMapArrayList.add(pad2HitMap)
-        padArrayMapArrayList.add(pad3HitMap)
-        padArrayMapArrayList.add(pad4HitMap)
 
-        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad1Index, pad1HitMap)
-        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad2Index, pad1HitMap)
-        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad3Index, pad1HitMap)
-        ApplicationState.padHitTimeStampArrayList!!.add(Definitions.pad4Index, pad1HitMap)
+        padArrayMapList.add(pad1HitMap)
+        padArrayMapList.add(pad2HitMap)
+        padArrayMapList.add(pad3HitMap)
+        padArrayMapList.add(pad4HitMap)
 
-//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
-//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
-//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
-//        ApplicationState.padHitUndoArrayList!!.add(padArrayMapArrayList)
+
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad1Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad2Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad3Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad4Index, pad1HitMap)
+
+
+
+//        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
+//        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
+//        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
+//        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
 
         ///Set up our live data observers
 
@@ -366,55 +387,58 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     }
 
-    val padArrayMapArrayList = arrayListOf<ArrayMap<Long, PadSequenceTimeStamp>>()
-    val pad1HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
-    val pad2HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
-    val pad3HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
-    val pad4HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
 
 
+
+companion object{
+
+    val padArrayMapList = arrayListOf<ArrayMap<Long, PadSequenceTimeStamp>>()
+}
+    /**
+     * The time stamp sequence list is always going to have at least size of 1(dummy data or actual time stamp)
+     */
     private fun addTimeStampToList(
         padIndex: Int,
         soundId: Int?,
         soundPlayTimeStamp: Long
     ) {
 
+        val numberOfPads = padArrayMapList.size
 
-        val numberOfPads = padArrayMapArrayList.size
-        var padHitIndex = 0
 
         //Make sure we have an equal amount of pads inside both array list
-        if (ApplicationState.padHitTimeStampArrayList!!.size.equals(numberOfPads)) {
-           //Loop through and set the array map to the corresponding pad index
+        if (ApplicationState.padHitSequenceArrayList!!.size.equals(numberOfPads)) {
+
+            //Loop through and set the array map to the corresponding pad index
+            var padHitIndex = 0
             while (padHitIndex < numberOfPads) {
 
                 if (padHitIndex.equals(padIndex)) {
 
                     //get the pad
-                    val pad = padArrayMapArrayList.get(padHitIndex)
+                    val pad = padArrayMapList[padHitIndex]
                     //log the time stamp for that pad to the array map
-                    pad.put(
-                        soundPlayTimeStamp,
+                    pad[soundPlayTimeStamp] =
                         PadSequenceTimeStamp(soundId, padIndex, soundPlayTimeStamp)
-                    )
                     //add the array map to that pad index in the pad array list
-                    ApplicationState.padHitTimeStampArrayList!!.set(padHitIndex, pad)
+                    ApplicationState.padHitSequenceArrayList!![padHitIndex] = pad
+
 
                     Log.d(
                         "timestamp",
-                        "number hits for first pad = ${ApplicationState.padHitTimeStampArrayList!![padHitIndex].size} "
+                        "number hits for first pad = ${ApplicationState.padHitSequenceArrayList!![padHitIndex].size} "
                     )
 
                 } else {
 
                     //Get the array map and fill dummy data to keep index inline for pads not triggered
-                    val pad = padArrayMapArrayList.get(padHitIndex)
-                    pad.put(-1, PadSequenceTimeStamp(-1, -1, -1))
+                    val pad = padArrayMapList.get(padHitIndex)
+                    pad.put(null, PadSequenceTimeStamp(null, padHitIndex, null))
 
-                    ApplicationState.padHitTimeStampArrayList!!.set(padHitIndex, pad)
+                    ApplicationState.padHitSequenceArrayList!![padHitIndex] = pad
                     Log.d(
                         "timestamp",
-                        "dummy data timestamp = ${ApplicationState.padHitTimeStampArrayList!![padHitIndex].size} "
+                        "dummy data timestamp = ${ApplicationState.padHitSequenceArrayList!![padHitIndex].size} "
                     )
 
                 }
@@ -424,7 +448,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
             }
         }
-        Log.d("timestamp", "number of pads = ${ApplicationState.padHitTimeStampArrayList!!.size} ")
+        Log.d("timestamp", "number of pads = ${ApplicationState.padHitSequenceArrayList!!.size} ")
+        ApplicationState.drumNoteHasBeenRecorded=true
 
     }
 

@@ -35,9 +35,8 @@ import androidx.lifecycle.ViewModelProviders
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
+import com.example.blacksquare.Managers.DrumPadPlayBack
 import com.example.blacksquare.Managers.DrumPadSoundPool
-import com.example.blacksquare.Managers.SoundResManager
-import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
@@ -79,16 +78,25 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var currentBarMeasure: Int? = null
     private var currentTempo: Long? = null
     external fun stringFromJNI()
+    lateinit var padPlayback1 :DrumPadPlayBack
+    lateinit var padPlayback2 :DrumPadPlayBack
+    lateinit var padPlayback3 :DrumPadPlayBack
+    lateinit var padPlayback4 :DrumPadPlayBack
     // external fun startEngine()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //////Sound Pool for playback///////
-        val drumPadSoundPool = DrumPadSoundPool(this)
-        soundPool2 = drumPadSoundPool //startEngine()
-        soundPool2.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
+//        //////Sound Pool for playback///////
+//        val drumPadSoundPool = DrumPadSoundPool(this)
+//        soundPool2 = drumPadSoundPool //startEngine()
+//        soundPool2.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
+
+        padPlayback1 =DrumPadPlayBack(this)
+        padPlayback2 =DrumPadPlayBack(this)
+        padPlayback3 =DrumPadPlayBack(this)
+        padPlayback4 =DrumPadPlayBack(this)
 
         //Subscribe app to channel "all" for cloud messages
         //post to topics/app
@@ -207,14 +215,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var pad2UndoListIndex = 0
     private var pad3UndoListIndex = 0
     private var pad4UndoListIndex = 0
-    private var padSequenceIndex = 0L
+    private var millisecSequenceIndex = 0L
     private var pad2SequenceListIndex = 0L
     private var pad3SequenceListIndex = 0L
     private var pad4SequenceListIndex = 0L
 
 
     fun onUndoTapped(view: View) {
-        if (ApplicationState.pad1HitTimeStampList!!.isNotEmpty()) {
+        if (DrumPadPlayBack.padHitUndoSequenceList!!.size != 0) {
 
             lateinit var dialog: AlertDialog
 
@@ -259,288 +267,67 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     private fun undoLastSequence() {
 
+        if (DrumPadPlayBack.padHitUndoSequenceList!!.size != 0) {
+            //loop through all pads
+            var padIndexCounter1 = 0
+            while (padIndexCounter1 < ApplicationState.padHitSequenceArrayList!!.size) {
 
-        //Only subtract the index if its greater than zero
-        if ((pad1UndoListIndexPointer > 0)) {
-
-
-            //remove unwanted pattern from undo list
-            ApplicationState.undoPad1HitTimeStampList!!.removeAt(pad1UndoListIndexPointer)
-
-
-            //Move our index pointer back one in the undo list
-            pad1UndoListIndexPointer--
-
-
-            //copy the pattern in the undo list
-            val copy = ArrayMap(ApplicationState.undoPad1HitTimeStampList!![pad1UndoListIndexPointer])
-            //clear the original list
-            ApplicationState.pad1HitTimeStampList!!.clear()
-            //assign original list to newly pattern copied from undo list
-            ApplicationState.pad1HitTimeStampList = copy
+                if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
+                    //remove last pattern
+                    DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].removeAt(
+                        DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].size - 1
+                    )
+                    DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].trimToSize()
 
 
+                    //get the last pattern
+                    val previousPattern =
+                        ArrayMap(DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].last())
 
-            Log.d(
-                "undoff",
-                "undo size ${ApplicationState.undoPad1HitTimeStampList!![pad1UndoListIndexPointer].size}"
-            )
-            Log.d("undoff", "hitlist size${ApplicationState.pad1HitTimeStampList!!.size}")
+                    //set the last pattern to the original list
+                    DrumScreenHomeFragment.padArrayMapList.set(padIndexCounter1, previousPattern)
+                    ApplicationState.padHitSequenceArrayList!!.set(
+                        padIndexCounter1,
+                        previousPattern
+                    )
+
+
+                }
+                padIndexCounter1++
+            }
         }
-
     }
+
 
 
     /**
-     *
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //                                                                                                              /
-    //                                                                                                              /
-    //   Undo List padHitUndoArrayList List structure is:                                                           /
-    //                                                                                                              /
-    //   (array list 1)                                                                                             /
-    //     (pad index) (array list 2)   (array map) are like the different sequences that we can undo back to       /
-    //       pad 1       sequences      each index has a time stamp that represents the time a user hit a pad       /
-    //                                                                                                              /
-    //     /////////    //////////     //////////////////////////////////////////////                               /
-    //     /       /    /        /     /time stamp/         /           /           /                               /
-    // --> /   0   /    /   0    /     /    0     /   1     /     2     /     3     /                               /
-    //     /       /    /        /     /          /         /           /           /                               /
-    //     /////////    //////////     //////////////////////////////////////////////////////////                   /
-    //                  /        /     /          /         /           /           /           /                   /
-    //              --> /   1    / --> /    0     /    1    /     2     /     3     /     4     /                   /
-    //                  /        /     /          /         /           /           /           /                   /
-    //                  //////////     //////////////////////////////////////////////////////////                   /
-    //                                                                                                              /
-    //                                                                                                              /
-    //  Example: We go into our first pad index 0 - with our latest index pointer at index 1 of the                 /
-    //  array list (sequences) - Then we check the size of our array map which is our time stamps                   /
-    //  against pad 1 array map size inside of "padHitTimeStampArrayList". If the size has increased then           /
-    //  we make a copy of it and store it into the Undo List "padHitUndoArrayList" and increase our pointer by 1    /
-    //  to point at the latest sequence. When we want to undo move our pointer to a previous index inside           /
-    //  array list 2 (sequences) then update pad 1 array map inside "padHitTimeStampArrayList" to reflect the       /
-    //  previous array map                                                                                          /
-    //                                                                                                              /
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     *
+     * Pad playbacks (called every millisecond)
      */
-    private fun padPlayback(
-        pad1HitTimeStampList: ArrayMap<Long, PadSequenceTimeStamp>?,
-        padSequenceListIndex: Long,
-        pad1LftVolume: Float,
-        pad1RftVolume: Float,
-        undoPad1HitTimeStampList: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>?,
-        padUndoListIndexPointer: Int
-    ) {
-
-
-
-    }
-
     private fun pad1Playback() {
-//
-//        padPlayback(
-//            ApplicationState.pad1HitTimeStampList,
-//            pad1SequenceListIndex,
-//            ApplicationState.pad1LftVolume,
-//            ApplicationState.pad1RftVolume,
-//            ApplicationState.undoPad1HitTimeStampList,
-//            pad1UndoListIndexPointer
-//        )
 
-        if (ApplicationState.padHitTimeStampArrayList!!.isNotEmpty()) {
+        padPlayback1.padPlayback(Definitions.pad1Index,ApplicationState.pad1LftVolume,ApplicationState.pad1RftVolume)
 
-            if (ApplicationState.padHitTimeStampArrayList!![Definitions.pad1Index].contains(padSequenceIndex)) {
-                soundPool2.startSound(
-                    ApplicationState.padHitTimeStampArrayList!![Definitions.pad1Index][padSequenceIndex]!!.soundId,
-                    ApplicationState.pad1LftVolume,
-                    ApplicationState.pad1RftVolume
-                )
-            }
-
-            // store array for undo action each time sequence loop
-            // and only if there is a new hit to the array
-            if (padSequenceIndex == Bpm.getPatternTimeInMilliSecs()) {
-                if ( ApplicationState.padHitUndoArrayList!!.isEmpty()) {
-
-                     val counter = 0
-                    while (counter < ApplicationState.padHitTimeStampArrayList!!.size){
-
-                        val copy = arrayListOf(ApplicationState.padHitTimeStampArrayList!![counter])
-                       // ApplicationState.undoPad1HitTimeStampList?.add(copy)
-                        ApplicationState.padHitUndoArrayList!!.add(counter,copy)
-                    }
-
-
-
-                    Log.d(
-                        "undoff",
-                        "undo Arrayvmap Size inside is empty= ${ApplicationState.undoPad1HitTimeStampList!![pad1UndoListIndexPointer].size}"
-                    )
-
-                    Log.d(
-                        "undoff",
-                        "undo pad1HitTimeStampList Size= ${ApplicationState.pad1HitTimeStampList!!.size }"
-                    )
-
-                }
-
-
-
-
-
-
-
-                else if ((ApplicationState.pad1HitTimeStampList!!.size > ApplicationState.undoPad1HitTimeStampList!![pad1UndoListIndexPointer].size)
-                ){
-
-                    //if we have new hits during this loop we add to list
-                    val copy = ArrayMap(ApplicationState.pad1HitTimeStampList!!)
-                    ApplicationState.undoPad1HitTimeStampList?.add(copy)
-
-                    //then we move to the next index for next loop around
-                    pad1UndoListIndexPointer++
-
-
-                    //Log.d("undoff", "padUndoListIndex size${pad1UndoListIndex}")
-                    Log.d(
-                        "undoff",
-                        "undo pad1HitTimeStampList Size= ${ApplicationState.pad1HitTimeStampList!!.size }"
-                    )
-
-                    Log.d(
-                        "undoff",
-                        "undo Arrayvmap Size= ${ApplicationState.undoPad1HitTimeStampList!![pad1UndoListIndexPointer].size}"
-                    )
-                }
-            }
-
-            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-                padSequenceIndex = 0
-            }
-            //move to the next index
-            padSequenceIndex++
-        }
     }
-
-
-
-
-
-
-
 
 
     fun pad2Playback() {
 
-        if (ApplicationState.pad2HitTimeStampList!!.isNotEmpty()) {
+        padPlayback2.padPlayback(Definitions.pad2Index,ApplicationState.pad2LftVolume,ApplicationState.pad2RftVolume)
 
-            if (ApplicationState.pad2HitTimeStampList!!.containsKey(pad2SequenceListIndex)) {
-
-                soundPool2.startSound(
-                    ApplicationState.pad2HitTimeStampList!![pad2SequenceListIndex]!!.soundId,
-                    ApplicationState.pad2LftVolume,
-                    ApplicationState.pad2RftVolume
-                )
-            }
-
-            // store array for undo action each time sequence loop
-            //and only if there is a new hit to the array
-            if (pad2SequenceListIndex == Bpm.getPatternTimeInMilliSecs()) {
-                if (ApplicationState.undoPad2HitTimeStampList!!.isEmpty()) {
-
-                    val copy = ArrayMap(ApplicationState.pad2HitTimeStampList!!)
-                    ApplicationState.undoPad2HitTimeStampList?.add(copy)
-                }
-                if (ApplicationState.pad2HitTimeStampList!!.size > ApplicationState.undoPad2HitTimeStampList!![pad2UndoListIndex].size) {
-
-                    //if we have new hits during this loop we add to list
-                    val copy = ArrayMap(ApplicationState.pad2HitTimeStampList!!)
-                    ApplicationState.undoPad2HitTimeStampList?.add(copy)
-                    //then we move to the next index for next loop around
-                    pad2UndoListIndex++
-                }
-            }
-            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-                pad2SequenceListIndex = 0
-            }
-            //move to the next index
-            pad2SequenceListIndex++
-        }
     }
 
 
     fun pad3Playback() {
-        if (ApplicationState.pad3HitTimeStampList!!.isNotEmpty()) {
 
-            if (ApplicationState.pad3HitTimeStampList!!.containsKey(pad3SequenceListIndex)) {
+        padPlayback3.padPlayback(Definitions.pad3Index,ApplicationState.pad3LftVolume,ApplicationState.pad3RftVolume)
 
-                soundPool2.startSound(
-                    ApplicationState.pad3HitTimeStampList!![pad3SequenceListIndex]!!.soundId,
-                    ApplicationState.pad3LftVolume,
-                    ApplicationState.pad3RftVolume
-                )
-            }
-            // store array for undo action each time sequence loop
-            //and only if there is a new hit to the array
-            if (pad3SequenceListIndex == Bpm.getPatternTimeInMilliSecs()) {
-                if (ApplicationState.undoPad3HitTimeStampList!!.isEmpty()) {
 
-                    val copy = ArrayMap(ApplicationState.pad3HitTimeStampList!!)
-                    ApplicationState.undoPad3HitTimeStampList?.add(copy)
-                }
-                if (ApplicationState.pad3HitTimeStampList!!.size > ApplicationState.undoPad3HitTimeStampList!![pad3UndoListIndex].size) {
-
-                    //if we have new hits during this loop we add to list
-                    val copy = ArrayMap(ApplicationState.pad3HitTimeStampList!!)
-                    ApplicationState.undoPad3HitTimeStampList?.add(copy)
-                    //then we move to the next index for next loop around
-                    pad3UndoListIndex++
-                }
-            }
-            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-                pad3SequenceListIndex = 0
-            }
-            //move to the next index
-            pad3SequenceListIndex++
-        }
     }
 
 
     fun pad4Playback() {
-        if (ApplicationState.pad4HitTimeStampList!!.isNotEmpty()) {
+        padPlayback4.padPlayback(Definitions.pad4Index,ApplicationState.pad4LftVolume,ApplicationState.pad4RftVolume)
 
-            if (ApplicationState.pad4HitTimeStampList!!.containsKey(pad4SequenceListIndex)) {
-
-                soundPool2.startSound(
-                    ApplicationState.pad4HitTimeStampList!![pad4SequenceListIndex]!!.soundId,
-                    ApplicationState.pad4LftVolume,
-                    ApplicationState.pad4RftVolume
-                )
-            }
-            // store array for undo action each time sequence loop
-            //and only if there is a new hit to the array
-            if (pad4SequenceListIndex == Bpm.getPatternTimeInMilliSecs()) {
-                if (ApplicationState.undoPad4HitTimeStampList!!.isEmpty()) {
-
-                    val copy = ArrayMap(ApplicationState.pad4HitTimeStampList!!)
-                    ApplicationState.undoPad4HitTimeStampList?.add(copy)
-                }
-                if (ApplicationState.pad4HitTimeStampList!!.size > ApplicationState.undoPad4HitTimeStampList!![pad4UndoListIndex].size) {
-
-                    //if we have new hits during this loop we add to list
-                    val copy = ArrayMap(ApplicationState.pad4HitTimeStampList!!)
-                    ApplicationState.undoPad4HitTimeStampList?.add(copy)
-                    //then we move to the next index for next loop around
-                    pad4UndoListIndex++
-                }
-            }
-            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-                pad4SequenceListIndex = 0
-            }
-            //move to the next index
-            pad4SequenceListIndex++
-        }
     }
 
 
@@ -754,9 +541,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         updateProgressBar()
         //soundsViewModel.drumPadSequenceNoteList.postValue(ApplicationState.uiSequenceMillisecCounter)
         pad1Playback()
-        //pad2Playback()
-        // pad3Playback()
-        // pad4Playback()
+        pad2Playback()
+        pad3Playback()
+        pad4Playback()
     }
 
     private fun resetUiClock() {
@@ -886,11 +673,16 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         resetUiClock()
         //reset progress bar
         resetProgressBar()
+
         //reset counters
         ApplicationState.metronomeMillisecCounter = 0L
         ApplicationState.uiProgressBarMillisecCounter = 0L
         ApplicationState.uiSequenceMillisecCounter = 0L
-        padSequenceIndex = 0
+        padPlayback1.resetCounter()
+        padPlayback2.resetCounter()
+        padPlayback3.resetCounter()
+        padPlayback4.resetCounter()
+        millisecSequenceIndex = 0
         pad2SequenceListIndex = 0
         pad3SequenceListIndex = 0
         pad4SequenceListIndex = 0
