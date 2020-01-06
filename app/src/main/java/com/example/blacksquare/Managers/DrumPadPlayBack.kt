@@ -2,7 +2,7 @@ package com.example.blacksquare.Managers
 
 import android.content.Context
 import android.util.ArrayMap
-import android.util.Log
+import com.example.blacksquare.Fragments.DrumScreenHomeFragment
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
@@ -11,9 +11,7 @@ class DrumPadPlayBack(context: Context) {
 
     private var soundPool2: DrumPadSoundPool
 
-
     private var millisecSequenceIndexCounter = 0L
-
 
 
     init {
@@ -59,11 +57,13 @@ class DrumPadPlayBack(context: Context) {
      *
      */
 
-companion object{
+    companion object {
 
-    val  padHitUndoSequenceList:ArrayList<ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>? = ArrayList()
+        val padHitUndoSequenceList: ArrayList<ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>? =
+            ArrayList()
 
-}
+    }
+
     fun padPlayback(padIndex: Int, padLftVolume: Float, padRftVolume: Float) {
 
 
@@ -77,6 +77,9 @@ companion object{
                 padLftVolume,
                 padRftVolume
             )
+
+            //show pad being triggered
+
         }
 
         // if a note has been recorded
@@ -95,14 +98,15 @@ companion object{
 
                     while (padIndexCounter < ApplicationState.padHitSequenceArrayList!!.size) {
 
-                      // Log.d("undoff", "inside empty")
+                        // Log.d("undoff", "inside empty")
 
                         //copy each pad sequence from sequence array list and add it to the undo list
-                        val arrayMapCopy =ArrayMap(ApplicationState.padHitSequenceArrayList!![padIndexCounter])
+                        val arrayMapCopy =
+                            ArrayMap(ApplicationState.padHitSequenceArrayList!![padIndexCounter])
                         val arrayListcopy = arrayListOf(arrayMapCopy)
 
                         //Add the array list of array maps to the undo list
-                     padHitUndoSequenceList.add(arrayListcopy)
+                        padHitUndoSequenceList.add(arrayListcopy)
 
 
 //
@@ -146,47 +150,37 @@ companion object{
                     while (padIndexCounter1 < ApplicationState.padHitSequenceArrayList!!.size) {
 
 
-                           // Log.d("undoff", "List hit size${ApplicationState.padHitSequenceArrayList!![padIndexCounter1].size}")
+                        // Log.d("undoff", "List hit size${ApplicationState.padHitSequenceArrayList!![padIndexCounter1].size}")
 
-                           // Log.d("undoff", "undo hit size${padHitUndoSequenceList!![padIndexCounter1].last().size}")
+                        // Log.d("undoff", "undo hit size${padHitUndoSequenceList!![padIndexCounter1].last().size}")
 
-                            //check what pads has new pattern
-                            if (ApplicationState.padHitSequenceArrayList!![padIndexCounter1].size >
-                                padHitUndoSequenceList!![padIndexCounter1].last().size
-                            ) {
+                        //check what pads has new pattern
+                        if (ApplicationState.padHitSequenceArrayList!![padIndexCounter1].size >
+                            padHitUndoSequenceList!![padIndexCounter1].last().size
+                        ) {
 
-                               // Log.d("undoff", "inside if statement")
+                            // Log.d("undoff", "inside if statement")
 
-                                //if we have changes add the map to the array list
-                                //loop through all pads and add for every pad
-                                var padIndexCounter2 = 0
+                            //if we have changes add the map to the array list
+                            //loop through all pads and add for every pad
+                            var padIndexCounter2 = 0
 
-                                while (padIndexCounter2 < ApplicationState.padHitSequenceArrayList!!.size) {
+                            while (padIndexCounter2 < ApplicationState.padHitSequenceArrayList!!.size) {
 
-                                  //  Log.d("undoff", "inside adding to all pads")
+                                //  Log.d("undoff", "inside adding to all pads")
 
-                                    //add the array map to the already added array list of array maps
-                                    val arrayMapCopy =
-                                        ArrayMap(ApplicationState.padHitSequenceArrayList!![padIndexCounter2])
+                                //add the array map to the already added array list of array maps
+                                val arrayMapCopy =
+                                    ArrayMap(ApplicationState.padHitSequenceArrayList!![padIndexCounter2])
 
-                                    padHitUndoSequenceList!![padIndexCounter2].add(arrayMapCopy)
+                                padHitUndoSequenceList!![padIndexCounter2].add(arrayMapCopy)
 
-                                   // Log.d("undoff", "undo list size after the add all 4 should be same${padHitUndoSequenceList!![padIndexCounter2].size}")
+                                // Log.d("undoff", "undo list size after the add all 4 should be same${padHitUndoSequenceList!![padIndexCounter2].size}")
 
-                                    padIndexCounter2++
-                                }
-
-                               // Log.d("undoff", "local undo size  ${padHitUndoSequenceList!![0].last().size}")
-                                //Feed the new undo updated list to the application list every pattern loop iteration
-                               // ApplicationState.padHitUndoSequenceList = padHitUndoSequenceList
-
-                               // Log.d("undoff", "Global undo size  ${ApplicationState.padHitUndoSequenceList!![0].last().size}")
-
+                                padIndexCounter2++
                             }
 
-                            //    Log.d("undoff", "hit size of new added last index after add ${padHitUndoSequenceList!![padIndexCounter1].last().size}")
-                           // Log.d("undoff", "hit size of original ${ApplicationState.padHitSequenceArrayList!![padIndexCounter1].size}")
-
+                        }
 
                         padIndexCounter1++
                     }
@@ -205,12 +199,15 @@ companion object{
         }
     }
 
-        /**
-         * use to reset counter when playback is stopped tho sync playback
-         */
-        fun resetCounter() {
-
-            millisecSequenceIndexCounter = 0
-        }
+    private fun padPlaybackSelector(padIndex: Int) {
 
     }
+
+    /**
+     * use to reset counter when playback is stopped tho sync playback
+     */
+    fun resetCounter() {
+        millisecSequenceIndexCounter = 0
+    }
+
+}

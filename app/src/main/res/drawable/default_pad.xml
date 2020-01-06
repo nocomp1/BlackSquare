@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="false" >
+<animated-selector
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item android:state_pressed="false"
+        android:id="@+id/usual">
+
         <shape android:shape="rectangle">
             <gradient android:startColor="@color/secondaryColor"
                 android:endColor="@color/colorPrimaryDark"
@@ -10,7 +15,9 @@
             <corners android:radius="10dp"/>
         </shape>
     </item>
-    <item android:state_pressed="true">
+    <item android:state_pressed="true"
+        android:id="@+id/selected">
+
         <shape android:shape="rectangle">
             <gradient android:startColor="@color/secondaryColor"
                 android:endColor="@color/colorAccent"
@@ -21,4 +28,13 @@
         </shape>
 
     </item>
-</selector>
+    <!-- specify a transition -->
+    <transition android:fromId="@+id/usual" android:toId="@+id/selected">
+        <animation-list>
+            <item android:duration="15" android:drawable="@drawable/selected_buton"/>
+            <item android:duration="15" android:drawable="@drawable/selected_drum_pad"/>
+
+        </animation-list>
+    </transition>
+
+</animated-selector>

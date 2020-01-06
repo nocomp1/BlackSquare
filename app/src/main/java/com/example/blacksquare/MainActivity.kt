@@ -88,11 +88,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        //////Sound Pool for playback///////
-//        val drumPadSoundPool = DrumPadSoundPool(this)
-//        soundPool2 = drumPadSoundPool //startEngine()
-//        soundPool2.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
-
         padPlayback1 =DrumPadPlayBack(this)
         padPlayback2 =DrumPadPlayBack(this)
         padPlayback3 =DrumPadPlayBack(this)
@@ -146,28 +141,26 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
 
-//        //Setting up View model to communicate to our fragments
-//        this.let {
-//            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-//        }
-///
+        //Setting up View model to communicate to our fragments
+        this.let {
+            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+        }
+
 //
         // Set up our live data observers
 
-        this.let {
-            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-
-            ////Observer to communicate with the clock from main activity
-            sharedViewModel.drumPadSequenceNoteList.observe(this, Observer {
-                it?.let {
-
-                    Log.d("pad1playback", "sharedViewModel= $it")
-
-                }
-            })
-
-
-        }
+//        this.let {
+//            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+//
+//            ////Observer to communicate with the clock from main activity
+//            sharedViewModel.drumPadSequenceNoteList.observe(this, Observer {
+//                it?.let {
+//
+//                    Log.d("pad1playback", "sharedViewModel= $it")
+//
+//                }
+//            })
+//        }
 
         //Set up icon for tabs
 //        val viewDrums = layoutInflater.inflate(R.layout.home_custom_tab,null)
@@ -298,36 +291,34 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
 
-
-
     /**
      * Pad playbacks (called every millisecond)
      */
+    private fun showPadHitState(padIndex : Int) {
+
+        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(ApplicationState.uiSequenceMillisecCounter)){
+            Log.d("pad1playback", "pad playback is triggered")
+            //show pad being triggered
+            soundsViewModel.playbackPadId.postValue(padIndex)
+        }
+    }
     private fun pad1Playback() {
-
         padPlayback1.padPlayback(Definitions.pad1Index,ApplicationState.pad1LftVolume,ApplicationState.pad1RftVolume)
-
+        showPadHitState(Definitions.pad1Index)
     }
-
-
     fun pad2Playback() {
-
         padPlayback2.padPlayback(Definitions.pad2Index,ApplicationState.pad2LftVolume,ApplicationState.pad2RftVolume)
-
+        showPadHitState(Definitions.pad2Index)
     }
-
 
     fun pad3Playback() {
-
         padPlayback3.padPlayback(Definitions.pad3Index,ApplicationState.pad3LftVolume,ApplicationState.pad3RftVolume)
-
-
+        showPadHitState(Definitions.pad3Index)
     }
-
 
     fun pad4Playback() {
         padPlayback4.padPlayback(Definitions.pad4Index,ApplicationState.pad4LftVolume,ApplicationState.pad4RftVolume)
-
+        showPadHitState(Definitions.pad4Index)
     }
 
 
@@ -663,11 +654,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     fun stopPlayEngine() {
 
         playEngineExecutor.shutdownNow()
-
-
-        //  engineClock!!.dispose()
-        //Reset the metronome interval
-        // metronomeInterval = Bpm.getBeatPerMilliSeconds()
 
         //reset uiClock
         resetUiClock()
