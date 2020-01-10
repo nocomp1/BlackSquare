@@ -30,7 +30,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
@@ -101,7 +100,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
         //////Setting up project shared preferences/////////
-        sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
+        sharedPref = this.applicationContext.getSharedPreferences(Definitions.APP_SHARED_PREFS, Context.MODE_PRIVATE) ?: return
+
+
 
         //////// Getting and setting our project tempo///////
         projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 120L)
@@ -204,10 +205,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     /**
      * Pad Playback methods
      */
-    private var pad1UndoListIndexPointer = 0
-    private var pad2UndoListIndex = 0
-    private var pad3UndoListIndex = 0
-    private var pad4UndoListIndex = 0
+
     private var millisecSequenceIndex = 0L
     private var pad2SequenceListIndex = 0L
     private var pad3SequenceListIndex = 0L
@@ -265,27 +263,35 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             var padIndexCounter1 = 0
             while (padIndexCounter1 < ApplicationState.padHitSequenceArrayList!!.size) {
 
-                if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
+               // if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
                     //remove last pattern
                     DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].removeAt(
                         DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].size - 1
                     )
                     DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].trimToSize()
 
+                    //now check if the list is not empty since we remove pattern first
+                    if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
+                        //get the last pattern
+                        val previousPattern =
+                            ArrayMap(DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].last())
 
-                    //get the last pattern
-                    val previousPattern =
-                        ArrayMap(DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].last())
+                        //set the last pattern to the original list
+                        DrumScreenHomeFragment.padTimeStampArrayMapList.set(
+                            padIndexCounter1,
+                            previousPattern
+                        )
+                        ApplicationState.padHitSequenceArrayList!!.set(
+                            padIndexCounter1,
+                            previousPattern
+                        )
+                    }else{
 
-                    //set the last pattern to the original list
-                    DrumScreenHomeFragment.padArrayMapList.set(padIndexCounter1, previousPattern)
-                    ApplicationState.padHitSequenceArrayList!!.set(
-                        padIndexCounter1,
-                        previousPattern
-                    )
+                        //Return to the original state when we first started
 
 
-                }
+                    }
+              //  }
                 padIndexCounter1++
             }
         }
@@ -303,21 +309,29 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
     private fun pad1Playback() {
-        padPlayback1.padPlayback(Definitions.pad1Index,ApplicationState.pad1LftVolume,ApplicationState.pad1RftVolume)
+        padPlayback1.padPlayback(Definitions.pad1Index,
+            sharedPref.getFloat(Definitions.pad1LftVolume, Definitions.padVolumeDefault)
+            ,sharedPref.getFloat(Definitions.pad1RftVolume,Definitions.padVolumeDefault))
         showPadHitState(Definitions.pad1Index)
     }
     fun pad2Playback() {
-        padPlayback2.padPlayback(Definitions.pad2Index,ApplicationState.pad2LftVolume,ApplicationState.pad2RftVolume)
+        padPlayback2.padPlayback(Definitions.pad2Index,
+            sharedPref.getFloat(Definitions.pad2LftVolume, Definitions.padVolumeDefault)
+            ,sharedPref.getFloat(Definitions.pad2RftVolume,Definitions.padVolumeDefault))
         showPadHitState(Definitions.pad2Index)
     }
 
     fun pad3Playback() {
-        padPlayback3.padPlayback(Definitions.pad3Index,ApplicationState.pad3LftVolume,ApplicationState.pad3RftVolume)
+        padPlayback3.padPlayback(Definitions.pad3Index,
+            sharedPref.getFloat(Definitions.pad3LftVolume, Definitions.padVolumeDefault)
+            ,sharedPref.getFloat(Definitions.pad3RftVolume,Definitions.padVolumeDefault))
         showPadHitState(Definitions.pad3Index)
     }
 
     fun pad4Playback() {
-        padPlayback4.padPlayback(Definitions.pad4Index,ApplicationState.pad4LftVolume,ApplicationState.pad4RftVolume)
+        padPlayback4.padPlayback(Definitions.pad4Index,
+            sharedPref.getFloat(Definitions.pad4LftVolume, Definitions.padVolumeDefault)
+            ,sharedPref.getFloat(Definitions.pad4RftVolume,Definitions.padVolumeDefault))
         showPadHitState(Definitions.pad4Index)
     }
 
@@ -504,7 +518,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         }
 
-        val seconds = String.format("%02d", uiClockSecondsCount)
+
         val milliSecPerBeat = String.format("%04d", ApplicationState.uiClockMillisecCounter)
         val beats = String.format("%02d", beatCount)
         val uIClock = SpannableStringBuilder(beats)
@@ -590,18 +604,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     //Volume Slider input from user --> to fragments
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        DrumScreenHomeFragment().onProgressChanged(seekBar, progress, fromUser)
-
-
+        soundsViewModel.mainSliderValue.postValue(progress)
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
-        DrumScreenHomeFragment().onStartTrackingTouch(seekBar)
         Log.d(" onStartTrackTouch", seekBar.toString())
     }
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        DrumScreenHomeFragment().onStopTrackingTouch(seekBar)
         Log.d(" onStopTrackiTouch", seekBar.toString())
     }
 
@@ -710,6 +720,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {
         Log.d(Companion.GESTURETAGBUTTON, "single confirmed")
 
+        /////////////////NOTE REPEAT //////////////
         if (ApplicationState.noteRepeatActive) {
             note_repeat_btn.setBackgroundResource(R.drawable.default_pad)
             ApplicationState.noteRepeatActive = false

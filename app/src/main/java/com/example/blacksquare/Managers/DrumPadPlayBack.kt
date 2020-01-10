@@ -78,7 +78,6 @@ class DrumPadPlayBack(context: Context) {
                 padRftVolume
             )
 
-            //show pad being triggered
 
         }
 
@@ -87,8 +86,6 @@ class DrumPadPlayBack(context: Context) {
         // and only if there is a new hit to the array
         if ((ApplicationState.drumNoteHasBeenRecorded)) {
 
-            // our sequence loop in milliseconds
-            if (millisecSequenceIndexCounter == Bpm.getPatternTimeInMilliSecs()) {
 
                 //if the undo list is empty add arraylist of array maps to it
                 if ((padHitUndoSequenceList!!.isEmpty())) {
@@ -144,6 +141,8 @@ class DrumPadPlayBack(context: Context) {
                     //3. loop and add entire (every index) new array map patterns to the undo list
                     //4. Update the global application drum pad undo list with local copy
 
+                    // our sequence loop in milliseconds
+                    if (millisecSequenceIndexCounter == Bpm.getPatternTimeInMilliSecs()) {
 
                     //loop through all pads
                     var padIndexCounter1 = 0

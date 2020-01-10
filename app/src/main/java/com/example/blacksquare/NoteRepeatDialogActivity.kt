@@ -32,17 +32,14 @@ class NoteRepeatDialogActivity : AppCompatActivity() {
     private fun setUpNoteRepeatChoice() {
         var selectedChoice = ApplicationState.selectedNoteRepeatId
 
-
         if (selectedChoice == -1) {
 
             findViewById<RadioButton>(patternList[0]).isChecked = true
 
         } else {
 
-
             findViewById<RadioButton>(selectedChoice).isChecked = true
         }
-
 
     }
 
@@ -57,13 +54,12 @@ class NoteRepeatDialogActivity : AppCompatActivity() {
         var viewCounter = 0
 
         while (rowCounter < tlRowCount) {
-            var tr = tl.getChildAt(rowCounter) as (TableRow)
-            var c = tr.childCount
+            val tr = tl.getChildAt(rowCounter) as (TableRow)
+            val c = tr.childCount
             while (viewCounter < c) {
                 ///Get the view that in the table row
-                var v = tr.getChildAt(viewCounter)
+                val v = tr.getChildAt(viewCounter)
                 if (v is RadioButton) {
-
                     //get the id
                     groupIds.add(v.id)
 

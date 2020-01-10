@@ -3,13 +3,7 @@ package com.example.blacksquare.Singleton
 object Bpm {
 
     private var userBpm: Long = 0L
-
-    var secondsInAminute = 60000L
-    var targetNoteRepeatInterval = -1L
-    var currentEngineStartTime = -1L
-
-
-
+    const val secondsInAminute = 60000L
 
     /**
      * Set methods
@@ -43,15 +37,15 @@ object Bpm {
 
 
     fun getNoteRepeatInterval(selectedNoteRepeat: Int): Long? {
-        var quarterNoteEquation = 60000L / getProjectTempo()
-        var eightNoteEquation = 30000L / getProjectTempo()
-        var sixtenthNoteEquation = 15000L / getProjectTempo()
-        var sixtyFourNoteEquation = 60000L / getProjectTempo()
-        var thirtyTwoNoteEquation = 60000L / getProjectTempo()
-        var quarterNoteTripletEquation = 40000L / getProjectTempo()
-        var eightNoteTripletEquation = 20000L / getProjectTempo()
-        var sixtenthNoteTripletEquation = 10000L / getProjectTempo()
-        var dottedEightNoteEquation = 45000L / getProjectTempo()
+        val quarterNoteEquation = 60000L / getProjectTempo()
+        val eightNoteEquation = 30000L / getProjectTempo()
+        val sixtenthNoteEquation = 15000L / getProjectTempo()
+        val sixtyFourNoteEquation = 90000L / getProjectTempo()
+        val thirtyTwoNoteEquation = 45000L / getProjectTempo()
+        val quarterNoteTripletEquation = 40000L / getProjectTempo()
+        val eightNoteTripletEquation = 20000L / getProjectTempo()
+        val sixtenthNoteTripletEquation = 10000L / getProjectTempo()
+        val dottedEightNoteEquation = 45000L / getProjectTempo()
 
         var noteRepeatInerval: Long? = null
 

@@ -10,15 +10,13 @@ import android.os.Bundle
 import android.util.ArrayMap
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
 import android.widget.SeekBar
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
-import com.example.blacksquare.Listeners.RepeatListener
 import com.example.blacksquare.LoadDrumSoundDialogActivity
 import com.example.blacksquare.Managers.DrumPadPlayBack
 import com.example.blacksquare.Managers.DrumPadSoundPool
@@ -32,14 +30,18 @@ import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.ViewModels.SoundsViewModel
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.drum_bank1.*
 import kotlinx.android.synthetic.main.drum_bank1.view.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 
 class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
-
-    private lateinit var sharedPref: SharedPreferences
+    private lateinit var noteRepeatEngineExecutor: ScheduledExecutorService
+    lateinit var sharedPref: SharedPreferences
     private lateinit var soundPool: DrumPadSoundPool
     private lateinit var pads: Array<PadClickListenerModel>
     private var LOAD_REQUEST_CODE: Int = 100
@@ -62,12 +64,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         val pager: ViewPager? = viewPager
         pager?.offscreenPageLimit = 5
 
+        //sharedPref = activity!!.applicationContext.getSharedPreferences("drumscreen", Context.MODE_PRIVATE) ?: return
 
-        //Initializing the timestamp arrays to stop a weird repeating when initialized when triggered
-        ApplicationState.pad1HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
-        ApplicationState.pad2HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
-        ApplicationState.pad3HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
-        ApplicationState.pad4HitTimeStampList?.put(-1, PadSequenceTimeStamp(-1, -1, -1))
 
     }
 
@@ -78,16 +76,25 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     }
 
+
+    override fun onStart() {
+        super.onStart()
+        //sharedPref = activity!!.applicationContext.getSharedPreferences("drumscreen", Context.MODE_PRIVATE) ?: return
+        //
+
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
         //Setting up View model to communicate to our fragments
+
         this.let {
             soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
         }
 
-
-        sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE) ?: return
+        //sharedPref = activity!!.applicationContext.getSharedPreferences("drumscreen", Context.MODE_PRIVATE) ?: return
+        //sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE) ?: return
 
         volumeSeekBar = activity!!.findViewById(R.id.main_ui_volume_seek_slider)
 
@@ -109,10 +116,10 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
 
 
-        padArrayMapList.add(pad1HitMap)
-        padArrayMapList.add(pad2HitMap)
-        padArrayMapList.add(pad3HitMap)
-        padArrayMapList.add(pad4HitMap)
+        padTimeStampArrayMapList.add(pad1HitMap)
+        padTimeStampArrayMapList.add(pad2HitMap)
+        padTimeStampArrayMapList.add(pad3HitMap)
+        padTimeStampArrayMapList.add(pad4HitMap)
 
 
         ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad1Index, pad1HitMap)
@@ -126,8 +133,15 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 //        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
 //        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
 
-        ///Set up our live data observers
 
+        ///Set up our live data observers
+        setUpLiveDataToObserve()
+
+
+    }
+
+    private fun setUpLiveDataToObserve() {
+        //observe what pad needs to change state during playback
         activity?.let {
             val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
 
@@ -135,6 +149,22 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                 it?.let {
                     padPlayBackchangePadState(it)
                     Log.d("pad1playback", "pad idroy= $it")
+
+                }
+            })
+        }
+
+        //observe the main slider/volume/pan/pitch ..ect value
+        activity?.let {
+            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+
+            sharedViewModel.mainSliderValue.observe(this, Observer {
+                it?.let { progress ->
+
+                    val volume = progress.toFloat() / 100
+                    setPadVolume(volume)
+
+                    Log.d("padVolumeValue", "pad volume value= $progress")
 
                 }
             })
@@ -148,6 +178,12 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -157,6 +193,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         val view: View =
             inflater.inflate(R.layout.drum_screen_home_fragment_layout, container, false)
 
+        sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE)
 
         return view
     }
@@ -194,19 +231,94 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
             val pad = padList[index].pad
             val padIndex = padList[index].padIndex
             val padId = padList[index].padId
+            var noteRepeatEngine: Disposable? = null
 
-            pad.setOnTouchListener(
-                RepeatListener
-                    (0, Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat),
-                    View.OnClickListener {
+            val action: Runnable = Runnable {
 
-                        handlePadEvent(
-                            padIndex,
-                            padId
-                        )
+                Log.d("NREPEAT", "NOTE REPEAT Action down")
+                                    handlePadEvent(
+                        padIndex,
+                        padId
+                    )
 
-                    })
-            )
+            }
+
+
+            pad.setOnTouchListener { v, m ->
+
+                // Perform tasks here
+                when (m.action) {
+
+                    MotionEvent.ACTION_DOWN -> {
+                        // noteRepeatEngineExecutor = Executors.newScheduledThreadPool(1)
+                        if (ApplicationState.noteRepeatActive) {
+
+                            val noteRepeatInterval =
+                                (Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat)!!.times(
+                                    1000000
+                                ))
+
+                            //manually change pad state
+                            pad.isPressed = true
+                            pad.invalidate()
+                            noteRepeatEngineExecutor = Executors.newScheduledThreadPool(1)
+                            noteRepeatEngineExecutor.scheduleAtFixedRate(action, 0, noteRepeatInterval, TimeUnit.NANOSECONDS)
+
+
+//                            noteRepeatEngine =
+//                                Observable.interval(noteRepeatInterval, TimeUnit.NANOSECONDS)
+//                                    .subscribeOn(Schedulers.io())
+//                                    .observeOn(AndroidSchedulers.mainThread())
+//                                    .subscribe {
+//                                        Log.d("NREPEAT", "NOTE REPEAT Action down")
+//
+//                                        handlePadEvent(
+//                                            padIndex,
+//                                            padId
+//                                        )
+//                                    }
+
+
+                        } else {
+
+
+                            Log.d("NREPEAT", "Defualt handle Action down")
+
+                            handlePadEvent(
+                                padIndex,
+                                padId
+                            )
+
+                        }
+
+                    }
+
+                    MotionEvent.ACTION_UP -> {
+
+                        if (ApplicationState.noteRepeatActive) {
+                            Log.d("NREPEAT", "NOTE REPEAT Action UP")
+                            //manually change pad state
+                            pad.isPressed = false
+                            pad.invalidate()
+                            //stop the repeat engine
+                           // noteRepeatEngine!!.dispose()
+                            noteRepeatEngineExecutor.shutdownNow()
+                            // Thread.currentThread().interrupt()
+                        }else{
+
+
+                            Log.d("NREPEAT", "Defualt handle Action up")
+
+                        }
+
+                    }
+
+                }
+
+
+                ApplicationState.noteRepeatActive
+            }
+
 
             index++
 
@@ -249,68 +361,82 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
             ApplicationState.tempoHasChanged = false
         }
 
-        if (ApplicationState.noteRepeatHasChanged) {
-            //Disable pad click listener to get an updated interval value
-            disableAllPadClickListeners()
-            //reset all the clickListeners
-            setPadClickListeners()
-
-            //reset the state
-            ApplicationState.noteRepeatHasChanged = false
-        }
+//        if (ApplicationState.noteRepeatHasChanged) {
+//            //Disable pad click listener to get an updated interval value
+//            disableAllPadClickListeners()
+//            //reset all the clickListeners
+//            setPadClickListeners()
+//
+//            //reset the state
+//            ApplicationState.noteRepeatHasChanged = false
+//        }
 
     }
 
     private fun handlePadEvent(padIndex: Int, padId: Int) {
 
-        var padLftVolume: Float = 0f
-        var padRtVolume: Float = 0f
+        var padLftVolume = 0f
+        var padRtVolume = 0f
+
+        val volumeDefaultValue = Definitions.padVolumeDefault
 
         when (padId) {
 
             1 -> {
-                padLftVolume = ApplicationState.pad1LftVolume
-                padRtVolume = ApplicationState.pad1RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad1LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad1RftVolume, volumeDefaultValue)
             }
             2 -> {
-                padLftVolume = ApplicationState.pad2LftVolume
-                padRtVolume = ApplicationState.pad2RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad2LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad2RftVolume, volumeDefaultValue)
 
             }
             3 -> {
-                padLftVolume = ApplicationState.pad3LftVolume
-                padRtVolume = ApplicationState.pad3RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad3LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad3RftVolume, volumeDefaultValue)
             }
             4 -> {
-                padLftVolume = ApplicationState.pad4LftVolume
-                padRtVolume = ApplicationState.pad4RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad4LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad4RftVolume, volumeDefaultValue)
             }
             5 -> {
-                padLftVolume = ApplicationState.pad5LftVolume
-                padRtVolume = ApplicationState.pad5RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad5LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad5RftVolume, volumeDefaultValue)
             }
             6 -> {
-                padLftVolume = ApplicationState.pad6LftVolume
-                padRtVolume = ApplicationState.pad6RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad6LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad6RftVolume, volumeDefaultValue)
             }
             7 -> {
-                padLftVolume = ApplicationState.pad7LftVolume
-                padRtVolume = ApplicationState.pad7RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad7LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad7RftVolume, volumeDefaultValue)
             }
             8 -> {
-                padLftVolume = ApplicationState.pad8LftVolume
-                padRtVolume = ApplicationState.pad8RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad8LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad8RftVolume, volumeDefaultValue)
             }
             9 -> {
-                padLftVolume = ApplicationState.pad9LftVolume
-                padRtVolume = ApplicationState.pad9RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad9LftVolume, volumeDefaultValue)
+                padRtVolume = sharedPref.getFloat(Definitions.pad9RftVolume, volumeDefaultValue)
             }
             10 -> {
-                padLftVolume = ApplicationState.pad10LftVolume
-                padRtVolume = ApplicationState.pad10RftVolume
+                padLftVolume =
+                    sharedPref.getFloat(Definitions.pad10LftVolume, volumeDefaultValue)
+                padRtVolume =
+                    sharedPref.getFloat(Definitions.pad10RftVolume, volumeDefaultValue)
             }
         }
 
+        Log.d("prefsVolume", " $padLftVolume")
 
         if (ApplicationState.hasLoadedAKit) {
 
@@ -353,7 +479,12 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     }
 
-    private fun playSound(soundId: Int?, padLftVolume: Float, padRftVolume: Float, padIndex: Int) {
+    private fun playSound(
+        soundId: Int?,
+        padLftVolume: Float,
+        padRftVolume: Float,
+        padIndex: Int
+    ) {
 
         soundPool.startSound(
             soundId,
@@ -381,7 +512,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         soundPlayTimeStamp: Long
     ) {
 
-        val numberOfPads = padArrayMapList.size
+        val numberOfPads = padTimeStampArrayMapList.size
 
 
         //Make sure we have an equal amount of pads inside both array list
@@ -394,7 +525,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                 if (padHitIndex.equals(padIndex)) {
 
                     //get the pad
-                    val pad = padArrayMapList[padHitIndex]
+                    val pad = padTimeStampArrayMapList[padHitIndex]
                     //log the time stamp for that pad to the array map
                     pad[soundPlayTimeStamp] =
                         PadSequenceTimeStamp(soundId, padIndex, soundPlayTimeStamp)
@@ -410,7 +541,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                 } else {
 
                     //Get the array map and fill dummy data to keep index inline for pads not triggered
-                    val pad = padArrayMapList.get(padHitIndex)
+                    val pad = padTimeStampArrayMapList.get(padHitIndex)
                     pad.put(null, PadSequenceTimeStamp(null, padHitIndex, null))
 
                     ApplicationState.padHitSequenceArrayList!![padHitIndex] = pad
@@ -426,7 +557,10 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
             }
         }
-        Log.d("timestamp", "number of pads = ${ApplicationState.padHitSequenceArrayList!!.size} ")
+        Log.d(
+            "timestamp",
+            "number of pads = ${ApplicationState.padHitSequenceArrayList!!.size} "
+        )
         ApplicationState.drumNoteHasBeenRecorded = true
 
     }
@@ -447,29 +581,47 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     fun padPlayBackchangePadState(padId: Int) {
         when (padId) {
             Definitions.pad1Index -> {
-                val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad1) }
-            Definitions.pad2Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad2)}
-            Definitions.pad3Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad3)}
-            Definitions.pad4Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad4)}
-            Definitions.pad5Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad5)}
-            Definitions.pad6Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad6)}
-            Definitions.pad7Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad7)}
-            Definitions.pad8Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad8)}
-            Definitions.pad9Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad9)}
-            Definitions.pad10Index -> {val showPadPlaying= ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad10)}
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad1)
+            }
+            Definitions.pad2Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad2)
+            }
+            Definitions.pad3Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad3)
+            }
+            Definitions.pad4Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad4)
+            }
+            Definitions.pad5Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad5)
+            }
+            Definitions.pad6Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad6)
+            }
+            Definitions.pad7Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad7)
+            }
+            Definitions.pad8Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad8)
+            }
+            Definitions.pad9Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad9)
+            }
+            Definitions.pad10Index -> {
+                val showPadPlaying = ShowPadPlaying()
+                showPadPlaying.showPadPlaying(pad10)
+            }
         }
     }
-
 
 
     private fun setVolumeSliderProgress(leftV: Float, rightV: Float) {
@@ -493,7 +645,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun loadSoundDialogMenu() {
-        val intent = Intent(activity!!.applicationContext, LoadDrumSoundDialogActivity::class.java)
+        val intent =
+            Intent(activity!!.applicationContext, LoadDrumSoundDialogActivity::class.java)
         startActivityForResult(intent, LOAD_REQUEST_CODE)
     }
 
@@ -525,68 +678,78 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     }
 
 
-    /////////////Main Slider knob for Volume or ect...
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-
-        val volume = progress.toFloat() / 100
-        setPadVolume(volume)
-
-    }
-
     private fun setPadVolume(volume: Float) {
 
         if (ApplicationState.selectedPadId == Definitions.pad1Id) {
-            ApplicationState.pad1LftVolume = volume
-            ApplicationState.pad1RftVolume = volume
+            setPadVolumePrefs(Definitions.pad1LftVolume, Definitions.pad1RftVolume, volume)
         }
         if (ApplicationState.selectedPadId == Definitions.pad2Id) {
-            ApplicationState.pad2LftVolume = volume
-            ApplicationState.pad2RftVolume = volume
+            setPadVolumePrefs(Definitions.pad2LftVolume, Definitions.pad2RftVolume, volume)
         }
         if (ApplicationState.selectedPadId == Definitions.pad3Id) {
-            ApplicationState.pad3LftVolume = volume
-            ApplicationState.pad3RftVolume = volume
+            setPadVolumePrefs(Definitions.pad3LftVolume, Definitions.pad3RftVolume, volume)
         }
         if (ApplicationState.selectedPadId == Definitions.pad4Id) {
-            ApplicationState.pad4LftVolume = volume
-            ApplicationState.pad4RftVolume = volume
+            setPadVolumePrefs(Definitions.pad4LftVolume, Definitions.pad4RftVolume, volume)
+
         }
         if (ApplicationState.selectedPadId == Definitions.pad5Id) {
-            ApplicationState.pad5LftVolume = volume
-            ApplicationState.pad5RftVolume = volume
+            setPadVolumePrefs(Definitions.pad5LftVolume, Definitions.pad5RftVolume, volume)
+
         }
         if (ApplicationState.selectedPadId == Definitions.pad6Id) {
-            ApplicationState.pad6LftVolume = volume
-            ApplicationState.pad6RftVolume = volume
+            setPadVolumePrefs(Definitions.pad6LftVolume, Definitions.pad6RftVolume, volume)
+
         }
         if (ApplicationState.selectedPadId == Definitions.pad7Id) {
-            ApplicationState.pad7LftVolume = volume
-            ApplicationState.pad7RftVolume = volume
+            setPadVolumePrefs(Definitions.pad7LftVolume, Definitions.pad7RftVolume, volume)
+
         }
         if (ApplicationState.selectedPadId == Definitions.pad8Id) {
-            ApplicationState.pad8LftVolume = volume
-            ApplicationState.pad8RftVolume = volume
+            setPadVolumePrefs(Definitions.pad8LftVolume, Definitions.pad8RftVolume, volume)
+
         }
         if (ApplicationState.selectedPadId == Definitions.pad9Id) {
-            ApplicationState.pad9LftVolume = volume
-            ApplicationState.pad9RftVolume = volume
+            setPadVolumePrefs(Definitions.pad9LftVolume, Definitions.pad9RftVolume, volume)
+
         }
         if (ApplicationState.selectedPadId == Definitions.pad10Id) {
-            ApplicationState.pad10LftVolume = volume
-            ApplicationState.pad10RftVolume = volume
+            setPadVolumePrefs(Definitions.pad10LftVolume, Definitions.pad10RftVolume, volume)
+
         }
 
     }
 
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+    private fun setPadVolumePrefs(
+        padLftVolume: String,
+        padRftVolume: String,
+        volume: Float
+    ) {
+
+        // val  sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE)
+
+        with(sharedPref.edit()) {
+            putFloat(padLftVolume, volume)
+            putFloat(padRftVolume, volume)
+            apply()
+        }
+
+
+
+        Log.d("padVolumeValue", "${sharedPref!!.getFloat(padLftVolume, 0.0f)}")
+
+
     }
 
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+    fun onStartTrackingTouch(seekBar: SeekBar?) {
+    }
+
+    fun onStopTrackingTouch(seekBar: SeekBar?) {
 
     }
 
     companion object {
-        val padArrayMapList = arrayListOf<ArrayMap<Long, PadSequenceTimeStamp>>()
+        val padTimeStampArrayMapList = arrayListOf<ArrayMap<Long, PadSequenceTimeStamp>>()
 
     }
 
