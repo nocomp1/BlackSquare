@@ -1,5 +1,7 @@
 package com.example.blacksquare.Singleton
 
+import android.util.Log
+
 object Bpm {
 
     private var userBpm: Long = 0L
@@ -37,11 +39,13 @@ object Bpm {
 
 
     fun getNoteRepeatInterval(selectedNoteRepeat: Int): Long? {
+        Log.d("bpm","$selectedNoteRepeat")
+
         val quarterNoteEquation = 60000L / getProjectTempo()
         val eightNoteEquation = 30000L / getProjectTempo()
         val sixtenthNoteEquation = 15000L / getProjectTempo()
-        val sixtyFourNoteEquation = 90000L / getProjectTempo()
-        val thirtyTwoNoteEquation = 45000L / getProjectTempo()
+        val sixtyFourNoteEquation = (60000L / getProjectTempo())*(4)/64
+        val thirtyTwoNoteEquation = (60000L / getProjectTempo())*(4)/32
         val quarterNoteTripletEquation = 40000L / getProjectTempo()
         val eightNoteTripletEquation = 20000L / getProjectTempo()
         val sixtenthNoteTripletEquation = 10000L / getProjectTempo()
