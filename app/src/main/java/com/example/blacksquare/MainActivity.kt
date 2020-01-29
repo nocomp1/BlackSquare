@@ -7,10 +7,12 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
@@ -18,7 +20,6 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
-import android.util.ArrayMap
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -41,68 +42,88 @@ import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
 import com.example.blacksquare.Tasks.PlayEngineTask
+import com.example.blacksquare.ViewModels.MainActivityViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.messaging.FirebaseMessaging
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.InputStream
+import java.math.BigInteger
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    PlayEngineTask.MetronomeListener, SeekBar.OnSeekBarChangeListener {
+    SeekBar.OnSeekBarChangeListener {
 
-    private lateinit var soundPool2: DrumPadSoundPool
-    private var uiClockSecondsCount: Long = 0
-    private var secondMilliInterval: Long = 1000
-    private var mFirebaseAnalytics: FirebaseAnalytics? = null
+    private lateinit var padPlayback1: DrumPadPlayBack
+    private lateinit var padPlayback2: DrumPadPlayBack
+    private lateinit var padPlayback3: DrumPadPlayBack
+    private lateinit var padPlayback4: DrumPadPlayBack
+    private lateinit var mainActivityViewModel : MainActivityViewModel
+    private lateinit var volumeSlider: SeekBar
     private lateinit var soundsViewModel: SoundsViewModel
-    private lateinit var metronomeSoundPool: DrumPadSoundPool
+    private lateinit var sharedPref: SharedPreferences
+    private lateinit var playEngineExecutor: ScheduledExecutorService
+    private lateinit var mygestureDetector: GestureDetector
+
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
     private var isMetronomeOn: Boolean = true
-    lateinit var sharedPref: SharedPreferences
-    lateinit var playEngineExecutor: ScheduledExecutorService
-    lateinit var playEngineTask: PlayEngineTask
-    lateinit var mygestureDetector: GestureDetector
-    var beatCount = 0
-    var milliPerBeat = 0L
-    var engineClock: Disposable? = null
-    private lateinit var volumeSlider: SeekBar
-    private lateinit var soundPool: SoundPool
-    var metronomeInterval: Long? = null
-    private var sound = 0
+    private var metronomeInterval: Long? = null
     private var currentBarMeasure: Int? = null
     private var currentTempo: Long? = null
     external fun stringFromJNI()
-    lateinit var padPlayback1 :DrumPadPlayBack
-    lateinit var padPlayback2 :DrumPadPlayBack
-    lateinit var padPlayback3 :DrumPadPlayBack
-    lateinit var padPlayback4 :DrumPadPlayBack
-    // external fun startEngine()
+
+    external fun startEngine(assetManager: AssetManager)
+    //external fun startEngine()
+
+
+    val TAG = "OpenSLESDemo"
+
+
+    external fun setDefaultStreamValues(
+        defaultSampleRate: Int,
+        defaultFramesPerBurst: Int
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        mainActivityViewModel = MainActivityViewModel(applicationContext)
 
-        padPlayback1 =DrumPadPlayBack(this)
-        padPlayback2 =DrumPadPlayBack(this)
-        padPlayback3 =DrumPadPlayBack(this)
-        padPlayback4 =DrumPadPlayBack(this)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
+    val myAudioMgr: AudioManager =  applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+    val defaultSampleRate = Integer.parseInt(sampleRateStr);
+    val framesPerBurstStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+    val defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr)
+
+        setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
+         // startEngine()
+    }
+
+        // startEngine(assets)
+
+        //startEngine()
+        //testReadingWaveHeader(assets)
+
+        padPlayback1 = DrumPadPlayBack(this)
+        padPlayback2 = DrumPadPlayBack(this)
+        padPlayback3 = DrumPadPlayBack(this)
+        padPlayback4 = DrumPadPlayBack(this)
 
         //Subscribe app to channel "all" for cloud messages
         //post to topics/app
         FirebaseMessaging.getInstance().subscribeToTopic("all")
-        // Obtain the FirebaseAnalytics instance.
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
-
 
         //////Setting up project shared preferences/////////
-        sharedPref = this.applicationContext.getSharedPreferences(Definitions.APP_SHARED_PREFS, Context.MODE_PRIVATE) ?: return
-
-
+        sharedPref = this.getPreferences(Context.MODE_PRIVATE)
 
         //////// Getting and setting our project tempo///////
         projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 120L)
@@ -113,14 +134,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
-        setUpMetronomeSoundPool()
-        loadMetronomeSound()
+        mainActivityViewModel.setUpMetronomeSoundPool()
+        mainActivityViewModel.loadMetronomeSound()
         metronomeInterval = Bpm.getBeatPerMilliSeconds()
-
-        playEngineTask = PlayEngineTask(application)
-
-        ///// callback to increment progress bar per beat
-        playEngineTask.setProgressListener(this)
 
         //full screen
         window.setFlags(
@@ -134,11 +150,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         ////Set up our Tabs
         val adapter = TabsViewPagerAdapter(supportFragmentManager)
-        adapter.addFragment(DrumScreenHomeFragment(), "Drums")
-        adapter.addFragment(InstrumentFragment(), "Instrument")
-        adapter.addFragment(SequenceFragment(), "Sequence")
-        adapter.addFragment(RecordingFragment(), "Recording")
-        adapter.addFragment(SongFragment(), "Song")
+        adapter.addFragment(DrumScreenHomeFragment(), DRUMS_SCREEN_NAME)
+            adapter.addFragment(InstrumentFragment(), INSTRUMENTS_SCREEN_NAME)
+        adapter.addFragment(SequenceFragment(), SEQUENCE_SCREEN_NAME)
+        adapter.addFragment(RecordingFragment(), RECORDING_SCREEN_NAME)
+        adapter.addFragment(SongFragment(), SONG_SCREEN_NAME)
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
 
@@ -146,27 +162,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         this.let {
             soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
         }
-
-//
-        // Set up our live data observers
-
-//        this.let {
-//            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-//
-//            ////Observer to communicate with the clock from main activity
-//            sharedViewModel.drumPadSequenceNoteList.observe(this, Observer {
-//                it?.let {
-//
-//                    Log.d("pad1playback", "sharedViewModel= $it")
-//
-//                }
-//            })
-//        }
-
-        //Set up icon for tabs
-//        val viewDrums = layoutInflater.inflate(R.layout.home_custom_tab,null)
-//        viewDrums.findViewById<ImageView>(R.id.icon).setBackgroundResource(R.drawable.ic_mpc)
-//        tabs.getTabAt(0)!!.customView=viewDrums
 
 
         //create our listener for the ui button touch events
@@ -198,38 +193,108 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         millisec_clock.typeface = myTypeface
         resetUiClock()
 
+    }
 
-        isPhoneSetToDarkTheme()
+
+
+    /**
+     * ------------------------PRACTICING READING WAVE FILES----------------------------------------------------------------------------------------
+     */
+    private fun testReadingWaveHeader(assets: AssetManager) {
+        //InputStream to a file path from the assets
+        val fileInputStream: InputStream = assets.open("sound1.wav")
+
+        //Read the file - we get an array with size of 4 to represent the first 4bytes of a wave file
+        // that contains the type characters are 1 byte long - expecting "RIFF"
+        val fourByteBuffers = ByteArray(4)
+        val twoByteBuffers = ByteArray(2)
+        //Now lets read our fileInputStream - which is at the 4bytes position
+        fileInputStream.read(fourByteBuffers)
+        // at this point, the buffer contains the 4 bytes
+        Log.d("testReadingWave","marks the file as a RIFF = ${String(fourByteBuffers)}")
+
+        //Now lets read our fileSIZE /NEXT 4 BYTES == INTEGER which is at the 8bytes position
+        fileInputStream.read(fourByteBuffers)
+
+        // at this point, the buffer contains the 4 bytes
+        Log.d("testReadingWave","FILE SIZE = ${littleEndianConversion(fourByteBuffers)}")
+        Log.d("testReadingWave","FILE SIZE bigInteger = ${BigInteger(fourByteBuffers)}")
+
+        //next 4bytes we should ge the file type "WAVE" which is at the 12bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave","type of file = ${String(fourByteBuffers)}")
+
+        //Format chunk marker "String".= 16bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave","Format chunk = ${String(fourByteBuffers)}")
+
+        //Length of Format chunk = 20bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave","Length of Format chunk = ${littleEndianConversion(fourByteBuffers)}")
+
+        //File Format 1 = PCM"= 22bytes position
+        fileInputStream.read(twoByteBuffers)
+        Log.d("testReadingWave","File Format 1 equals PCM = ${littleEndianConversion(fourByteBuffers)}")
+
+        //Number of channels 1 = mono 2 = stereo"= 24bytes position
+        fileInputStream.read(twoByteBuffers)
+        Log.d("testReadingWave","Number of channels 1 = mono 2 = stereo = ${littleEndianConversion(fourByteBuffers)}")
+
+        //Sampling rate= 28bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave","Sampling rate= = ${integerConversion(fourByteBuffers)}")
+        fileInputStream.close()
+
+
+
+
+    }
+
+
+    fun littleEndianConversion(bytes: ByteArray): Int {
+        var result = 0
+        for (i in bytes.indices) {
+            result = result or (bytes[i].toInt() shl 8 * i)
+        }
+        return result
+    }
+
+    fun integerConversion(bytes: ByteArray): Int {
+        var result = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt()
+
+        return result
+    }
+    /**
+     * ------------------------------------------------------------------------------------------------------------------------------
+     */
+    //external fun add(a: Int, b: Int): Int
+    external fun startPlayEngineFromNative(): String
+
+    external fun stopPlayEngineFromNative()
+
+    var count: Int = 0
+    fun messageMe(text: String) {
+        updateUiClockEveryMilliSec()
+        count++
+        //Log.d("nativeCode", text)
+        Log.d("nativeCode", "${count} second")
     }
 
     /**
      * Pad Playback methods
      */
 
-    private var millisecSequenceIndex = 0L
-    private var pad2SequenceListIndex = 0L
-    private var pad3SequenceListIndex = 0L
-    private var pad4SequenceListIndex = 0L
-
-
     fun onUndoTapped(view: View) {
         if (DrumPadPlayBack.padHitUndoSequenceList!!.size != 0) {
 
             lateinit var dialog: AlertDialog
-
-            // Initialize a new instance of alert dialog builder object
             val builder = AlertDialog.Builder(this)
-            // Set a title for alert dialog
-            builder.setTitle("Undo?")
-            // Set a message for alert dialog
-            builder.setMessage("Are you sure you want to undo the last selected pad sequence?")
+                .setTitle("Undo?")
+                .setMessage("Are you sure you want to undo the last selected pad sequence?")
 
-            // On click listener for dialog buttons
             val dialogClickListener = DialogInterface.OnClickListener { _, which ->
                 when (which) {
                     DialogInterface.BUTTON_POSITIVE -> {
-
-
                         undoLastSequence()
                     }
                     DialogInterface.BUTTON_NEGATIVE -> {
@@ -238,17 +303,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                 }
             }
 
-            // Set the alert dialog positive/yes button
             builder.setPositiveButton("YES", dialogClickListener)
-
-            // Set the alert dialog negative/no button
-            builder.setNegativeButton("NO", dialogClickListener)
-
-            // Initialize the AlertDialog using builder object
-            dialog = builder.create()
-
-            // Finally, display the alert dialog
-            dialog.show()
+                .setNegativeButton("NO", dialogClickListener)
+                .create()
+                .show()
 
         } else {
 
@@ -256,169 +314,62 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
 
-    private fun undoLastSequence() {
 
-        if (DrumPadPlayBack.padHitUndoSequenceList!!.size != 0) {
-            //loop through all pads
-            var padIndexCounter1 = 0
-            while (padIndexCounter1 < ApplicationState.padHitSequenceArrayList!!.size) {
-
-               // if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
-                    //remove last pattern
-                    DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].removeAt(
-                        DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].size - 1
-                    )
-                    DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].trimToSize()
-
-                    //now check if the list is not empty since we remove pattern first
-                    if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
-                        //get the last pattern
-                        val previousPattern =
-                            ArrayMap(DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].last())
-
-                        //set the last pattern to the original list
-                        DrumScreenHomeFragment.padTimeStampArrayMapList.set(
-                            padIndexCounter1,
-                            previousPattern
-                        )
-                        ApplicationState.padHitSequenceArrayList!!.set(
-                            padIndexCounter1,
-                            previousPattern
-                        )
-                    }else{
-
-                        //Return to the original state when we first started
-
-
-                    }
-              //  }
-                padIndexCounter1++
-            }
-        }
-    }
+    private fun undoLastSequence() { mainActivityViewModel.undoLastSequence() }
 
     /**
      * Pad playbacks (called every millisecond)
      */
-    private fun showPadHitState(padIndex : Int) {
+    private fun showPadHitState(padIndex: Int) {
 
-        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(ApplicationState.uiSequenceMillisecCounter)){
+        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(ApplicationState.uiSequenceMillisecCounter)) {
             Log.d("pad1playback", "pad playback is triggered")
             //show pad being triggered
             soundsViewModel.playbackPadId.postValue(padIndex)
         }
     }
+
     private fun pad1Playback() {
-        padPlayback1.padPlayback(Definitions.pad1Index,
+        padPlayback1.padPlayback(
+            Definitions.pad1Index,
             sharedPref.getFloat(Definitions.pad1LftVolume, Definitions.padVolumeDefault)
-            ,sharedPref.getFloat(Definitions.pad1RftVolume,Definitions.padVolumeDefault))
+            , sharedPref.getFloat(Definitions.pad1RftVolume, Definitions.padVolumeDefault)
+        )
         showPadHitState(Definitions.pad1Index)
     }
-    fun pad2Playback() {
-        padPlayback2.padPlayback(Definitions.pad2Index,
+
+    private fun pad2Playback() {
+        padPlayback2.padPlayback(
+            Definitions.pad2Index,
             sharedPref.getFloat(Definitions.pad2LftVolume, Definitions.padVolumeDefault)
-            ,sharedPref.getFloat(Definitions.pad2RftVolume,Definitions.padVolumeDefault))
+            , sharedPref.getFloat(Definitions.pad2RftVolume, Definitions.padVolumeDefault)
+        )
         showPadHitState(Definitions.pad2Index)
     }
 
-    fun pad3Playback() {
-        padPlayback3.padPlayback(Definitions.pad3Index,
+    private fun pad3Playback() {
+        padPlayback3.padPlayback(
+            Definitions.pad3Index,
             sharedPref.getFloat(Definitions.pad3LftVolume, Definitions.padVolumeDefault)
-            ,sharedPref.getFloat(Definitions.pad3RftVolume,Definitions.padVolumeDefault))
+            , sharedPref.getFloat(Definitions.pad3RftVolume, Definitions.padVolumeDefault)
+        )
         showPadHitState(Definitions.pad3Index)
     }
 
-    fun pad4Playback() {
-        padPlayback4.padPlayback(Definitions.pad4Index,
+    private fun pad4Playback() {
+        padPlayback4.padPlayback(
+            Definitions.pad4Index,
             sharedPref.getFloat(Definitions.pad4LftVolume, Definitions.padVolumeDefault)
-            ,sharedPref.getFloat(Definitions.pad4RftVolume,Definitions.padVolumeDefault))
+            , sharedPref.getFloat(Definitions.pad4RftVolume, Definitions.padVolumeDefault)
+        )
         showPadHitState(Definitions.pad4Index)
-    }
-
-
-    external fun add(a: Int, b: Int): Int
-
-    private fun isPhoneSetToDarkTheme() {
-
-        val mode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
-        when (mode) {
-            Configuration.UI_MODE_NIGHT_YES -> {
-                //  Toast.makeText(this, stringFromJNI().toString(), Toast.LENGTH_SHORT).show()
-                val bundle = Bundle()
-                bundle.putInt("dark_theme_enabled_count", 1)
-                mFirebaseAnalytics?.logEvent("app_dark_theme_is_enabled", bundle)
-
-                //Logging for Audience
-                mFirebaseAnalytics?.setUserProperty(
-                    DARK_THEME_ENABLED_USER_PROPERTY,
-                    DARK_THEME_ENABLED_VALUE
-                )
-            }
-            Configuration.UI_MODE_NIGHT_NO -> {
-                //Toast.makeText(this, "UI_MODE_NIGHT_NO", Toast.LENGTH_SHORT).show()
-                val bundle = Bundle()
-                bundle.putInt("dark_theme_disabled_count", 1)
-                mFirebaseAnalytics?.logEvent("app_dark_theme_is_not_enabled", bundle)
-
-                //Logging for Audience
-                mFirebaseAnalytics?.setUserProperty(
-                    DARK_THEME_ENABLED_USER_PROPERTY,
-                    DARK_THEME_DISABLED_VALUE
-                )
-            }
-            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-                Toast.makeText(this, "UI_MODE_NIGHT_UNDEFINED", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-
-    }
-
-    /**
-     * Metronome
-     * call this method after changing the sound
-     */
-
-    fun loadMetronomeSound() {
-        sound = soundPool.load(this, Metronome.getSoundId(), 1)
-    }
-
-    private fun playMetronomeSound() {
-
-
-        if (Metronome.isActive()) {
-            if ((ApplicationState.metronomeMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.metronomeMillisecCounter == 0L)) {
-
-                //Play the sound
-                soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
-
-                //reset the counter
-                ApplicationState.metronomeMillisecCounter = 0L
-
-            }
-        } else {
-            ApplicationState.metronomeMillisecCounter = 0L
-        }
-
-        ApplicationState.metronomeMillisecCounter++
-    }
-
-    private fun setUpMetronomeSoundPool() {
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(1)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            .build()
     }
 
     /**
      * Main progress bar --- This is called every millisecond and updated every beat
      */
 
-    override fun updateProgressBar() {
+    fun updateProgressBar() {
 
         //increase every beat
         if ((ApplicationState.uiProgressBarMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.uiProgressBarMillisecCounter == 0L)) {
@@ -463,7 +414,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                         Log.d("xxx", "progress ${fabProgress.progress}")
                     }
 
-
                 }
                 Definitions.eightBars -> {
                     maxMetronomeIncrement = 10
@@ -485,92 +435,40 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    fun resetProgressBar() {
-        fabProgress.progress = 0
-    }
+    private fun resetProgressBar() { fabProgress.progress = 0 }
 
     /**
      * UICLOCK
      */
 
-    override fun updateUiClockEveryMilliSec() {
+    private fun updateUiClockEveryMilliSec() {
 
-        //For sequence time reached reset counter
-        if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-
-            // Log.d("sequencetime","sequencetime= ${ApplicationState.uiSequenceMillisecCounter}")
-            // Log.d(" sequenceTime", Bpm.getPatternTimeInMilliSecs().toString())
-            ApplicationState.uiSequenceMillisecCounter = 0
-        }
-
-        // start our clock and beat count at 1 and increment from there
-        if ((ApplicationState.uiClockMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.uiClockMillisecCounter == 0L)) {
-            beatCount++
-            ApplicationState.uiClockMillisecCounter = 0L
-        }
-
-        if (beatCount > (ApplicationState.selectedBarMeasure * 4)) {
-            //resetting the beat count
-            beatCount = 1
-
-            //always updating progress every beat
-            updateProgressBar()
-
-        }
-
-
-        val milliSecPerBeat = String.format("%04d", ApplicationState.uiClockMillisecCounter)
-        val beats = String.format("%02d", beatCount)
-        val uIClock = SpannableStringBuilder(beats)
-        uIClock.setSpan(
-            ForegroundColorSpan(ContextCompat.getColor(this, R.color.colorAccent)),
-            0, 2,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-
-        uIClock.append(" : ")
-        //uIClock.append(oneHundmillis)
-        uIClock.append(milliSecPerBeat)
-
-        //post to ui thread
         millisec_clock.post {
-            millisec_clock.text = uIClock
+            millisec_clock.text = mainActivityViewModel.updateUiClockEveryMilliSec()
         }
 
-        //update counters
-        ApplicationState.uiClockMillisecCounter++
-        ApplicationState.uiSequenceMillisecCounter++
+        updateUIeveryMillisecond()
 
-        //call these functions every millisecond
-        playMetronomeSound()
-        updateProgressBar()
-        //soundsViewModel.drumPadSequenceNoteList.postValue(ApplicationState.uiSequenceMillisecCounter)
-        pad1Playback()
-        pad2Playback()
-        pad3Playback()
-        pad4Playback()
+    }
+
+    private fun updateUIeveryMillisecond() {
+     mainActivityViewModel.playMetronomeSound()
+     updateProgressBar()
+     pad1Playback()
+     pad2Playback()
+     pad3Playback()
+     pad4Playback()
+
     }
 
     private fun resetUiClock() {
-        beatCount = 0
-        ApplicationState.uiClockMillisecCounter = 0L
-        val uIClock = SpannableStringBuilder("00")
-        uIClock.setSpan(
-            ForegroundColorSpan(ContextCompat.getColor(this, R.color.colorAccent)),
-            0, 2,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-        uIClock.append(" : ")
-        uIClock.append("0000")
-
-        //post to ui thread
         millisec_clock.post {
-            millisec_clock.text = uIClock
+            millisec_clock.text = mainActivityViewModel.resetUiClock()
         }
     }
 
     /**
-     * Multi horizontal slider control
+     * Multi functional horizontal slider control
      */
 
     private fun setUpMenuforMainVolumeslider() {
@@ -601,9 +499,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    //Volume Slider input from user --> to fragments
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        //Move this variable tho mainActivity viewmodel
         soundsViewModel.mainSliderValue.postValue(progress)
     }
 
@@ -644,32 +542,18 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      * Main play engine
      */
 
-    fun startPlayEngine() {
-//
-//        engineClock = Observable.interval(1, TimeUnit.MILLISECONDS)
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe {
-//                playMetronomeSound(it)
-//                updateUiClockEveryMilliSec(it)
-//            }
-
-
+    private fun startPlayEngine() {
+        val task = Runnable { updateUiClockEveryMilliSec() }
         playEngineExecutor = Executors.newScheduledThreadPool(1)
-        playEngineExecutor.scheduleAtFixedRate(playEngineTask, 0, 1000000, TimeUnit.NANOSECONDS)
+        playEngineExecutor.scheduleAtFixedRate(task, 0, 1000, TimeUnit.MICROSECONDS)
 
     }
 
-
-    fun stopPlayEngine() {
-
+    private fun stopPlayEngine() {
         playEngineExecutor.shutdownNow()
 
-        //reset uiClock
         resetUiClock()
-        //reset progress bar
         resetProgressBar()
-
         //reset counters
         ApplicationState.metronomeMillisecCounter = 0L
         ApplicationState.uiProgressBarMillisecCounter = 0L
@@ -678,10 +562,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         padPlayback2.resetCounter()
         padPlayback3.resetCounter()
         padPlayback4.resetCounter()
-        millisecSequenceIndex = 0
-        pad2SequenceListIndex = 0
-        pad3SequenceListIndex = 0
-        pad4SequenceListIndex = 0
+
     }
 
     /**
@@ -710,34 +591,23 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         velocityY: Float
     ) {
 
-        Log.d(
-            Companion.GESTURETAGBUTTON,
-            "on fling\t Veloxity x \t\t" + velocityX + "\t\tveloxity y\t\t" + velocityY
-        )
-
     }
 
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {
-        Log.d(Companion.GESTURETAGBUTTON, "single confirmed")
-
         /////////////////NOTE REPEAT //////////////
         if (ApplicationState.noteRepeatActive) {
             note_repeat_btn.setBackgroundResource(R.drawable.default_pad)
             ApplicationState.noteRepeatActive = false
 
-
         } else {
 
             note_repeat_btn.setBackgroundResource(R.drawable.note_repeat_selected_state)
             ApplicationState.noteRepeatActive = true
-
         }
 
     }
 
     override fun onFabDoubleTap(e: MotionEvent?) {
-        // Log.d(GESTURETAGBUTTON, "double  tap ")
-
         ///Note repeat menu double tapped
         val intent = Intent(applicationContext, NoteRepeatDialogActivity::class.java)
         startActivityForResult(intent, Companion.LOAD_SOUND_REQUEST_CODE)
@@ -756,12 +626,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             (play_stop_btn.drawable as AnimatedVectorDrawable).start()
 
-
             ///////Set the play state//////
             ApplicationState.isPlaying = true
             startPlayEngine()
-
-
 
             if (!ApplicationState.isRecording) {
 
@@ -770,15 +637,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         } else {
 
-            // fab.setBackgroundResource(R.drawable.default_pad)
             play_stop_btn.setImageResource(R.drawable.stop_to_play_anim)
             (play_stop_btn.drawable as AnimatedVectorDrawable).start()
 
-
-
             ApplicationState.isPlaying = false
             ApplicationState.isMillisecondClockPlaying = false
-
 
             fabProgress.progress = 0
 
@@ -790,9 +653,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-
     fun onRecordTapped(view: View) {
-
         //start recording
         if (!ApplicationState.isRecording) {
             record_btn.setImageResource(R.drawable.ic_recording_color)
@@ -800,20 +661,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                 ContextCompat.getColor(this, R.color.recording),
                 android.graphics.PorterDuff.Mode.MULTIPLY
             )
-            //fab.setColorFilter(R.color.pinkendcolor)
-            //fab.background=getDrawable(R.color.pinkendcolor)
-            // (record_btn.drawable as AnimatedVectorDrawable).start()
             ApplicationState.isRecording = true
-
 
         } else {
 
-            //stop recording
-
-            // fab.setBackgroundResource(R.drawable.default_pad)
-            // fab.setColorFilter(R.color.colorPrimaryDark)
             record_btn.setImageResource(R.drawable.ic_record_default)
-            // (play_stop_btn.drawable as AnimatedVectorDrawable).start()
             ApplicationState.isRecording = false
 
         }
@@ -821,13 +673,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     fun onSettingsTapped(view: View) {
 
-        val intent = Intent(applicationContext, SettingsDialogActivity::class.java)
+        val intent = Intent(this, SettingsDialogActivity::class.java)
         startActivityForResult(intent, Companion.SETTINGS_REQUEST_CODE)
     }
 
 
     fun onLoadTapped(view: View) {
-        val intent = Intent(applicationContext, LoadDrumSoundDialogActivity::class.java)
+        val intent = Intent(this, LoadDrumSoundDialogActivity::class.java)
         startActivityForResult(intent, Companion.LOAD_SOUND_REQUEST_CODE)
     }
 
@@ -876,22 +728,22 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
 
     }
+    override fun onDestroy() {
+        super.onDestroy()
+    }
 
     companion object {
-
-
-        const val DARK_THEME_ENABLED_USER_PROPERTY = "UsesDarkMode"
-        const val GESTURETAGBUTTON = "MAINACTIVITYTOUCHMEBUTTON"
-        const val DARK_THEME_ENABLED_VALUE = "true"
-        const val DARK_THEME_DISABLED_VALUE = "false"
         const val SETTINGS_REQUEST_CODE: Int = 200
         const val LOAD_SOUND_REQUEST_CODE: Int = 300
-
+        const val  DRUMS_SCREEN_NAME = "Drums"
+        const val  INSTRUMENTS_SCREEN_NAME = "Instruments"
+        const val  SEQUENCE_SCREEN_NAME = "Sequence"
+        const val  RECORDING_SCREEN_NAME = "Recording"
+        const val  SONG_SCREEN_NAME = "Song"
         init {
-            // System.loadLibrary("native-lib")
+            System.loadLibrary("native-lib")
+           // System.loadLibrary("OpenSLESDemo")
         }
-
-
     }
 }
 

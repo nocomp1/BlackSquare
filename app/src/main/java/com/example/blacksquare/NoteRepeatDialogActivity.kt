@@ -1,6 +1,7 @@
 package com.example.blacksquare
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Window
 import android.widget.RadioButton
 import android.widget.TableLayout
@@ -23,14 +24,18 @@ class NoteRepeatDialogActivity : AppCompatActivity() {
         setContentView(R.layout.activity_note_repeat_dialog)
 
 
-        patternList = getRadioBtnGroupIds(note_repeat_radio_group)
+        patternList = getRadioBtnGroupIds(note_repeat_radio_group as ToggleButtonGroupTableLayout)
+        for (element in patternList) {
+
+            Log.d("noteRepeatList","${element}")
+        }
 
         setUpNoteRepeatChoice()
     }
 
 
     private fun setUpNoteRepeatChoice() {
-        var selectedChoice = ApplicationState.selectedNoteRepeatId
+        val selectedChoice = ApplicationState.selectedNoteRepeatId
 
         if (selectedChoice == -1) {
 
@@ -45,7 +50,7 @@ class NoteRepeatDialogActivity : AppCompatActivity() {
 
     private fun getRadioBtnGroupIds(view: ToggleButtonGroupTableLayout): ArrayList<Int> {
 
-        var groupIds: ArrayList<Int> = arrayListOf()
+        var groupIds: ArrayList<Int> = ArrayList()
 
         //The table layout that holds our radio buttons
         val tl = view as (TableLayout)
@@ -53,21 +58,35 @@ class NoteRepeatDialogActivity : AppCompatActivity() {
         var rowCounter = 0
         var viewCounter = 0
 
+        Log.d("noteRepeatList","tlRowCount =${tlRowCount}")
+
         while (rowCounter < tlRowCount) {
+            viewCounter = 0
+            Log.d("noteRepeatList","RowCounter =${rowCounter}")
             val tr = tl.getChildAt(rowCounter) as (TableRow)
             val c = tr.childCount
+            Log.d("noteRepeatList","child count ${c}")
             while (viewCounter < c) {
                 ///Get the view that in the table row
                 val v = tr.getChildAt(viewCounter)
                 if (v is RadioButton) {
                     //get the id
                     groupIds.add(v.id)
-
+                    Log.d("noteRepeatList","groupID's inside =${v.id}")
                 }
                 viewCounter++
             }
+
             rowCounter++
         }
+
+
+        for (element in groupIds) {
+
+            Log.d("noteRepeatList","groupID's =${element}")
+        }
+
+
 
         return groupIds
 

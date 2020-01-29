@@ -2,12 +2,11 @@ package com.example.blacksquare.Managers
 
 import android.content.Context
 import android.util.ArrayMap
-import com.example.blacksquare.Fragments.DrumScreenHomeFragment
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 
-class DrumPadPlayBack(context: Context) {
+class DrumPadPlayBack(applicationContext: Context) {
 
     private var soundPool2: DrumPadSoundPool
 
@@ -16,7 +15,7 @@ class DrumPadPlayBack(context: Context) {
 
     init {
         //////Sound Pool for playback///////
-        val drumPadSoundPool = DrumPadSoundPool(context)
+        val drumPadSoundPool = DrumPadSoundPool(applicationContext)
         soundPool2 = drumPadSoundPool //startEngine()
         soundPool2.loadSoundKit(SoundResManager.getDefaultKitFilesIds())
 

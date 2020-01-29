@@ -115,17 +115,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         loadAsoundKit(SoundResManager.getDefaultKitFilesIds())
 
 
+        initPadTimeStampArrayList()
 
-        padTimeStampArrayMapList.add(pad1HitMap)
-        padTimeStampArrayMapList.add(pad2HitMap)
-        padTimeStampArrayMapList.add(pad3HitMap)
-        padTimeStampArrayMapList.add(pad4HitMap)
-
-
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad1Index, pad1HitMap)
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad2Index, pad1HitMap)
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad3Index, pad1HitMap)
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad4Index, pad1HitMap)
 
 
 //        ApplicationState.padHitUndoSequenceList!!.add(padArrayMapArrayList)
@@ -137,6 +128,22 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         ///Set up our live data observers
         setUpLiveDataToObserve()
 
+
+    }
+
+    fun initPadTimeStampArrayList() {
+       Log.d("drumFrag","it called it")
+        //Array map that holds timestamps for each pad hit
+        padTimeStampArrayMapList.add(pad1HitMap)
+        padTimeStampArrayMapList.add(pad2HitMap)
+        padTimeStampArrayMapList.add(pad3HitMap)
+        padTimeStampArrayMapList.add(pad4HitMap)
+
+        //Array list that holds the array map timestamps for each pad
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad1Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad2Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad3Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad4Index, pad1HitMap)
 
     }
 
@@ -235,7 +242,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
             val action: Runnable = Runnable {
 
-                Log.d("NREPEAT", "NOTE REPEAT Action down")
+               // Log.d("NREPEAT", "NOTE REPEAT Action down")
                                     handlePadEvent(
                         padIndex,
                         padId
@@ -254,15 +261,13 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
                         if (ApplicationState.noteRepeatActive) {
 
                             val noteRepeatInterval =
-                                (Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat)!!.times(
-                                    1000000
-                                ))
-
+                                (Bpm.getNoteRepeatInterval(ApplicationState.selectedNoteRepeat))!!.times(1000)
+                            Log.d("NREPEAT", "interval = $noteRepeatInterval")
                             //manually change pad state
                             pad.isPressed = true
                             pad.invalidate()
                             noteRepeatEngineExecutor = Executors.newScheduledThreadPool(1)
-                            noteRepeatEngineExecutor.scheduleAtFixedRate(action, 0, noteRepeatInterval, TimeUnit.NANOSECONDS)
+                            noteRepeatEngineExecutor.scheduleAtFixedRate(action, 0, noteRepeatInterval!!, TimeUnit.MICROSECONDS)
 
 
 //                            noteRepeatEngine =

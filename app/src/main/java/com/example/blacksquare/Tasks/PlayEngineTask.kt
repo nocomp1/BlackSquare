@@ -29,9 +29,7 @@ class PlayEngineTask(applicationContext: Context) : Runnable {
         fun updateUiClockEveryMilliSec()
     }
 
-    fun setProgressListener(callback: MetronomeListener) {
-        this.callback = callback as MainActivity
-    }
+
 
    // var player: AudioTrack
    // val minBufferSize: Int
@@ -86,6 +84,7 @@ class PlayEngineTask(applicationContext: Context) : Runnable {
      * This engine is triggered every millisecond
      */
     override fun run() {
+       // Thread().priority = Thread.MAX_PRIORITY
 
         callback.updateUiClockEveryMilliSec()
 
