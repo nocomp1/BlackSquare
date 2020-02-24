@@ -50,4 +50,16 @@
     <string name="pitch">Pitch</string>
     <string name="volume">Volume</string>
     <string name="ui_clock">%1$d : %s</string>
+    <string name="p1">p1</string>
+    <string name="p2">p2</string>
+    <string name="p3">p3</string>
+    <string name="p4">p4</string>
+    <string name="p5">p5</string>
+    <string name="p6">p6</string>
+    <string name="p7">p7</string>
+    <string name="p8">p8</string>
+    <string name="p9">p9</string>
+    <string name="p10">p10</string>
+    <string name="p11">p11</string>
+    <string name="p12">p12</string>
 </resources>

@@ -8,23 +8,15 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
-import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.media.AudioAttributes
+import android.graphics.drawable.TransitionDrawable
 import android.media.AudioManager
-import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import android.widget.PopupMenu
 import android.widget.SeekBar
 import android.widget.Toast
@@ -32,22 +24,23 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
+import androidx.transition.Scene
+import androidx.transition.Slide
+import androidx.transition.Transition
+import androidx.transition.TransitionManager
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.DrumPadPlayBack
-import com.example.blacksquare.Managers.DrumPadSoundPool
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
-import com.example.blacksquare.Tasks.PlayEngineTask
 import com.example.blacksquare.ViewModels.MainActivityViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.messaging.FirebaseMessaging
-import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.main_ui_controls.*
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -64,7 +57,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var padPlayback2: DrumPadPlayBack
     private lateinit var padPlayback3: DrumPadPlayBack
     private lateinit var padPlayback4: DrumPadPlayBack
-    private lateinit var mainActivityViewModel : MainActivityViewModel
+    private lateinit var mainActivityViewModel: MainActivityViewModel
     private lateinit var volumeSlider: SeekBar
     private lateinit var soundsViewModel: SoundsViewModel
     private lateinit var sharedPref: SharedPreferences
@@ -78,6 +71,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var currentBarMeasure: Int? = null
     private var currentTempo: Long? = null
     external fun stringFromJNI()
+    private lateinit var mainControlsSceneRoot: ViewGroup
+    private lateinit var mainUiControlsScene: Scene
+    private lateinit var mainUiPatternControlScene: Scene
 
     external fun startEngine(assetManager: AssetManager)
     //external fun startEngine()
@@ -96,17 +92,25 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         setContentView(R.layout.activity_main)
         mainActivityViewModel = MainActivityViewModel(applicationContext)
 
+        //initialize layout scenes
+        mainControlsSceneRoot = findViewById(R.id.ui_scene_controls_root)
+        mainUiControlsScene =
+            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_ui_controls, this)
+        mainUiPatternControlScene =
+            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_pattern_controls, this)
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
-    val myAudioMgr: AudioManager =  applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-    val defaultSampleRate = Integer.parseInt(sampleRateStr);
-    val framesPerBurstStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-    val defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            val myAudioMgr: AudioManager =
+                applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+            val defaultSampleRate = Integer.parseInt(sampleRateStr);
+            val framesPerBurstStr =
+                myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+            val defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr)
 
-        setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
-         // startEngine()
-    }
+            setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
+            // startEngine()
+        }
 
         // startEngine(assets)
 
@@ -151,7 +155,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         ////Set up our Tabs
         val adapter = TabsViewPagerAdapter(supportFragmentManager)
         adapter.addFragment(DrumScreenHomeFragment(), DRUMS_SCREEN_NAME)
-            adapter.addFragment(InstrumentFragment(), INSTRUMENTS_SCREEN_NAME)
+        adapter.addFragment(InstrumentFragment(), INSTRUMENTS_SCREEN_NAME)
         adapter.addFragment(SequenceFragment(), SEQUENCE_SCREEN_NAME)
         adapter.addFragment(RecordingFragment(), RECORDING_SCREEN_NAME)
         adapter.addFragment(SongFragment(), SONG_SCREEN_NAME)
@@ -183,7 +187,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         volumeSlider.setOnSeekBarChangeListener(this)
 
         //Selector menu for volume slider
-        setUpMenuforMainVolumeslider()
+        setUpMenuForMainVolumeSlider()
 
         ////////Ui clock/////////
         val myTypeface = Typeface.createFromAsset(
@@ -194,7 +198,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         resetUiClock()
 
     }
-
 
 
     /**
@@ -211,41 +214,48 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //Now lets read our fileInputStream - which is at the 4bytes position
         fileInputStream.read(fourByteBuffers)
         // at this point, the buffer contains the 4 bytes
-        Log.d("testReadingWave","marks the file as a RIFF = ${String(fourByteBuffers)}")
+        Log.d("testReadingWave", "marks the file as a RIFF = ${String(fourByteBuffers)}")
 
         //Now lets read our fileSIZE /NEXT 4 BYTES == INTEGER which is at the 8bytes position
         fileInputStream.read(fourByteBuffers)
 
         // at this point, the buffer contains the 4 bytes
-        Log.d("testReadingWave","FILE SIZE = ${littleEndianConversion(fourByteBuffers)}")
-        Log.d("testReadingWave","FILE SIZE bigInteger = ${BigInteger(fourByteBuffers)}")
+        Log.d("testReadingWave", "FILE SIZE = ${littleEndianConversion(fourByteBuffers)}")
+        Log.d("testReadingWave", "FILE SIZE bigInteger = ${BigInteger(fourByteBuffers)}")
 
         //next 4bytes we should ge the file type "WAVE" which is at the 12bytes position
         fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave","type of file = ${String(fourByteBuffers)}")
+        Log.d("testReadingWave", "type of file = ${String(fourByteBuffers)}")
 
         //Format chunk marker "String".= 16bytes position
         fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave","Format chunk = ${String(fourByteBuffers)}")
+        Log.d("testReadingWave", "Format chunk = ${String(fourByteBuffers)}")
 
         //Length of Format chunk = 20bytes position
         fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave","Length of Format chunk = ${littleEndianConversion(fourByteBuffers)}")
+        Log.d(
+            "testReadingWave",
+            "Length of Format chunk = ${littleEndianConversion(fourByteBuffers)}"
+        )
 
         //File Format 1 = PCM"= 22bytes position
         fileInputStream.read(twoByteBuffers)
-        Log.d("testReadingWave","File Format 1 equals PCM = ${littleEndianConversion(fourByteBuffers)}")
+        Log.d(
+            "testReadingWave",
+            "File Format 1 equals PCM = ${littleEndianConversion(fourByteBuffers)}"
+        )
 
         //Number of channels 1 = mono 2 = stereo"= 24bytes position
         fileInputStream.read(twoByteBuffers)
-        Log.d("testReadingWave","Number of channels 1 = mono 2 = stereo = ${littleEndianConversion(fourByteBuffers)}")
+        Log.d(
+            "testReadingWave",
+            "Number of channels 1 = mono 2 = stereo = ${littleEndianConversion(fourByteBuffers)}"
+        )
 
         //Sampling rate= 28bytes position
         fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave","Sampling rate= = ${integerConversion(fourByteBuffers)}")
+        Log.d("testReadingWave", "Sampling rate= = ${integerConversion(fourByteBuffers)}")
         fileInputStream.close()
-
-
 
 
     }
@@ -264,6 +274,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         return result
     }
+
     /**
      * ------------------------------------------------------------------------------------------------------------------------------
      */
@@ -315,7 +326,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
 
-    private fun undoLastSequence() { mainActivityViewModel.undoLastSequence() }
+    private fun undoLastSequence() {
+        mainActivityViewModel.undoLastSequence()
+    }
 
     /**
      * Pad playbacks (called every millisecond)
@@ -435,7 +448,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    private fun resetProgressBar() { fabProgress.progress = 0 }
+    private fun resetProgressBar() {
+        fabProgress.progress = 0
+    }
 
     /**
      * UICLOCK
@@ -452,12 +467,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     private fun updateUIeveryMillisecond() {
-     mainActivityViewModel.playMetronomeSound()
-     updateProgressBar()
-     pad1Playback()
-     pad2Playback()
-     pad3Playback()
-     pad4Playback()
+        mainActivityViewModel.playMetronomeSound()
+        updateProgressBar()
+        pad1Playback()
+        pad2Playback()
+        pad3Playback()
+        pad4Playback()
 
     }
 
@@ -471,31 +486,31 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      * Multi functional horizontal slider control
      */
 
-    private fun setUpMenuforMainVolumeslider() {
+    private fun setUpMenuForMainVolumeSlider() {
 
-        seekbar_slider_menu_toggle.setOnClickListener {
+ //       seekbar_slider_menu_toggle.setOnClickListener {
 
-            val popupMenu = PopupMenu(this, seekbar_slider_menu_toggle)
-            //Inflating the Popup using xml file
-            popupMenu.menuInflater.inflate(R.menu.main_seekbar_popup_menu, popupMenu.menu)
-
-            popupMenu.setOnMenuItemClickListener {
-
-                // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
-                if (it.title == getString(R.string.volume)) {
-                    seekbar_slider_menu_toggle.text = "V"
-                }
-                if (it.title == getString(R.string.pan)) {
-                    seekbar_slider_menu_toggle.text = "P"
-                }
-                if (it.title == getString(R.string.pitch)) {
-                    seekbar_slider_menu_toggle.text = "Pi"
-                }
-
-                true
-            }
-            popupMenu.show()
-        }
+//            val popupMenu = PopupMenu(this, seekbar_slider_menu_toggle)
+//            //Inflating the Popup using xml file
+//            popupMenu.menuInflater.inflate(R.menu.main_seekbar_popup_menu, popupMenu.menu)
+//
+//            popupMenu.setOnMenuItemClickListener {
+//
+//                // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
+//                if (it.title == getString(R.string.volume)) {
+//                    seekbar_slider_menu_toggle.text = "V"
+//                }
+//                if (it.title == getString(R.string.pan)) {
+//                    seekbar_slider_menu_toggle.text = "P"
+//                }
+//                if (it.title == getString(R.string.pitch)) {
+//                    seekbar_slider_menu_toggle.text = "Pi"
+//                }
+//
+//                true
+//            }
+//            popupMenu.show()
+//        }
 
     }
 
@@ -590,7 +605,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         velocityX: Float,
         velocityY: Float
     ) {
+        Log.d("flingTest", "ITS FLINGING!!!!")
 
+
+    }
+
+    fun onGoToPatternUi(view: View) {
+       val  slide: Transition = Slide(Gravity.LEFT)
+       TransitionManager.go(mainUiPatternControlScene,slide)
+    }
+
+    fun onGoToMainUi(view: View) {
+        val  slide: Transition = Slide(Gravity.RIGHT)
+        TransitionManager.go(mainUiControlsScene,slide)
     }
 
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {
@@ -644,9 +671,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             ApplicationState.isMillisecondClockPlaying = false
 
             fabProgress.progress = 0
-
+            stopPlayEngine()
             if (Metronome.isActive()) {
-                stopPlayEngine()
+
             }
 
         }
@@ -728,6 +755,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
 
     }
+
     override fun onDestroy() {
         super.onDestroy()
     }
@@ -735,16 +763,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     companion object {
         const val SETTINGS_REQUEST_CODE: Int = 200
         const val LOAD_SOUND_REQUEST_CODE: Int = 300
-        const val  DRUMS_SCREEN_NAME = "Drums"
-        const val  INSTRUMENTS_SCREEN_NAME = "Instruments"
-        const val  SEQUENCE_SCREEN_NAME = "Sequence"
-        const val  RECORDING_SCREEN_NAME = "Recording"
-        const val  SONG_SCREEN_NAME = "Song"
+        const val DRUMS_SCREEN_NAME = "Drums"
+        const val INSTRUMENTS_SCREEN_NAME = "Instruments"
+        const val SEQUENCE_SCREEN_NAME = "Sequence"
+        const val RECORDING_SCREEN_NAME = "Recording"
+        const val SONG_SCREEN_NAME = "Song"
+
         init {
             System.loadLibrary("native-lib")
-           // System.loadLibrary("OpenSLESDemo")
+            // System.loadLibrary("OpenSLESDemo")
         }
     }
+
+
 }
 
 
