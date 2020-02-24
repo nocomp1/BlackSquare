@@ -52,11 +52,22 @@
             android:indeterminate="false"
             android:max="100"
             android:progress="0"
-            app:layout_constraintBottom_toTopOf="@id/main_ui_button_controls"
+            app:layout_constraintBottom_toTopOf="@id/ui_scene_controls_root"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/viewPager" />
+<FrameLayout
+    android:id="@+id/ui_scene_controls_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/fabProgress">
 
+    <include layout="@layout/main_ui_controls" />
+</FrameLayout>
+       <!--
         <LinearLayout
             android:id="@+id/main_ui_button_controls"
             android:layout_width="match_parent"
@@ -133,17 +144,17 @@
                 android:onClick="onPlayStopTapped"
                 app:srcCompat="@drawable/play_to_stop_anim" />
 
-                <SeekBar
+            <SeekBar
 
-                    android:thumb="@drawable/ic_volume_slider_knob"
-                    android:id="@+id/main_ui_volume_seek_slider"
-                    android:layout_width="160dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:max="100"
-                    android:progress="5"
-                    android:splitTrack="false"
-                    android:progressDrawable="@drawable/ic_volume_slider_bg"/>
+                android:thumb="@drawable/ic_volume_slider_knob"
+                android:id="@+id/main_ui_volume_seek_slider"
+                android:layout_width="160dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:max="100"
+                android:progress="5"
+                android:splitTrack="false"
+                android:progressDrawable="@drawable/ic_volume_slider_bg"/>
             <Button
                 android:id="@+id/seekbar_slider_menu_toggle"
                 android:layout_width="25dp"
@@ -153,16 +164,16 @@
                 android:elevation="15dp"
 
                 />
-<TextView
-    android:layout_width="75dp"
-    android:layout_height="wrap_content"
-    android:id="@+id/millisec_clock"
-    android:textColor="@color/textColor"
-    android:textSize="18sp"
-    android:text="00:1456"
-    android:layout_marginStart="16dp"/>
+            <TextView
+                android:layout_width="75dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/millisec_clock"
+                android:textColor="@color/textColor"
+                android:textSize="18sp"
+                android:text="00:1456"
+                android:layout_marginStart="16dp"/>
         </LinearLayout>
-
+-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

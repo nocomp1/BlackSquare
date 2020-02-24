@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:id="@+id/main_ui_button_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:orientation="horizontal"
+        >
+
+        <ImageButton
+            android:id="@+id/pad"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/ic_btn_control"
+            android:onClick="onLoadTapped"
+            android:scaleY="-1"
+            android:src="@drawable/ic_music" />
+
+        <ImageButton
+            android:id="@+id/settings_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/ic_btn_control"
+            android:onClick="onSettingsTapped"
+            android:scaleY="-1"
+
+            android:src="@drawable/ic_settings" />
+
+        <Button
+            android:id="@+id/note_repeat_btn"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="10dp"
+            android:text="NR"
+            android:background="@drawable/default_pad"
+            android:layout_margin="4dp"
+            />
+
+        <ImageButton
+            android:id="@+id/record_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/ic_btn_control"
+            android:onClick="onRecordTapped"
+            android:scaleY="-1"
+            app:srcCompat="@drawable/ic_record_default" />
+
+        <ImageButton
+            android:id="@+id/undo_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/ic_btn_control"
+            android:onClick="onUndoTapped"
+            android:scaleY="-1"
+            app:srcCompat="@drawable/ic_undo" />
+
+        <ImageButton
+            android:id="@+id/play_stop_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/ic_btn_control"
+            android:scaleY="-1"
+            android:onClick="onPlayStopTapped"
+            app:srcCompat="@drawable/play_to_stop_anim" />
+
+        <SeekBar
+
+            android:thumb="@drawable/ic_volume_slider_knob"
+            android:id="@+id/main_ui_volume_seek_slider"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:max="100"
+            android:progress="5"
+            android:splitTrack="false"
+            android:progressDrawable="@drawable/ic_volume_slider_bg"/>
+        <Button
+            android:id="@+id/seekbar_slider_menu_toggle"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginLeft="12dp"
+            android:background="@drawable/default_pad"
+            android:elevation="15dp"
+
+            />
+        <TextView
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/millisec_clock"
+            android:textColor="@color/textColor"
+            android:textSize="18sp"
+            android:text="00:1456"
+            android:layout_marginStart="16dp"/>
+
+
+        <Button
+            android:id="@+id/toggle_scene"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="12dp"
+            android:gravity="end"
+            android:onClick="onGoToPatternUi"
+            android:background="@drawable/ic_chevron_left"
+            android:elevation="15dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -9,6 +9,7 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.util.ArrayMap
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import com.example.blacksquare.Fragments.DrumScreenHomeFragment
@@ -188,7 +189,7 @@ class MainActivityViewModel(private var applicationContext: Context) : ViewModel
                     )
                 } else {
 
-
+                    Toast.makeText(applicationContext, "Undo List Empty!", Toast.LENGTH_SHORT).show()
                 }
                 //  }
                 padIndexCounter1++
