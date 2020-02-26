@@ -1,6 +1,9 @@
 package com.example.blacksquare
 
 
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.DialogInterface
@@ -10,24 +13,20 @@ import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.graphics.Typeface
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.TransitionDrawable
 import android.media.AudioManager
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.PopupMenu
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
 import androidx.transition.Scene
-import androidx.transition.Slide
-import androidx.transition.Transition
-import androidx.transition.TransitionManager
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
@@ -40,7 +39,6 @@ import com.example.blacksquare.ViewModels.MainActivityViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.main_ui_controls.*
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -92,20 +90,23 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         setContentView(R.layout.activity_main)
         mainActivityViewModel = MainActivityViewModel(applicationContext)
 
+
+//main_ui_pattern_controls.measure(View.MeasureSpec.EXACTLY,View.MeasureSpec.EXACTLY)
+
         //initialize layout scenes
-        mainControlsSceneRoot = findViewById(R.id.ui_scene_controls_root)
-        mainUiControlsScene =
-            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_ui_controls, this)
-        mainUiPatternControlScene =
-            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_pattern_controls, this)
+//        mainControlsSceneRoot = findViewById(R.id.ui_scene_controls_root)
+//        mainUiControlsScene =
+//            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_ui_controls, this)
+//        mainUiPatternControlScene =
+//            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_pattern_controls, this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val myAudioMgr: AudioManager =
                 applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-            val defaultSampleRate = Integer.parseInt(sampleRateStr);
+            val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
+            val defaultSampleRate = Integer.parseInt(sampleRateStr)
             val framesPerBurstStr =
-                myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+                myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
             val defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr)
 
             setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
@@ -167,7 +168,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
         }
 
+        initializeUiComponents()
 
+
+    }
+
+    private fun initializeUiComponents() {
         //create our listener for the ui button touch events
         val fabGestureDetectionListener = FabGestureDetectionListener()
         mygestureDetector = GestureDetector(this@MainActivity, fabGestureDetectionListener)
@@ -270,7 +276,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     fun integerConversion(bytes: ByteArray): Int {
-        var result = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt()
+        var result = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).int
 
         return result
     }
@@ -488,29 +494,29 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     private fun setUpMenuForMainVolumeSlider() {
 
- //       seekbar_slider_menu_toggle.setOnClickListener {
+        seekbar_slider_menu_toggle.setOnClickListener {
 
-//            val popupMenu = PopupMenu(this, seekbar_slider_menu_toggle)
-//            //Inflating the Popup using xml file
-//            popupMenu.menuInflater.inflate(R.menu.main_seekbar_popup_menu, popupMenu.menu)
-//
-//            popupMenu.setOnMenuItemClickListener {
-//
-//                // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
-//                if (it.title == getString(R.string.volume)) {
-//                    seekbar_slider_menu_toggle.text = "V"
-//                }
-//                if (it.title == getString(R.string.pan)) {
-//                    seekbar_slider_menu_toggle.text = "P"
-//                }
-//                if (it.title == getString(R.string.pitch)) {
-//                    seekbar_slider_menu_toggle.text = "Pi"
-//                }
-//
-//                true
-//            }
-//            popupMenu.show()
-//        }
+            val popupMenu = PopupMenu(this, seekbar_slider_menu_toggle)
+            //Inflating the Popup using xml file
+            popupMenu.menuInflater.inflate(R.menu.main_seekbar_popup_menu, popupMenu.menu)
+
+            popupMenu.setOnMenuItemClickListener {
+
+                // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
+                if (it.title == getString(R.string.volume)) {
+                    seekbar_slider_menu_toggle.text = "V"
+                }
+                if (it.title == getString(R.string.pan)) {
+                    seekbar_slider_menu_toggle.text = "P"
+                }
+                if (it.title == getString(R.string.pitch)) {
+                    seekbar_slider_menu_toggle.text = "Pi"
+                }
+
+                true
+            }
+            popupMenu.show()
+        }
 
     }
 
@@ -610,14 +616,25 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    fun onGoToPatternUi(view: View) {
-       val  slide: Transition = Slide(Gravity.LEFT)
-       TransitionManager.go(mainUiPatternControlScene,slide)
+    fun onShowPatternUi(view: View) {
+
+        main_ui_button_controls.animate()
+            .translationY(main_ui_button_controls.height.toFloat())
+            .setListener(object : Animator.AnimatorListener{
+                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationEnd(animation: Animator?) {
+                    main_ui_button_controls.visibility = View.INVISIBLE
+                }
+                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationStart(animation: Animator?) {}
+            })
     }
 
-    fun onGoToMainUi(view: View) {
-        val  slide: Transition = Slide(Gravity.RIGHT)
-        TransitionManager.go(mainUiControlsScene,slide)
+    fun onShowMainUi(view: View) {
+        main_ui_button_controls.visibility = View.VISIBLE
+        main_ui_button_controls.animate()
+            .translationY(0f)
+            .setListener(null)
     }
 
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {
@@ -754,10 +771,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             }
         }
 
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     companion object {

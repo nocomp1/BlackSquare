@@ -110,7 +110,7 @@
             android:layout_height="30dp"
             android:layout_marginLeft="12dp"
             android:gravity="end"
-            android:onClick="onGoToPatternUi"
+            android:onClick="onShowPatternUi"
             android:background="@drawable/ic_chevron_left"
             android:elevation="15dp"/>
 

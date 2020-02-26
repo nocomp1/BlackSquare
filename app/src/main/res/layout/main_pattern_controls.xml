@@ -191,7 +191,7 @@
             android:background="@drawable/ic_chevron_right"
             android:elevation="15dp"
             android:gravity="end"
-            android:onClick="onGoToMainUi" />
+            android:onClick="onShowMainUi" />
     </LinearLayout>
 
 </LinearLayout>
