@@ -2,8 +2,6 @@ package com.example.blacksquare
 
 
 import android.animation.Animator
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.DialogInterface
@@ -35,10 +33,13 @@ import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Utils.WriteJsonObjects
+import com.example.blacksquare.Utils.WriteJsonUtils
 import com.example.blacksquare.ViewModels.MainActivityViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
+import timber.log.Timber
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -73,6 +74,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var mainUiControlsScene: Scene
     private lateinit var mainUiPatternControlScene: Scene
 
+
     external fun startEngine(assetManager: AssetManager)
     //external fun startEngine()
 
@@ -91,14 +93,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         mainActivityViewModel = MainActivityViewModel(applicationContext)
 
 
-//main_ui_pattern_controls.measure(View.MeasureSpec.EXACTLY,View.MeasureSpec.EXACTLY)
 
-        //initialize layout scenes
-//        mainControlsSceneRoot = findViewById(R.id.ui_scene_controls_root)
-//        mainUiControlsScene =
-//            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_ui_controls, this)
-//        mainUiPatternControlScene =
-//            Scene.getSceneForLayout(mainControlsSceneRoot, R.layout.main_pattern_controls, this)
+       // Log.d("ProjectName ","$projectName")
+
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val myAudioMgr: AudioManager =

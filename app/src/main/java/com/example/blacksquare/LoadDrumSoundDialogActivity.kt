@@ -9,6 +9,7 @@ import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.DrumScreenLoadKitFrag
 import com.example.blacksquare.Fragments.DrumScreenLoadLoopsFrag
 import com.example.blacksquare.Fragments.DrumScreenLoadSoundFrag
+import com.example.blacksquare.Fragments.LoadProjectsFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 
@@ -81,7 +82,7 @@ class LoadDrumSoundDialogActivity : AppCompatActivity() {
         sectionsPagerAdapter.addFragment(DrumScreenLoadKitFrag(), "Kits")
         sectionsPagerAdapter.addFragment(DrumScreenLoadSoundFrag(), "Sounds")
         sectionsPagerAdapter.addFragment(DrumScreenLoadLoopsFrag(), "Loops")
-
+        sectionsPagerAdapter.addFragment(LoadProjectsFragment(), "Projects")
 
         viewPager.adapter = sectionsPagerAdapter
         val tabs: TabLayout = findViewById(R.id.tabs)
@@ -89,34 +90,35 @@ class LoadDrumSoundDialogActivity : AppCompatActivity() {
 
 
         tabs.setupWithViewPager(viewPager)
-        //Set up a search tab
-        tabs.addTab(tabs.newTab())
-        tabs.getTabAt(3)!!.setIcon(R.drawable.ic_search)
 
-        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabReselected(p0: TabLayout.Tab?) {
-
-            }
-
-            override fun onTabUnselected(p0: TabLayout.Tab?) {
-
-            }
-
-            override fun onTabSelected(p0: TabLayout.Tab?) {
-
-                when (p0!!.position) {
-
-                    KITS_TAB -> {activitySnackbar?.dismiss()
-                        snackbarlayout = R.layout.snackbar_search_kits_tag_layout}
-                    SOUNDS_TAB -> {activitySnackbar?.dismiss()
-                        snackbarlayout = R.layout.snackbar_search_sound_tag_layout}
-                    LOOPS_TAB -> {activitySnackbar?.dismiss()
-                        snackbarlayout = R.layout.snackbar_search_loops_tag_layout}
-                    SEARCH_TAB ->  showSearchTagSnackbar()
-                }
-
-            }
-        })
+//        //Set up a search tab
+//        tabs.addTab(tabs.newTab())
+//        tabs.getTabAt(3)!!.setIcon(R.drawable.ic_search)
+//
+//        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+//            override fun onTabReselected(p0: TabLayout.Tab?) {
+//
+//            }
+//
+//            override fun onTabUnselected(p0: TabLayout.Tab?) {
+//
+//            }
+//
+//            override fun onTabSelected(p0: TabLayout.Tab?) {
+//
+//                when (p0!!.position) {
+//
+//                    KITS_TAB -> {activitySnackbar?.dismiss()
+//                        snackbarlayout = R.layout.snackbar_search_kits_tag_layout}
+//                    SOUNDS_TAB -> {activitySnackbar?.dismiss()
+//                        snackbarlayout = R.layout.snackbar_search_sound_tag_layout}
+//                    LOOPS_TAB -> {activitySnackbar?.dismiss()
+//                        snackbarlayout = R.layout.snackbar_search_loops_tag_layout}
+//                    SEARCH_TAB ->  showSearchTagSnackbar()
+//                }
+//
+//            }
+//        })
 
 
     }
