@@ -18,7 +18,7 @@ class DrumScreenLoadSoundFrag : Fragment() {
 
 
         viewAdapter = LoadSoundRvAdapter(myListArray, activity!!.applicationContext)
-        recyclerView = view.findViewById(R.id.load_kit_rv) as RecyclerView
+        recyclerView = view.findViewById(R.id.recycler_view) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity)
 
 

@@ -1,6 +1,6 @@
 package com.example.blacksquare.Utils
 
-class WriteJsonObjects {
+class ProjectJsonObjects {
 
     data class Project(
 

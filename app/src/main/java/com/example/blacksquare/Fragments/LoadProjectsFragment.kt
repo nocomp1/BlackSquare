@@ -10,17 +10,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.blacksquare.Adapters.LoadProjectRVAdapter
 import com.example.blacksquare.R
-import com.example.blacksquare.Utils.WriteJsonObjects
-import com.example.blacksquare.Utils.WriteJsonUtils
+import com.example.blacksquare.Utils.ProjectJsonObjects
+import com.example.blacksquare.Utils.ProjectJsonUtils
 
 class LoadProjectsFragment : Fragment() {
-    private lateinit var projectWriteJson: WriteJsonUtils
+    private lateinit var projectWriteJson: ProjectJsonUtils
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         setUpData()
         viewAdapter = LoadProjectRVAdapter(myListArray, activity!!.applicationContext)
-        recyclerView = view.findViewById(R.id.load_kit_rv) as RecyclerView
+        recyclerView = view.findViewById(R.id.recycler_view) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity)
         val divider =
             DividerItemDecoration(activity!!.applicationContext, DividerItemDecoration.HORIZONTAL)
@@ -31,10 +31,10 @@ class LoadProjectsFragment : Fragment() {
 
     private fun setUpData() {
         //write some project details to file
-        projectWriteJson = WriteJsonUtils(activity!!.applicationContext)
+        projectWriteJson = ProjectJsonUtils(activity!!.applicationContext)
         val projectTree = projectWriteJson.getObject()
         //Create project details
-        val projectDetails = WriteJsonObjects.ProjectDetails()
+        val projectDetails = ProjectJsonObjects.ProjectDetails()
         projectDetails.name = "Project 2"
         projectTree.project.projectList.add(projectDetails)
         projectWriteJson.writeToFile(projectTree)

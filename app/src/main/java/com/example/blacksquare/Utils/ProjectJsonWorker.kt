@@ -1,4 +1,4 @@
 package com.example.blacksquare.Utils
 
-class WriteJsonWorker {
+class ProjectJsonWorker {
 }

@@ -9,10 +9,10 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
 
-class WriteJsonUtils(private val applicationContext: Context) {
+class ProjectJsonUtils(private val applicationContext: Context) {
 
     data class WriteJsonTree(
-        val project: WriteJsonObjects.Project = WriteJsonObjects.Project()
+        val project: ProjectJsonObjects.Project = ProjectJsonObjects.Project()
 
     )
 

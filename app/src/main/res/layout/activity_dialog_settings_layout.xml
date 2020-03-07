@@ -1,711 +1,754 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-
-    <!--  PROJECT TEMPO MENU  -->
-
     <LinearLayout
-        android:id="@+id/tempo_menu"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
+
+        <!--  PROJECT TEMPO MENU  -->
+
         <LinearLayout
-            android:id="@+id/project_tempo_header"
-            style="@style/menu_headers"
+            android:id="@+id/tempo_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
-
-            <TextView
-                style="@style/menu_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Project Tempo"
-                android:textColor="@color/textColor" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center">
+            android:background="@color/colorPrimaryDark"
+            android:orientation="vertical">
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/save_project_header"
+                style="@style/menu_headers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="15dp"
-                >
+                android:orientation="horizontal">
 
-
-
-                <NumberPicker
-                    android:id="@+id/tempo_value"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="120 BPM"
-                    android:textSize="16sp"
-                    android:textColor="@color/textColor"
-
-
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/tap_tempo"/>
-
-
-                <Button
-                    android:id="@+id/tap_tempo"
+                <EditText
+                    style="@style/menu_text"
+                    android:id="@+id/save_project_edit_text"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="12dp"
-                    android:text="Tap"
-                    android:background="@drawable/radio_button_background"
-                    android:onClick="tapInTemp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/tempo_value"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent=".25" />
-
-
-                <Switch
-                    android:id="@+id/metronome"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Metronome"
+                    android:layout_gravity="center"
+                    android:layout_weight="5"
+                    android:hint="Save Project"
                     android:textColor="@color/textColor"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/tap_tempo"
+                    app:layout_constraintEnd_toStartOf="@id/save_project_btn"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-
+                <Button
+                    android:id="@+id/save_project_btn"
+                    app:layout_constraintStart_toEndOf="@id/save_project_edit_text"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintHorizontal_bias="7"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@drawable/ic_save_24dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </LinearLayout>
-    </LinearLayout>
 
-
-    <!--  PATTERNS MENU  -->
-
-    <LinearLayout
-        android:id="@+id/pattern_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:id="@+id/pattern_menu_header"
-            style="@style/menu_headers"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
-
-            <TextView
-                style="@style/menu_text"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/project_tempo_header"
+                style="@style/menu_headers"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Patterns"
-                android:textColor="@color/textColor" />
+                android:orientation="vertical">
 
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical">
-<LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:layout_gravity="center"
-    android:layout_margin="8dp">
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Copy"
-        android:id="@+id/copy"
-        android:layout_marginRight="8dp"
-        android:background="@drawable/radio_button_background"/>
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Paste"
-        android:layout_marginRight="8dp"
-        android:background="@drawable/radio_button_background"
-        android:id="@+id/paste"/>
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
-        android:background="@drawable/radio_button_background"
-        android:id="@+id/delete"/>
-
-</LinearLayout>
-            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
-                android:id="@+id/bar_measure_radio_group"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="8dp">
-
-            <TableRow>
                 <TextView
+                    style="@style/menu_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Bar"
-                    android:layout_margin="4dp"
-                    android:textSize="16sp"
-                    android:textColor="@color/textColor"/>
-                <RadioButton
-                    android:id="@+id/two_bar_measure"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-                    android:text="1"
-                    android:clickable="true"
-                    android:onClick="onBarSelected"
-                    android:textAlignment="center" />
+                    android:layout_gravity="center"
+                    android:text="Project Tempo"
+                    android:textColor="@color/textColor" />
 
-                <RadioButton
-                    android:id="@+id/three_bar_measure"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-                    android:onClick="onBarSelected"
-                    android:text="2"
-                    android:textAlignment="center" />
+            </LinearLayout>
 
-                <RadioButton
-                    android:id="@+id/four_bar_measure"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-                    android:onClick="onBarSelected"
-                    android:text="4"
-                    android:textAlignment="center" />
-                <RadioButton
-                    android:id="@+id/five_bar_measure"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:onClick="onBarSelected"
-                    android:checked="false"
-                    android:text="8"
-                    android:textAlignment="center" />
-            </TableRow>
-            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
-
-            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
-                android:id="@+id/pattern_radio_group"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="8dp">
+                android:layout_gravity="center">
 
-                <TableRow>
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="15dp">
 
-                    <RadioButton
-                        android:id="@+id/pattern1"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
+
+                    <NumberPicker
+                        android:id="@+id/tempo_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="120 BPM"
+                        android:textColor="@color/textColor"
+                        android:textSize="16sp"
+
+
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/tap_tempo"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+
+                    <Button
+                        android:id="@+id/tap_tempo"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="12dp"
                         android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-                        android:text="P1"
-                        android:textAlignment="center" />
-
-                    <RadioButton
-                        android:id="@+id/pattern2"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P2"
-                        android:textAlignment="center" />
-
-                    <RadioButton
-                        android:id="@+id/pattern3"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P3"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/pattern4"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-
-                        android:checked="false"
-                        android:text="P4"
-                        android:textAlignment="center" />
-                </TableRow>
-
-                <TableRow>
-
-                    <RadioButton
-                        android:id="@+id/pattern5"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-                        android:text="P5"
-                        android:textAlignment="center" />
-
-                    <RadioButton
-                        android:id="@+id/pattern6"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-                        android:text="P6"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/pattern7"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P7"
-                        android:textAlignment="center" />
-
-                    <RadioButton
-                        android:id="@+id/pattern8"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P8"
-                        android:textAlignment="center" />
-
-                </TableRow>
-
-                <TableRow>
+                        android:onClick="tapInTemp"
+                        android:text="Tap"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/tempo_value"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintWidth_percent=".25" />
 
 
-                    <RadioButton
-                        android:id="@+id/pattern9"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P9"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/pattern10"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P10"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/pattern11"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P11"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/pattern12"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-
-                        android:text="P12"
-                        android:textAlignment="center" />
-                </TableRow>
+                    <Switch
+                        android:id="@+id/metronome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Metronome"
+                        android:textColor="@color/textColor"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/tap_tempo"
+                        app:layout_constraintTop_toTopOf="parent" />
 
 
-            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
-
-
-        </LinearLayout>
-    </LinearLayout>
-
-
-<!--  INSTRUMENT TRACKS MENU  -->
-    <LinearLayout
-        android:id="@+id/instrument_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:id="@+id/instrument_menu_header"
-            style="@style/menu_headers"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
-
-            <TextView
-                style="@style/menu_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Instrument Tracks"
-                android:textColor="@color/textColor" />
-
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
         </LinearLayout>
 
+
+        <!--  PATTERNS MENU  -->
+
         <LinearLayout
+            android:id="@+id/pattern_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:background="@color/colorPrimaryDark"
             android:orientation="vertical">
 
+            <LinearLayout
+                android:id="@+id/pattern_menu_header"
+                style="@style/menu_headers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
-                android:id="@+id/instrument_tracks_radio_group"
-                android:layout_width="wrap_content"
+                <TextView
+                    style="@style/menu_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Patterns"
+                    android:textColor="@color/textColor" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_margin="8dp">
+                android:orientation="vertical">
 
-                <TableRow>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="8dp"
+                    android:orientation="horizontal">
 
-                    <RadioButton
-                        android:id="@+id/keys"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
+                    <Button
+                        android:id="@+id/copy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="8dp"
                         android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-                        android:text="Keys"
-                        android:textAlignment="center" />
+                        android:text="Copy" />
 
-                    <RadioButton
-                        android:id="@+id/horns"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
+                    <Button
+                        android:id="@+id/paste"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="8dp"
                         android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                        android:text="Paste" />
 
-                        android:text="Horns"
-                        android:textAlignment="center" />
-
-                    <RadioButton
-                        android:id="@+id/strings"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
+                    <Button
+                        android:id="@+id/delete"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                        android:text="Delete" />
 
-                        android:text="Strings"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/guitar"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
+                </LinearLayout>
 
-                        android:checked="false"
-                        android:text="Guitar"
-                        android:textAlignment="center" />
-                </TableRow>
+                <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                    android:id="@+id/bar_measure_radio_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="8dp">
 
-                <TableRow>
+                    <TableRow>
 
-                    <RadioButton
-                        android:id="@+id/winds"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-                        android:text="Winds"
-                        android:textAlignment="center" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="4dp"
+                            android:text="Bar"
+                            android:textColor="@color/textColor"
+                            android:textSize="16sp" />
 
-                    <RadioButton
-                        android:id="@+id/pads"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
-                        android:text="Pads"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/synth"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                        <RadioButton
+                            android:id="@+id/two_bar_measure"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:clickable="true"
+                            android:onClick="onBarSelected"
+                            android:text="1"
+                            android:textAlignment="center" />
 
-                        android:text="Synth"
-                        android:textAlignment="center" />
+                        <RadioButton
+                            android:id="@+id/three_bar_measure"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:onClick="onBarSelected"
+                            android:text="2"
+                            android:textAlignment="center" />
 
-                    <RadioButton
-                        android:id="@+id/bass"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                        <RadioButton
+                            android:id="@+id/four_bar_measure"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:onClick="onBarSelected"
+                            android:text="4"
+                            android:textAlignment="center" />
 
-                        android:text="Bass"
-                        android:textAlignment="center" />
+                        <RadioButton
+                            android:id="@+id/five_bar_measure"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:onClick="onBarSelected"
+                            android:text="8"
+                            android:textAlignment="center" />
+                    </TableRow>
+                </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
-                </TableRow>
+                <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                    android:id="@+id/pattern_radio_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="8dp">
 
-                <TableRow>
+                    <TableRow>
+
+                        <RadioButton
+                            android:id="@+id/pattern1"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="P1"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pattern2"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="P2"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pattern3"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="P3"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pattern4"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+
+                            android:checked="false"
+                            android:text="P4"
+                            android:textAlignment="center" />
+                    </TableRow>
+
+                    <TableRow>
+
+                        <RadioButton
+                            android:id="@+id/pattern5"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="P5"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pattern6"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="P6"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pattern7"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="P7"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pattern8"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="P8"
+                            android:textAlignment="center" />
+
+                    </TableRow>
+
+                    <TableRow>
 
 
-                    <RadioButton
-                        android:id="@+id/vocal"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                        <RadioButton
+                            android:id="@+id/pattern9"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
 
-                        android:text="Vocal"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/all_one"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                            android:text="P9"
+                            android:textAlignment="center" />
 
-                        android:text="All 1"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/all_two"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                        <RadioButton
+                            android:id="@+id/pattern10"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
 
-                        android:text="All 2"
-                        android:textAlignment="center" />
-                    <RadioButton
-                        android:id="@+id/all_three"
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:layout_margin="4dp"
-                        android:background="@drawable/radio_button_background"
-                        android:button="@android:color/transparent"
-                        android:checked="false"
+                            android:text="P10"
+                            android:textAlignment="center" />
 
-                        android:text="All 3"
-                        android:textAlignment="center" />
-                </TableRow>
+                        <RadioButton
+                            android:id="@+id/pattern11"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
 
-                <TableRow>
-                <RadioButton
-                    android:id="@+id/all_four"
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
+                            android:text="P11"
+                            android:textAlignment="center" />
 
-                    android:text="All 4"
-                    android:textAlignment="center" />
-                <RadioButton
-                    android:id="@+id/all_five"
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
+                        <RadioButton
+                            android:id="@+id/pattern12"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
 
-                    android:text="All 5"
-                    android:textAlignment="center" />
-                <RadioButton
-                    android:id="@+id/all_six"
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-
-                    android:text="All 2"
-                    android:textAlignment="center" />
-                <RadioButton
-                    android:id="@+id/all_seven"
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-
-                    android:text="All 6"
-                    android:textAlignment="center" />
-            </TableRow>
+                            android:text="P12"
+                            android:textAlignment="center" />
+                    </TableRow>
 
 
-            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+                </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
 
 
+            </LinearLayout>
         </LinearLayout>
 
 
-</LinearLayout>
-
-
-
-    <!--  DRUM BANK MENU  -->
-    <LinearLayout
-        android:id="@+id/drum_track_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
-        android:orientation="vertical">
-
+        <!--  INSTRUMENT TRACKS MENU  -->
         <LinearLayout
-            android:id="@+id/drum_track_menu_header"
-            style="@style/menu_headers"
+            android:id="@+id/instrument_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
-
-            <TextView
-                style="@style/menu_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Drum Banks"
-                android:textColor="@color/textColor" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:background="@color/colorPrimaryDark"
             android:orientation="vertical">
 
-            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
-                android:id="@+id/drum_bank_radio_group"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/instrument_menu_header"
+                style="@style/menu_headers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/menu_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Instrument Tracks"
+                    android:textColor="@color/textColor" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_margin="8dp">
-
-            <TableRow>
-
-                <RadioButton
-                    android:id="@+id/drum_bank1"
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-                    android:text="Bank 1"
-                    android:textAlignment="center" />
-
-                <RadioButton
-                    android:id="@+id/drum_bank2"
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/radio_button_background"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-
-                    android:text="Bank 2"
-                    android:textAlignment="center" />
-
-            </TableRow>
-            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+                android:orientation="vertical">
 
 
+                <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                    android:id="@+id/instrument_tracks_radio_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="8dp">
+
+                    <TableRow>
+
+                        <RadioButton
+                            android:id="@+id/keys"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="Keys"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/horns"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="Horns"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/strings"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="Strings"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/guitar"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+
+                            android:checked="false"
+                            android:text="Guitar"
+                            android:textAlignment="center" />
+                    </TableRow>
+
+                    <TableRow>
+
+                        <RadioButton
+                            android:id="@+id/winds"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="Winds"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/pads"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="Pads"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/synth"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="Synth"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/bass"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="Bass"
+                            android:textAlignment="center" />
+
+                    </TableRow>
+
+                    <TableRow>
+
+
+                        <RadioButton
+                            android:id="@+id/vocal"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="Vocal"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/all_one"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 1"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/all_two"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 2"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/all_three"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 3"
+                            android:textAlignment="center" />
+                    </TableRow>
+
+                    <TableRow>
+
+                        <RadioButton
+                            android:id="@+id/all_four"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 4"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/all_five"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 5"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/all_six"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 2"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/all_seven"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="All 6"
+                            android:textAlignment="center" />
+                    </TableRow>
+
+
+                </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+
+
+            </LinearLayout>
 
 
         </LinearLayout>
+
+
+        <!--  DRUM BANK MENU  -->
+        <LinearLayout
+            android:id="@+id/drum_track_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimaryDark"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/drum_track_menu_header"
+                style="@style/menu_headers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/menu_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Drum Banks"
+                    android:textColor="@color/textColor" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical">
+
+                <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                    android:id="@+id/drum_bank_radio_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="8dp">
+
+                    <TableRow>
+
+                        <RadioButton
+                            android:id="@+id/drum_bank1"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:text="Bank 1"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/drum_bank2"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+
+                            android:text="Bank 2"
+                            android:textAlignment="center" />
+
+                    </TableRow>
+                </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+
+
+            </LinearLayout>
+        </LinearLayout>
+
+
     </LinearLayout>
-
-
-
-</LinearLayout>
 </ScrollView>

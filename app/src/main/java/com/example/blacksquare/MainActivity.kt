@@ -33,13 +33,10 @@ import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
-import com.example.blacksquare.Utils.WriteJsonObjects
-import com.example.blacksquare.Utils.WriteJsonUtils
 import com.example.blacksquare.ViewModels.MainActivityViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
-import timber.log.Timber
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -69,7 +66,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var metronomeInterval: Long? = null
     private var currentBarMeasure: Int? = null
     private var currentTempo: Long? = null
-    external fun stringFromJNI()
+   // external fun stringFromJNI()
     private lateinit var mainControlsSceneRoot: ViewGroup
     private lateinit var mainUiControlsScene: Scene
     private lateinit var mainUiPatternControlScene: Scene

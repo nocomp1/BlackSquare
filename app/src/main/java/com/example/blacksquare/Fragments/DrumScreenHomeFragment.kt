@@ -70,13 +70,6 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     }
 
 
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-
-
-    }
-
-
     override fun onStart() {
         super.onStart()
         //sharedPref = activity!!.applicationContext.getSharedPreferences("drumscreen", Context.MODE_PRIVATE) ?: return
