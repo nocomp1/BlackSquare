@@ -1,81 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_margin="8dp"
-
-    android:id="@+id/item_kit_cardview">
-<TextView
-    app:layout_constraintVertical_chainStyle="packed"
-    style="@style/menu_text"
-    android:id="@+id/kit_title"
+    android:id="@+id/item_kit_cardview"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="My Kit"
-    android:padding="3dp"
-    android:background="@color/colorPrimary"
-    android:layout_gravity="center"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    />
 
-    <ImageView
-        android:layout_marginTop="8dp"
-        android:id="@+id/kit_image"
-        android:layout_width="125dp"
-        android:layout_height="125dp"
-        app:layout_constraintTop_toBottomOf="@+id/kit_title"
-        app:layout_constraintStart_toStartOf="parent"
-        android:background="@color/colorPrimary"
-        />
+    android:layout_margin="8dp">
+
     <TextView
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="2dp"
-        android:id="@+id/kit_description"
-
-        android:layout_width="0dp"
+        android:id="@+id/kit_title"
+        style="@style/menu_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxLines="4"
-        android:ellipsize="end"
-        android:text="Best creamy sounding loops you will ever hear- So inspiring and energizing"
-        app:layout_constraintTop_toTopOf="@+id/kit_image"
-        app:layout_constraintStart_toEndOf="@+id/kit_image"
+        android:layout_gravity="center"
+        android:background="@color/colorPrimary"
+        android:padding="3dp"
+        android:paddingStart="4dp"
+        android:text="My Kit"
+
 
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <ImageView
+        android:id="@+id/kit_image"
+        android:layout_width="115dp"
+        android:layout_height="115dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/kit_title" />
+
+    <RelativeLayout
+        android:id="@+id/sale_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_sale"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/kit_price"
+        app:layout_constraintEnd_toEndOf="@id/kit_image"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/kit_image"
+        app:layout_constraintVertical_bias="0.99"
+
         />
+
+    <TextView
+        android:id="@+id/kit_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="2dp"
+        android:ellipsize="end"
+        android:maxLength="80"
+        android:maxLines="4"
+        android:text="Best creamy sounding loops you will ever hear- So inspiring and energizing"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/kit_image"
+        app:layout_constraintTop_toTopOf="@+id/kit_image" />
 
     <ImageButton
 
         android:id="@+id/preview_kit"
         android:layout_width="34dp"
         android:layout_height="34dp"
-        app:layout_constraintTop_toBottomOf="@+id/kit_description"
-        app:layout_constraintStart_toStartOf="@+id/kit_description"
-        app:layout_constraintBottom_toBottomOf="@+id/kit_image"
         android:background="@drawable/ic_play_circle_outline_black_24dp"
-        />
+        app:layout_constraintBottom_toBottomOf="@+id/kit_image"
+        app:layout_constraintStart_toStartOf="@+id/kit_description"
+        app:layout_constraintTop_toBottomOf="@+id/kit_description" />
+
+    <ProgressBar
+        android:id="@+id/preview_progress"
+        style="@android:style/Widget.Material.ProgressBar.Horizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/preview_kit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/preview_kit"
+        app:layout_constraintTop_toTopOf="@+id/preview_kit" />
+
     <ImageButton
         android:id="@+id/favorite_kit"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
         android:layout_marginStart="12dp"
-        app:layout_constraintTop_toTopOf="@+id/preview_kit"
-        app:layout_constraintStart_toEndOf="@+id/preview_kit"
-        app:layout_constraintBottom_toBottomOf="@+id/preview_kit"
         android:background="@drawable/ic_favorite_border_24dp"
-        />
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/preview_progress"
+        app:layout_constraintStart_toEndOf="@+id/preview_progress"
+        app:layout_constraintTop_toTopOf="@+id/preview_progress" />
+
     <Button
-        android:layout_margin="8dp"
         android:id="@+id/kit_price"
+        style="@style/menu_text"
         android:layout_width="0dp"
         android:layout_height="30dp"
+        android:layout_margin="8dp"
+        android:background="@drawable/default_pad"
         android:text="BUY - $4.99"
-        style="@style/menu_text"
-        android:background="@color/darkPurple"
-        app:layout_constraintTop_toBottomOf="@+id/preview_kit"
-        app:layout_constraintStart_toEndOf="@+id/kit_image"
         app:layout_constraintEnd_toEndOf="parent"
-        />
+        app:layout_constraintStart_toEndOf="@+id/kit_image"
+        app:layout_constraintTop_toBottomOf="@+id/preview_kit" />
 </androidx.constraintlayout.widget.ConstraintLayout>

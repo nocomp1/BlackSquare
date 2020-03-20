@@ -35,6 +35,8 @@ import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
 import com.example.blacksquare.ViewModels.MainActivityViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.InputStream
@@ -70,6 +72,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var mainControlsSceneRoot: ViewGroup
     private lateinit var mainUiControlsScene: Scene
     private lateinit var mainUiPatternControlScene: Scene
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 
     external fun startEngine(assetManager: AssetManager)
@@ -89,9 +92,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         setContentView(R.layout.activity_main)
         mainActivityViewModel = MainActivityViewModel(applicationContext)
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
 
-       // Log.d("ProjectName ","$projectName")
 
 
 

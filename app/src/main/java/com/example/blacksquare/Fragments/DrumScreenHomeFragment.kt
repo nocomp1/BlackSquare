@@ -502,7 +502,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
 
     /**
-     * The time stamp sequence list is always going to have at least size of 1(dummy data or actual time stamp)
+     * The time stamp sequence list is always going to have at least size of
+     * 1(dummy data or actual time stamp)
      */
     private fun addTimeStampToList(
         padIndex: Int,
