@@ -1,7 +1,7 @@
 package com.example.blacksquare.ViewModels
 
-import android.media.AudioManager
 import android.media.MediaPlayer
+import android.view.View
 import android.widget.ProgressBar
 import androidx.lifecycle.*
 import com.example.blacksquare.Models.Kit
@@ -9,7 +9,7 @@ import com.google.firebase.database.*
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
 
-class DrumScreenLoadKitViewModel : ViewModel() {
+class StoreViewModel : ViewModel() {
     private lateinit var database: FirebaseDatabase
     private lateinit var dbReference: DatabaseReference
     private val disposables = CompositeDisposable()
@@ -23,25 +23,26 @@ class DrumScreenLoadKitViewModel : ViewModel() {
     private val _kitPreviewProgressBar = MutableLiveData<ProgressBar>()
         .also { _viewState.addSource(it) { combineLatest() } }
 
-    private val _kitPreviewProgress = MutableLiveData<Int>()
+    private val _loadStoreProgressSpinner = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineLatest() } }
 
     private fun combineLatest() {
         ViewState(
             kitList = _kitList.value ?: ArrayList(),
-            kitPreviewProgress = _kitPreviewProgress.value ?: 0,
+            loadStoreProgressSpinner = _loadStoreProgressSpinner.value ?: 0,
             kitPreviewProgressBar = _kitPreviewProgressBar.value
         ).apply { _viewState.value = copy() }
     }
 
     data class ViewState(
         val kitList: List<Kit>,
-        val kitPreviewProgress: Int,
+        val loadStoreProgressSpinner: Int,
         val kitPreviewProgressBar: ProgressBar?
     )
 
     fun fetchKitData() {
-
+        //show loading spinner
+_loadStoreProgressSpinner.postValue(View.VISIBLE)
         viewModelScope.launch {
 
             database = FirebaseDatabase.getInstance()
@@ -82,7 +83,8 @@ class DrumScreenLoadKitViewModel : ViewModel() {
 
                     val listOfKit = listOfKitObjects.toList()
                     _kitList.postValue(listOfKit)
-
+                    //hide loading spinner
+                    _loadStoreProgressSpinner.postValue(View.INVISIBLE)
                 }
             })
 

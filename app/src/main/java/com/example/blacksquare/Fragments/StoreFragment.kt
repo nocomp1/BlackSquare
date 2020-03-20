@@ -7,40 +7,50 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.blacksquare.Fragments.StoreFragment.Event.NoPreviewPlaying
 import com.example.blacksquare.Items.KitItem
 import com.example.blacksquare.Models.Kit
 import com.example.blacksquare.R
-import com.example.blacksquare.ViewModels.DrumScreenLoadKitViewModel
+import com.example.blacksquare.ViewModels.StoreViewModel
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.ViewHolder
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-class DrumScreenLoadKitFrag : Fragment(), KitItem.ItemClickListenerInterface {
+class StoreFragment : Fragment(), KitItem.ItemClickListenerInterface {
+
     private val listener: KitItem.ItemClickListenerInterface = this
-    private lateinit var viewModel: DrumScreenLoadKitViewModel
+    private var viewModel: StoreViewModel? = null
     private var previewIsPlaying = false
+    private var recyclerView: RecyclerView? = null
+    private var mediaPlayer: MediaPlayer? = null
+    private var previewKitProgressEngineExecutor: ScheduledExecutorService? = null
+    private var currentUrlPlaying: Any = NoPreviewPlaying
+    private var storeProgressSpinner: ProgressBar? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         recyclerView = view.findViewById(R.id.recycler_view) as RecyclerView
-        recyclerView.setHasFixedSize(true)
+        recyclerView?.setHasFixedSize(true)
+
+        storeProgressSpinner = activity!!.findViewById(R.id.store_progress_spinner)
 
         this.let {
-            viewModel = ViewModelProviders.of(it).get(DrumScreenLoadKitViewModel::class.java)
+            viewModel = ViewModelProviders.of(it).get(StoreViewModel::class.java)
         }
 
-        viewModel.fetchKitData()
+        viewModel?.fetchKitData()
 
-        viewModel.viewState.observe(this, Observer {
-
-
-            // it.kitPreviewProgressBar!!.progress = it.kitPreviewProgress
+        viewModel?.viewState?.observe(this, Observer {
+            storeProgressSpinner?.visibility = it.loadStoreProgressSpinner
             initRecyclerView(it.kitList.toRecyclerListItem())
         })
 
@@ -53,7 +63,7 @@ class DrumScreenLoadKitFrag : Fragment(), KitItem.ItemClickListenerInterface {
             addAll(items)
         }
         //set up the layout manager and set the adapter
-        recyclerView.apply {
+        recyclerView?.apply {
 
             layoutManager = GridLayoutManager(activity, groupAdapter.spanCount).apply {
                 spanSizeLookup = groupAdapter.spanSizeLookup
@@ -85,6 +95,9 @@ class DrumScreenLoadKitFrag : Fragment(), KitItem.ItemClickListenerInterface {
         super.onDestroyView()
         mediaPlayer?.release()
         mediaPlayer = null
+        previewKitProgressEngineExecutor = null
+        recyclerView = null
+        viewModel = null
     }
 
     override fun onCreateView(
@@ -97,33 +110,53 @@ class DrumScreenLoadKitFrag : Fragment(), KitItem.ItemClickListenerInterface {
         return view
     }
 
-    private var mediaPlayer: MediaPlayer? = null
-    private val previewKitProgressEngineExecutor = Executors.newScheduledThreadPool(1)
-
     override fun onPreviewKitItemClicked(
         view: View,
         previewUrl: String,
-        previewProgressBar: ProgressBar
+        previewProgress: ProgressBar,
+        kitPreviewLoading: ProgressBar
     ) {
 
-        if (previewIsPlaying) {
+        //check if the url is the same
+        //that way we only play one kit at a time.
+        //We reset the currentUrlPlaying when we stop
 
-            stopKitItem(view,previewProgressBar)
+        when (currentUrlPlaying) {
+            NoPreviewPlaying -> {
+                //set current playing and play preview
+                currentUrlPlaying = previewUrl
+                playKitItem(view, previewUrl, previewProgress, kitPreviewLoading)
+            }
+            previewUrl -> {
+                //reset current playing and stop preview
+                currentUrlPlaying = NoPreviewPlaying
+                stopKitItem(view, previewProgress)
 
-        } else {
+            }
+            else -> {
+                Toast.makeText(
+                    activity!!.applicationContext,
+                    "Please stop current preview",
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            playKitItem(view,previewUrl,previewProgressBar)
-
+            }
         }
 
     }
 
-    private fun stopKitItem(view: View,previewProgressBar: ProgressBar) {
+    sealed class Event {
+        object NoPreviewPlaying : Event()
+    }
+
+    private fun stopKitItem(view: View, previewProgressBar: ProgressBar) {
         //Resetting the progress state
         previewProgressBar.progress = 0
-        //shutdown incrementing progress bar
-        previewKitProgressEngineExecutor.shutdown()
 
+        //shutdown incrementing progress bar
+        if (!previewKitProgressEngineExecutor?.isShutdown!!) {
+            previewKitProgressEngineExecutor?.shutdown()
+        }
 
         view.background = ContextCompat.getDrawable(
             activity!!.applicationContext,
@@ -134,38 +167,53 @@ class DrumScreenLoadKitFrag : Fragment(), KitItem.ItemClickListenerInterface {
         if (mediaPlayer != null) {
             mediaPlayer?.stop()
         }
+
     }
 
-    private fun playKitItem(view: View, previewUrl: String, previewProgressBar: ProgressBar) {
+    private fun playKitItem(
+        view: View,
+        previewUrl: String,
+        previewProgressBar: ProgressBar,
+        kitPreviewLoading: ProgressBar
+    ) {
+        //Initialize our executor service
+        previewKitProgressEngineExecutor = Executors.newScheduledThreadPool(1)
 
-
+        //change play to pause
         view.background = ContextCompat.getDrawable(
             activity!!.applicationContext,
             R.drawable.ic_pause_circle_outline_black_24dp
         )
+        //update our flag
         previewIsPlaying = true
-
 
         mediaPlayer = MediaPlayer().apply {
             setAudioStreamType(AudioManager.STREAM_MUSIC)
+            //show loading spinner
+            kitPreviewLoading.visibility = View.VISIBLE
+
             setDataSource(previewUrl)
             prepareAsync()
             setOnPreparedListener {
 
                 start()
 
-                val action: Runnable = Runnable {
+                //hide loading spinner
+                kitPreviewLoading.visibility = View.INVISIBLE
+
+                //This will run every millisecond
+                val action = Runnable {
                     previewProgressBar.max = duration
                     previewProgressBar.progress += 1
 
                     //shut down progress when song finish
                     if (previewProgressBar.progress == previewProgressBar.max) {
-                        previewKitProgressEngineExecutor.shutdown()
+                        previewKitProgressEngineExecutor?.shutdown()
                     }
                 }
 
-                //start incrementing the progressbar
-                previewKitProgressEngineExecutor.scheduleAtFixedRate(
+                //start engine to incrementing the progressbar
+                previewKitProgressEngineExecutor?.scheduleAtFixedRate(
                     action,
                     0,
                     1000,
@@ -175,13 +223,13 @@ class DrumScreenLoadKitFrag : Fragment(), KitItem.ItemClickListenerInterface {
             }
             setOnCompletionListener { mp ->
 
-                previewKitProgressEngineExecutor.shutdown()
+                previewKitProgressEngineExecutor?.shutdown()
 
-                stopKitItem(view,previewProgressBar)
+                stopKitItem(view, previewProgressBar)
             }
         }
 
     }
 
-    private lateinit var recyclerView: RecyclerView
+
 }

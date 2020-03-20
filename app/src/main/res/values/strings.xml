@@ -62,4 +62,8 @@
     <string name="p10">p10</string>
     <string name="p11">p11</string>
     <string name="p12">p12</string>
+    <string name="store_title">Store</string>
+    <string name="sounds_title">Sounds</string>
+    <string name="loops_title">Loops</string>
+    <string name="projects_title">Projects</string>
 </resources>

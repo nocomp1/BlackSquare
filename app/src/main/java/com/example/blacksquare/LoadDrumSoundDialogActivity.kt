@@ -6,7 +6,7 @@ import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
-import com.example.blacksquare.Fragments.DrumScreenLoadKitFrag
+import com.example.blacksquare.Fragments.StoreFragment
 import com.example.blacksquare.Fragments.DrumScreenLoadLoopsFrag
 import com.example.blacksquare.Fragments.DrumScreenLoadSoundFrag
 import com.example.blacksquare.Fragments.LoadProjectsFragment
@@ -79,10 +79,10 @@ class LoadDrumSoundDialogActivity : AppCompatActivity() {
         //Tabs
         val sectionsPagerAdapter = TabsViewPagerAdapter(supportFragmentManager)
         val viewPager: ViewPager = findViewById(R.id.view_pager)
-        sectionsPagerAdapter.addFragment(DrumScreenLoadKitFrag(), "Kits")
-        sectionsPagerAdapter.addFragment(DrumScreenLoadSoundFrag(), "Sounds")
-        sectionsPagerAdapter.addFragment(DrumScreenLoadLoopsFrag(), "Loops")
-        sectionsPagerAdapter.addFragment(LoadProjectsFragment(), "Projects")
+        sectionsPagerAdapter.addFragment(StoreFragment(), getString(R.string.store_title))
+        sectionsPagerAdapter.addFragment(DrumScreenLoadSoundFrag(), getString(R.string.sounds_title))
+        sectionsPagerAdapter.addFragment(DrumScreenLoadLoopsFrag(), getString(R.string.loops_title))
+        sectionsPagerAdapter.addFragment(LoadProjectsFragment(), getString(R.string.projects_title))
 
         viewPager.adapter = sectionsPagerAdapter
         val tabs: TabLayout = findViewById(R.id.tabs)
@@ -90,35 +90,6 @@ class LoadDrumSoundDialogActivity : AppCompatActivity() {
 
 
         tabs.setupWithViewPager(viewPager)
-
-//        //Set up a search tab
-//        tabs.addTab(tabs.newTab())
-//        tabs.getTabAt(3)!!.setIcon(R.drawable.ic_search)
-//
-//        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-//            override fun onTabReselected(p0: TabLayout.Tab?) {
-//
-//            }
-//
-//            override fun onTabUnselected(p0: TabLayout.Tab?) {
-//
-//            }
-//
-//            override fun onTabSelected(p0: TabLayout.Tab?) {
-//
-//                when (p0!!.position) {
-//
-//                    KITS_TAB -> {activitySnackbar?.dismiss()
-//                        snackbarlayout = R.layout.snackbar_search_kits_tag_layout}
-//                    SOUNDS_TAB -> {activitySnackbar?.dismiss()
-//                        snackbarlayout = R.layout.snackbar_search_sound_tag_layout}
-//                    LOOPS_TAB -> {activitySnackbar?.dismiss()
-//                        snackbarlayout = R.layout.snackbar_search_loops_tag_layout}
-//                    SEARCH_TAB ->  showSearchTagSnackbar()
-//                }
-//
-//            }
-//        })
 
 
     }

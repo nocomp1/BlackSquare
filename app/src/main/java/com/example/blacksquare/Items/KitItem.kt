@@ -8,6 +8,7 @@ import com.example.blacksquare.R
 import com.xwray.groupie.kotlinandroidextensions.Item
 import com.xwray.groupie.kotlinandroidextensions.ViewHolder
 import kotlinx.android.synthetic.main.item_kit.view.*
+import kotlinx.android.synthetic.main.item_kit.view.kit_preview_loading_spinner
 
 class KitItem(
     private val title: String,
@@ -25,7 +26,8 @@ class KitItem(
         fun onPreviewKitItemClicked(
             view: View,
             previewUrl: String,
-            previewProgress: ProgressBar
+            previewProgress: ProgressBar,
+            kitPreviewLoading: ProgressBar
         )
 
     }
@@ -38,6 +40,7 @@ class KitItem(
             viewHolder.itemView.kit_description.text = kitDescription
             viewHolder.itemView.kit_price.text = kitPrice
             val previewProgress = viewHolder.itemView.preview_progress
+            val kitPreviewLoading = viewHolder.itemView.kit_preview_loading_spinner
             val kitImageView = viewHolder.itemView.kit_image
             Glide.with(context).load(imageUrl).into(kitImageView)
 
@@ -47,7 +50,7 @@ class KitItem(
 
 
             viewHolder.itemView.preview_kit.setOnClickListener {
-                clickListener.onPreviewKitItemClicked(it,previewUrl,previewProgress)
+                clickListener.onPreviewKitItemClicked(it,previewUrl,previewProgress,kitPreviewLoading)
             }
 
 
