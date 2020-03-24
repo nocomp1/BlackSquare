@@ -34,7 +34,7 @@
     <string name="shakers_tag">Shakers</string>
     <string name="snaps_tag">Snaps</string>
     <string name="toms_tag">Toms</string>
-    <string name="crash_cymbals_tag">Crash Cymbals</string>
+    <string name="crash_cymbals_tag">Cymbals</string>
     <string name="transfx_tag">TransFX</string>
     <string name="bpm">BPM</string>
     <string name="isMetronomeOn">isMetronomeOn</string>
@@ -66,4 +66,5 @@
     <string name="sounds_title">Sounds</string>
     <string name="loops_title">Loops</string>
     <string name="projects_title">Projects</string>
+    <string name="all_tag">All</string>
 </resources>

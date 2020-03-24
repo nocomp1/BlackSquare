@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark">
+
+    <HorizontalScrollView
+
+        android:id="@+id/tag_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:scrollbarStyle="insideInset"
+        app:layout_constraintBottom_toTopOf="@id/recycler_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <LinearLayout
+            android:id="@+id/tag_table"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                android:id="@+id/load_loops_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+                <TableRow>
+
+                    <RadioButton
+                        android:id="@+id/hats"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:clickable="true"
+                        android:contentDescription="@string/percussion_tag"
+                        android:focusable="true"
+                        android:padding="8dp"
+
+                        android:text="@string/percussion_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/snares"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/arpeggio_tag"
+                        android:padding="8dp"
+                        android:text="@string/arpeggio_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/kicks"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/atmospheric_tap"
+                        android:padding="8dp"
+                        android:text="@string/atmospheric_tap"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/_808s"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/guitar_tag"
+                        android:padding="8dp"
+                        android:text="@string/guitar_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/claps"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/keys_tag"
+                        android:padding="8dp"
+                        android:text="@string/keys_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/percussion"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/strings_tag"
+                        android:padding="8dp"
+                        android:text="@string/strings_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/builds"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/synthesizer_tag"
+                        android:padding="8dp"
+                        android:text="@string/synthesizer_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/fills"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/pads_tag"
+                        android:padding="8dp"
+                        android:text="@string/pads_tag"
+                        android:textAlignment="center" />
+
+                </TableRow>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/colorPrimaryDark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tag_filter" />
+
+    <ProgressBar
+        android:id="@+id/store_progress_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tag_filter"
+        app:layout_constraintVertical_bias="0.1"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

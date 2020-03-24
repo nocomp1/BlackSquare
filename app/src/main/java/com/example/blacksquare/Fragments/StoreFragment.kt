@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.blacksquare.Fragments.StoreFragment.Event.NoPreviewPlaying
 import com.example.blacksquare.Items.KitItem
-import com.example.blacksquare.Models.Kit
+import com.example.blacksquare.Models.StoreKit
 import com.example.blacksquare.R
 import com.example.blacksquare.ViewModels.StoreViewModel
 import com.xwray.groupie.GroupAdapter
@@ -51,7 +51,7 @@ class StoreFragment : Fragment(), KitItem.ItemClickListenerInterface {
 
         viewModel?.viewState?.observe(this, Observer {
             storeProgressSpinner?.visibility = it.loadStoreProgressSpinner
-            initRecyclerView(it.kitList.toRecyclerListItem())
+            initRecyclerView(it.storeKitList.toRecyclerListItem())
         })
 
     }
@@ -77,7 +77,7 @@ class StoreFragment : Fragment(), KitItem.ItemClickListenerInterface {
     }
 
     // custom extension function
-    private fun List<Kit>.toRecyclerListItem(): List<KitItem> {
+    private fun List<StoreKit>.toRecyclerListItem(): List<KitItem> {
         return this.map { kit ->
             KitItem(
                 kit.title,

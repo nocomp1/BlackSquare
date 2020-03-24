@@ -238,7 +238,7 @@ class SettingsDialogActivity : AppCompatActivity() {
         if(bar_measure_radio_group.checkedRadioButtonId != -1) {
             ApplicationState.selectedBarMeasureRadioButtonId =
                 bar_measure_radio_group.checkedRadioButtonId
-            var rb = findViewById<RadioButton>(bar_measure_radio_group.checkedRadioButtonId)
+            val rb = findViewById<RadioButton>(bar_measure_radio_group.checkedRadioButtonId)
             if (rb != null) {
                 ApplicationState.selectedBarMeasure = (rb.text).toString().toInt()
             }

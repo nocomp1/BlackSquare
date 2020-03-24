@@ -1,6 +1,6 @@
 package com.example.blacksquare.Models
 
-data class Kit(
+data class StoreKit(
     val title: String,
     val imageUrl: String,
     val kitShortDescription: String,

@@ -4,7 +4,7 @@ import android.media.MediaPlayer
 import android.view.View
 import android.widget.ProgressBar
 import androidx.lifecycle.*
-import com.example.blacksquare.Models.Kit
+import com.example.blacksquare.Models.StoreKit
 import com.google.firebase.database.*
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
@@ -12,12 +12,11 @@ import kotlinx.coroutines.launch
 class StoreViewModel : ViewModel() {
     private lateinit var database: FirebaseDatabase
     private lateinit var dbReference: DatabaseReference
-    private val disposables = CompositeDisposable()
     private var mediaPlayer: MediaPlayer? = null
     private val _viewState = MediatorLiveData<ViewState>()
     val viewState: LiveData<ViewState> get() = _viewState
 
-    private val _kitList = MutableLiveData<List<Kit>>()
+    private val _kitList = MutableLiveData<List<StoreKit>>()
         .also { _viewState.addSource(it) { combineLatest() } }
 
     private val _kitPreviewProgressBar = MutableLiveData<ProgressBar>()
@@ -28,14 +27,14 @@ class StoreViewModel : ViewModel() {
 
     private fun combineLatest() {
         ViewState(
-            kitList = _kitList.value ?: ArrayList(),
+            storeKitList = _kitList.value ?: ArrayList(),
             loadStoreProgressSpinner = _loadStoreProgressSpinner.value ?: 0,
             kitPreviewProgressBar = _kitPreviewProgressBar.value
         ).apply { _viewState.value = copy() }
     }
 
     data class ViewState(
-        val kitList: List<Kit>,
+        val storeKitList: List<StoreKit>,
         val loadStoreProgressSpinner: Int,
         val kitPreviewProgressBar: ProgressBar?
     )
@@ -49,7 +48,7 @@ _loadStoreProgressSpinner.postValue(View.VISIBLE)
             //get reference to the "users" node
             dbReference = database.getReference("kit")
 
-            val listOfKitObjects = mutableListOf<Kit>()
+            val listOfKitObjects = mutableListOf<StoreKit>()
             dbReference.addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
 
@@ -58,8 +57,8 @@ _loadStoreProgressSpinner.postValue(View.VISIBLE)
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     // This method is called once with the initial value and again
                     // whenever data at this location is updated.
-                    for (kits in dataSnapshot.children) {
-
+                   // for (kits in dataSnapshot.children) {
+                    val listOfKit = dataSnapshot.children.map { kits ->
                         val title = kits.child("title").value.toString()
                         val imageUrl = kits.child("imageUrl").value.toString()
                         val kitShortDescription = kits.child("kitDescription").value.toString()
@@ -68,8 +67,8 @@ _loadStoreProgressSpinner.postValue(View.VISIBLE)
                         val sale = kits.child("sale").value.toString().toBoolean()
                         val previewUrl = kits.child("previewUrl").value.toString()
 
-                        listOfKitObjects.add(
-                            Kit(
+                      //  listOfKitObjects.add(
+                            StoreKit(
                                 title,
                                 imageUrl,
                                 kitShortDescription,
@@ -78,10 +77,12 @@ _loadStoreProgressSpinner.postValue(View.VISIBLE)
                                 sale,
                                 previewUrl
                             )
-                        )
-                    }
+                       // )
 
-                    val listOfKit = listOfKitObjects.toList()
+                }
+                  //  }
+
+                  //  val listOfKit = listOfKitObjects.toList()
                     _kitList.postValue(listOfKit)
                     //hide loading spinner
                     _loadStoreProgressSpinner.postValue(View.INVISIBLE)
@@ -132,6 +133,6 @@ _loadStoreProgressSpinner.postValue(View.VISIBLE)
 
     override fun onCleared() {
         super.onCleared()
-        disposables.clear()
+
     }
 }

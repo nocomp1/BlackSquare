@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.StoreFragment
-import com.example.blacksquare.Fragments.DrumScreenLoadLoopsFrag
-import com.example.blacksquare.Fragments.DrumScreenLoadSoundFrag
+import com.example.blacksquare.Fragments.LoadLoopsFrag
+import com.example.blacksquare.Fragments.LoadSoundFrag
 import com.example.blacksquare.Fragments.LoadProjectsFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
@@ -80,8 +80,8 @@ class LoadDrumSoundDialogActivity : AppCompatActivity() {
         val sectionsPagerAdapter = TabsViewPagerAdapter(supportFragmentManager)
         val viewPager: ViewPager = findViewById(R.id.view_pager)
         sectionsPagerAdapter.addFragment(StoreFragment(), getString(R.string.store_title))
-        sectionsPagerAdapter.addFragment(DrumScreenLoadSoundFrag(), getString(R.string.sounds_title))
-        sectionsPagerAdapter.addFragment(DrumScreenLoadLoopsFrag(), getString(R.string.loops_title))
+        sectionsPagerAdapter.addFragment(LoadSoundFrag(), getString(R.string.sounds_title))
+        sectionsPagerAdapter.addFragment(LoadLoopsFrag(), getString(R.string.loops_title))
         sectionsPagerAdapter.addFragment(LoadProjectsFragment(), getString(R.string.projects_title))
 
         viewPager.adapter = sectionsPagerAdapter

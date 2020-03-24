@@ -13,6 +13,11 @@ import java.util.ArrayList;
 
 public class ToggleButtonGroupTableLayout extends TableLayout implements OnClickListener {
 
+    public interface ToggleButtonListener {
+        void onToggleButtonClicked(RadioButton radioButton);
+    }
+
+    public ToggleButtonListener listener;
     private static final String TAG = "ToggleButtonGroupTableLayout";
     private RadioButton activeRadioButton;
 
@@ -21,7 +26,12 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
      */
     public ToggleButtonGroupTableLayout(Context context) {
         super(context);
+
         // TODO Auto-generated constructor stub
+    }
+
+    public void setUpListener(ToggleButtonListener listener) {
+        this.listener = listener;
     }
 
     /**
@@ -37,12 +47,12 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
     public void onClick(View v) {
 
         ////Remove all selected
-        for(int i=0; i < radioButtonList.size(); i++){
+        for (int i = 0; i < radioButtonList.size(); i++) {
 
-           int id = radioButtonList.get(i);
-           RadioButton rb = (RadioButton) findViewById(id) ;
+            int id = radioButtonList.get(i);
+            RadioButton rb = (RadioButton) findViewById(id);
 
-           rb.setChecked(false);
+            rb.setChecked(false);
         }
 
         final RadioButton rb = (RadioButton) v;
@@ -52,6 +62,9 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
         }
         rb.setChecked(true);
         activeRadioButton = rb;
+        if (listener != null) {
+            listener.onToggleButtonClicked(activeRadioButton);
+        }
     }
 
     /* (non-Javadoc)
@@ -89,10 +102,11 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
 
     }
 
-ArrayList<Integer> radioButtonList = new ArrayList();
+    ArrayList<Integer> radioButtonList = new ArrayList();
+
     private void setChildrenOnClickListener(TableRow tr) {
         final int c = tr.getChildCount();
-        for (int i=0; i < c; i++) {
+        for (int i = 0; i < c; i++) {
             final View v = tr.getChildAt(i);
             if (v instanceof RadioButton) {
 

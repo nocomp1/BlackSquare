@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:scrollbarStyle="insideInset">
+
+        <LinearLayout
+            android:id="@+id/tag_table"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                android:id="@+id/bar_measure_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+                <TableRow>
+
+                    <RadioButton
+                        android:id="@+id/hats"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:clickable="true"
+                        android:contentDescription="@string/hats_tag"
+                        android:focusable="true"
+                        android:padding="8dp"
+
+                        android:text="@string/hats_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/snares"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/snares_tag"
+                        android:padding="8dp"
+                        android:text="@string/snares_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/kicks"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/kicks_tag"
+                        android:padding="8dp"
+                        android:text="@string/kicks_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+                        android:id="@+id/_808s"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/_808_s_tag"
+                        android:padding="8dp"
+                        android:text="@string/_808_s_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/claps"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:contentDescription="@string/clapsTag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/clapsTag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/percussion"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/percussion_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/percussion_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/builds"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/builds_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/builds_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/fills"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/fills_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/fills_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/rolls"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+
+                        android:contentDescription="@string/rolls_tag"
+                        android:padding="8dp"
+
+                        android:text="@string/rolls_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/shakers"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/shakers_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/shakers_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/snaps"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/snaps_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/snaps_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/toms"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/toms_tag"
+                        android:padding="8dp"
+
+                        android:text="@string/toms_tag"
+                        android:textAlignment="center" />
+
+
+                    <RadioButton
+
+                        android:id="@+id/crash"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/crash_cymbals_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/crash_cymbals_tag"
+                        android:textAlignment="center" />
+
+                    <RadioButton
+
+                        android:id="@+id/trans_fx"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/transfx_tag"
+
+                        android:padding="8dp"
+
+                        android:text="@string/transfx_tag"
+                        android:textAlignment="center" />
+
+
+                    <RadioButton
+
+                        android:id="@+id/sound_fx"
+                        style="@style/menu_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/radio_button_background"
+                        android:button="@android:color/transparent"
+                        android:checked="false"
+                        android:contentDescription="@string/soundfx"
+
+                        android:padding="8dp"
+
+                        android:text="@string/soundfx"
+                        android:textAlignment="center" />
+                </TableRow>
+            </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+        </LinearLayout>
+
+    </HorizontalScrollView>
+</LinearLayout>

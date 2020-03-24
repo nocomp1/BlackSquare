@@ -1,13 +1,9 @@
 package com.example.blacksquare.Repository
 
 import com.example.blacksquare.Api.LoadApi
-import com.example.blacksquare.Models.Kit
+import com.example.blacksquare.Models.StoreKit
 import com.example.blacksquare.Networking.RetrofitClientInstance
 import io.reactivex.Single
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Response
-import javax.security.auth.callback.Callback
 
 class LoadRepository {
     private var loadApi: LoadApi ? = null
@@ -21,7 +17,7 @@ class LoadRepository {
         }
     }
 
-    fun fetchKitData(): Single<ArrayList<Kit>> {
+    fun fetchKitData(): Single<ArrayList<StoreKit>> {
       return  loadApi.let {  it!!.getAllKits()}
 
     }
