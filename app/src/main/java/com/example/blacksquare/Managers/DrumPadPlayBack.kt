@@ -6,7 +6,6 @@ import android.util.Log
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
-import timber.log.Timber
 
 class DrumPadPlayBack(applicationContext: Context) {
 
@@ -68,7 +67,7 @@ class DrumPadPlayBack(applicationContext: Context) {
     //triggered every millisecond
     fun padPlayback(padIndex: Int, padLftVolume: Float, padRftVolume: Float) {
 
-        millisecSequenceIndexCounter = ApplicationState.uiSequenceMillisecCounter
+        millisecSequenceIndexCounter = ApplicationState.sequenceMillisecClock
         //Timber.d("millisecond counter $millisecSequenceIndexCounter")
        // Log.d("fuckJACK","millisecSequenceIndexCounter= ${ApplicationState.uiSequenceMillisecCounter}")
 
@@ -86,14 +85,12 @@ class DrumPadPlayBack(applicationContext: Context) {
                 padRftVolume
             )
 
-
         }
 
         // if a note has been recorded
         // store array for undo action each time sequence loop
         // and only if there is a new hit to the array
         if ((ApplicationState.drumNoteHasBeenRecorded)) {
-
 
                 //if the undo list is empty add arraylist of array maps to it
                 if ((padHitUndoSequenceList!!.isEmpty())) {
@@ -126,7 +123,7 @@ class DrumPadPlayBack(applicationContext: Context) {
                     //4. Update the global application drum pad undo list with local copy
 
                     // our sequence loop in milliseconds
-                    if (millisecSequenceIndexCounter == Bpm.getPatternTimeInMilliSecs()) {
+                    if (millisecSequenceIndexCounter == Bpm.getSequenceTimeInMilliSecs()) {
 
                         Log.d("sequencetime","iteration=")
 

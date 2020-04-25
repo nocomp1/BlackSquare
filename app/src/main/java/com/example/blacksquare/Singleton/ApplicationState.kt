@@ -44,13 +44,14 @@ companion object {
 
     var metronomeMillisecCounter : Long = 0L
     var uiClockMillisecCounter : Long = 0L
-    var uiSequenceMillisecCounter : Long = 0L
+    var sequenceMillisecClock : Long = 0L
     var uiProgressBarMillisecCounter : Long = 0L
     var globalMilliSecCounter : Long = 0L
 
 
     /**
      * Arraylist of notes triggered for each pad
+     *
      */                         //|Pads|   |Timestamp index| |object at index|
     val padHitSequenceArrayList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
 

@@ -1,7 +1,9 @@
 package com.example.blacksquare.Objects
 
 data class PadSequenceTimeStamp(
-    val soundId:Int?,
-    val padId:Int,
-    val soundPlayTimeStamp: Long?
+    val soundId: Int?,
+    val padId: Int,
+    val soundPlayTimeStamp: Long?,
+    val padLftVolume: Float,
+    val padRftVolume: Float
 )

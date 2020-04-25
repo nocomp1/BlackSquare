@@ -1,16 +1,11 @@
 package com.example.blacksquare.ViewModels
 
-import android.util.ArrayMap
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.blacksquare.Fragments.DrumScreenHomeFragment
-import com.example.blacksquare.Managers.DrumPadPlayBack
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
-import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -21,6 +16,13 @@ import java.util.concurrent.TimeUnit
 class MainViewModel() : ViewModel() {
     //using interface for precision
     private lateinit var callback: UpdateListener
+    private lateinit var sequenceCallback: SequenceListener
+
+    interface SequenceListener {
+        fun updateSeqPerMilliSec(sequenceMilliSecClock: Long)
+        fun onUndoTapped()
+        fun onUndoConfirmed()
+    }
 
     interface UpdateListener {
         fun resetProgressBar()
@@ -36,6 +38,11 @@ class MainViewModel() : ViewModel() {
         callback = activityListener
     }
 
+    fun setSeqListener(sequenceListener: SequenceListener) {
+        sequenceCallback = sequenceListener
+    }
+
+    private var sequenceMilliSecClock = 0L
     private lateinit var playEngineExecutor: ScheduledExecutorService
     private var uiProgressBarMilliSecCounter = 0L
     private var metronomeCounter = 0L
@@ -88,75 +95,13 @@ class MainViewModel() : ViewModel() {
 
     }
 
-
-    fun pad1Playback() {
-
-//        padPlayback1.padPlayback(
-//            Definitions.pad1Index,
-//            sharedPref.getFloat(Definitions.pad1LftVolume, Definitions.padVolumeDefault)
-//            , sharedPref.getFloat(Definitions.pad1RftVolume, Definitions.padVolumeDefault)
-//        )
-        showPadHitState(Definitions.pad1Index)
+    private fun onUndoTapped() {
+        sequenceCallback.onUndoTapped()
     }
 
-    /**
-     * Pad playbacks (called every millisecond)
-     */
-    private fun showPadHitState(padIndex: Int) {
-
-        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(ApplicationState.uiSequenceMillisecCounter)) {
-            Log.d("pad1playback", "pad playback is triggered")
-            //show pad being triggered
-            playbackPadId.postValue(padIndex)
-        }
+    private fun onUndoConfirmed() {
+        sequenceCallback.onUndoConfirmed()
     }
-
-
-    fun undoLastSequence() {
-        if (DrumPadPlayBack.padHitUndoSequenceList!!.size != 0) {
-            //loop through all pads
-            var padIndexCounter1 = 0
-            while (padIndexCounter1 < ApplicationState.padHitSequenceArrayList!!.size) {
-
-                // if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
-                //remove last pattern
-                DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].removeAt(
-                    DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].size - 1
-                )
-                DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].trimToSize()
-
-                //now check if the list is not empty since we remove pattern first
-                if (DrumPadPlayBack.padHitUndoSequenceList!![padIndexCounter1].isNotEmpty()) {
-                    //get the last pattern
-                    val previousPattern =
-                        ArrayMap(DrumPadPlayBack.padHitUndoSequenceList[padIndexCounter1].last())
-
-                    //set the last pattern to the original list
-                    DrumScreenHomeFragment.padTimeStampArrayMapList.set(
-                        padIndexCounter1,
-                        previousPattern
-                    )
-                    ApplicationState.padHitSequenceArrayList!!.set(
-                        padIndexCounter1,
-                        previousPattern
-                    )
-                } else {
-
-                    _events.postValue(Event.UndoLisEmptyMsg)
-
-                }
-                //  }
-                padIndexCounter1++
-            }
-        }
-
-        if (DrumPadPlayBack.padHitUndoSequenceList.isEmpty()) {
-            //Return to the original state when we first started
-            DrumScreenHomeFragment().initPadTimeStampArrayList()
-        }
-
-    }
-
 
 //    private fun isPhoneSetToDarkTheme() {
 //
@@ -240,11 +185,13 @@ class MainViewModel() : ViewModel() {
 
     private fun sequenceClock() {
         //keeping track of current sequence by milliseconds
-        ApplicationState.uiSequenceMillisecCounter++
+        // ApplicationState.sequenceMillisecClock++
+        sequenceMilliSecClock++
+        sequenceCallback.updateSeqPerMilliSec(sequenceMilliSecClock)
 
         //Reset the counter when we reach the end of sequence
-        if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-            ApplicationState.uiSequenceMillisecCounter = 0
+        if (sequenceMilliSecClock == Bpm.getSequenceTimeInMilliSecs()) {
+            sequenceMilliSecClock = 0
         }
     }
 
@@ -286,7 +233,8 @@ class MainViewModel() : ViewModel() {
 
         when (action) {
             Action.Run -> runEngine()
-            Action.OnUndoTapped -> undoLastSequence()
+            Action.OnUndoTapped -> onUndoTapped()
+            Action.OnUndoConfirmed -> onUndoConfirmed()
             Action.OnPlay -> startPlayEngine()
             Action.OnStop -> stopPlayEngine()
             Action.OnSettingsTapped -> _events.value = Event.ShowSettings
@@ -302,6 +250,8 @@ class MainViewModel() : ViewModel() {
                 Event.ActivateRecord(action.isRecording)
             is Action.OnMainSliderProgressChange -> mainSlider(action.progress)
             is Action.OnMainSliderMenuSelection -> TODO()
+            Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
+            Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
         }.exhaustive
 
 
@@ -312,13 +262,16 @@ class MainViewModel() : ViewModel() {
         object OnPlay : Action()
         object OnStop : Action()
         object OnUndoTapped : Action()
+        object OnUndoConfirmed : Action()
         object OnSettingsTapped : Action()
         object OnLoadTapped : Action()
         data class OnNoteRepeatTapped(val isNoteRepeatActivated: Boolean) : Action()
         object OnNoteRepeatDoubleTapped : Action()
         object OnShowPatternUi : Action()
         object OnShowMainUi : Action()
-        data class OnMainSliderProgressChange(val progress : Int) : Action()
+        object OnShowUndoErrorMsg : Action()
+        object OnShowUndoConfirmMsg : Action()
+        data class OnMainSliderProgressChange(val progress: Int) : Action()
         data class OnRecordTapped(val isRecording: Boolean) : Action()
         data class OnMainSliderMenuSelection(val label: String) : MainViewModel.Action()
     }
@@ -327,6 +280,7 @@ class MainViewModel() : ViewModel() {
         object UndoLisEmptyMsg : Event()
         object ShowSettings : Event()
         object ShowLoadMenu : Event()
+        object ShowUndoConfirmMsg : Event()
         data class ActivateNoteRepeat(val isNoteRepeatActivated: Boolean) : Event()
         data class ActivateRecord(val isRecording: Boolean) : Event()
         object ShowNoteRepeatMenu : Event()

@@ -137,8 +137,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             when (event) {
 
                 is MainViewModel.Event.UndoLisEmptyMsg -> {
-                    Toast.makeText(applicationContext, "Undo List Empty!", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this, "Nothing to undo!", Toast.LENGTH_SHORT).show()
                 }
                 MainViewModel.Event.ShowSettings -> {
                     val intent = Intent(this, SettingsDialogActivity::class.java)
@@ -158,6 +157,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                 is MainViewModel.Event.ActivateRecord -> {
                     ApplicationState.isRecording = event.isRecording
                 }
+                MainViewModel.Event.ShowUndoConfirmMsg -> showUndoConfirmMsg()
+
             }.exhaustive
 
         })
@@ -180,16 +181,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
             // startEngine()
         }
-
-        // startEngine(assets)
-
-        //startEngine()
-        //testReadingWaveHeader(assets)
-
-        padPlayback1 = DrumPadPlayBack(this)
-        padPlayback2 = DrumPadPlayBack(this)
-        padPlayback3 = DrumPadPlayBack(this)
-        padPlayback4 = DrumPadPlayBack(this)
 
         //Subscribe app to channel "all" for cloud messages
         //post to topics/app
@@ -235,6 +226,31 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         initializeUiComponents()
 
+
+    }
+
+    private fun showUndoConfirmMsg() {
+
+        lateinit var dialog: AlertDialog
+        val builder = AlertDialog.Builder(this)
+            .setTitle("Undo?")
+            .setMessage("Are you sure you want to undo the last selected pad sequence?")
+
+        val dialogClickListener = DialogInterface.OnClickListener { _, which ->
+            when (which) {
+                DialogInterface.BUTTON_POSITIVE -> {
+                    mainViewModel.onAction(MainViewModel.Action.OnUndoConfirmed)
+                }
+                DialogInterface.BUTTON_NEGATIVE -> {
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        builder.setPositiveButton("YES", dialogClickListener)
+            .setNegativeButton("NO", dialogClickListener)
+            .create()
+            .show()
 
     }
 
@@ -399,84 +415,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      */
 
     fun onUndoTapped(view: View) {
-        if (DrumPadPlayBack.padHitUndoSequenceList!!.size != 0) {
-
-            lateinit var dialog: AlertDialog
-            val builder = AlertDialog.Builder(this)
-                .setTitle("Undo?")
-                .setMessage("Are you sure you want to undo the last selected pad sequence?")
-
-            val dialogClickListener = DialogInterface.OnClickListener { _, which ->
-                when (which) {
-                    DialogInterface.BUTTON_POSITIVE -> {
-                        mainViewModel.onAction(MainViewModel.Action.OnUndoTapped)
-                    }
-                    DialogInterface.BUTTON_NEGATIVE -> {
-                        dialog.dismiss()
-                    }
-                }
-            }
-
-            builder.setPositiveButton("YES", dialogClickListener)
-                .setNegativeButton("NO", dialogClickListener)
-                .create()
-                .show()
-
-        } else {
-
-            Toast.makeText(this, "Nothing to undo!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * Pad playbacks (called every millisecond)
-     */
-    private fun showPadHitState(padIndex: Int) {
-        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(ApplicationState.uiSequenceMillisecCounter)) {
-            Log.d("pad1playback", "pad playback is triggered")
-            //show pad being triggered
-            mainViewModel.playbackPadId.postValue(padIndex)
-        }
-    }
-
-    private fun pad1Playback() {
-
-        mainViewModel.pad1Playback()
-
-
-//        padPlayback1.padPlayback(
-//            Definitions.pad1Index,
-//            sharedPref.getFloat(Definitions.pad1LftVolume, Definitions.padVolumeDefault)
-//            , sharedPref.getFloat(Definitions.pad1RftVolume, Definitions.padVolumeDefault)
-//        )
-//        showPadHitState(Definitions.pad1Index)
-    }
-
-    private fun pad2Playback() {
-        padPlayback2.padPlayback(
-            Definitions.pad2Index,
-            sharedPref.getFloat(Definitions.pad2LftVolume, Definitions.padVolumeDefault)
-            , sharedPref.getFloat(Definitions.pad2RftVolume, Definitions.padVolumeDefault)
-        )
-        showPadHitState(Definitions.pad2Index)
-    }
-
-    private fun pad3Playback() {
-        padPlayback3.padPlayback(
-            Definitions.pad3Index,
-            sharedPref.getFloat(Definitions.pad3LftVolume, Definitions.padVolumeDefault)
-            , sharedPref.getFloat(Definitions.pad3RftVolume, Definitions.padVolumeDefault)
-        )
-        showPadHitState(Definitions.pad3Index)
-    }
-
-    private fun pad4Playback() {
-        padPlayback4.padPlayback(
-            Definitions.pad4Index,
-            sharedPref.getFloat(Definitions.pad4LftVolume, Definitions.padVolumeDefault)
-            , sharedPref.getFloat(Definitions.pad4RftVolume, Definitions.padVolumeDefault)
-        )
-        showPadHitState(Definitions.pad4Index)
+        mainViewModel.onAction(MainViewModel.Action.OnUndoTapped)
     }
 
     /**

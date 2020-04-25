@@ -5,10 +5,12 @@ import android.widget.Button
 class ShowPadPlaying {
 
     fun showPadPlaying(pad: Button) {
-
-
         pad.isPressed = true
         pad.invalidate()
+//        Thread.sleep(100)
+//        pad.isPressed = false
+//        pad.invalidate()
+
 
         pad.postDelayed(
             Runnable //delay button

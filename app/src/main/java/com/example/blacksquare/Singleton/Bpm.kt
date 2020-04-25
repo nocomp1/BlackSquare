@@ -30,7 +30,7 @@ object Bpm {
 
     }
 
-    fun getPatternTimeInMilliSecs(): Long {
+    fun getSequenceTimeInMilliSecs(): Long {
         //example: if we have 500 milliseconds per beat times 1 bar times 4 = 2,000 milliseconds
         //1 bar = 4beats
         return (getBeatPerMilliSeconds() * ApplicationState.selectedBarMeasure) * 4
