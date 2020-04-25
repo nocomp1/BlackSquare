@@ -67,4 +67,9 @@
     <string name="loops_title">Loops</string>
     <string name="projects_title">Projects</string>
     <string name="all_tag">All</string>
+
+    <string name="main_slider_short_volume_label">V</string>
+    <string name="main_slider_short_pan_label">P</string>
+    <string name="main_slider_short_pitch_label">PI</string>
+
 </resources>

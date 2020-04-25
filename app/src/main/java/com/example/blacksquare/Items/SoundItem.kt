@@ -30,11 +30,15 @@ class SoundItem(
 
             viewHolder.itemView.sound_title.text = title
 
+            // Play button
             viewHolder.itemView.sound_preview.setOnClickListener {
+                //The Frag will handle this
                 clickListener.onPreviewSoundItemClicked(fileLocation, title,it)
             }
 
+            //Load sound button
             viewHolder.itemView.load_sound.setOnClickListener {
+                //The Frag will handle this
                 clickListener.onLoadSoundItemClicked(fileLocation, title,it)
             }
 

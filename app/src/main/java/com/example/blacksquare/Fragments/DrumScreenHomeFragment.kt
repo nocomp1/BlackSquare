@@ -17,7 +17,7 @@ import android.widget.SeekBar
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
-import com.example.blacksquare.LoadDrumSoundDialogActivity
+import com.example.blacksquare.LoadDialogActivity
 import com.example.blacksquare.Managers.DrumPadPlayBack
 import com.example.blacksquare.Managers.DrumPadSoundPool
 import com.example.blacksquare.Managers.SoundResManager
@@ -29,6 +29,7 @@ import com.example.blacksquare.SettingsDialogActivity
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
+import com.example.blacksquare.ViewModels.MainViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
@@ -49,7 +50,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
     private val padList = mutableListOf<PadClickListenerModel>()
     // private val padSequenceList = arrayOf<ArrayList<PadSequenceTimeStamp>>()
     private lateinit var volumeSeekBar: SeekBar
-    private lateinit var soundsViewModel: SoundsViewModel
+    private lateinit var sharedViewModel: MainViewModel
+    private lateinit var mainViewModel: MainViewModel
 
     private lateinit var drumPadPlayback: DrumPadPlayBack
     //List of pad time stamps
@@ -60,14 +62,35 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val pager: ViewPager? = viewPager
         pager?.offscreenPageLimit = 5
 
-        //sharedPref = activity!!.applicationContext.getSharedPreferences("drumscreen", Context.MODE_PRIVATE) ?: return
+        activity?.let {
+            sharedViewModel = ViewModelProviders.of(it).get(MainViewModel::class.java)
+        }
+
+        sharedViewModel.mainSliderValue.observe(this, Observer {
+            it?.let { progress ->
+                val volume = progress.toFloat() / 100
+                setPadVolume(volume)
+
+                Log.d("padVolumeValue", "pad volume value= $progress")
+
+            }
+        })
+
+            sharedViewModel.playbackPadId.observe(this, Observer {pad ->
+                pad?.let {
+                    padPlayBackchangePadState(it)
+                    Log.d("pad1playback", "pad idroy= $it")
+
+                }
+            })
+
+        }
 
 
-    }
+
 
 
     override fun onStart() {
@@ -82,10 +105,22 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
         //Setting up View model to communicate to our fragments
 
-        this.let {
-            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-        }
 
+
+
+
+
+
+
+
+
+
+//
+//        this.let {
+//
+//            mainActivityViewModel = ViewModelProviders.of(it).get(MainActivityViewModel::class.java)
+//
+//        }
         //sharedPref = activity!!.applicationContext.getSharedPreferences("drumscreen", Context.MODE_PRIVATE) ?: return
         //sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE) ?: return
 
@@ -107,7 +142,6 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
         //Load Default kit
         loadAsoundKit(SoundResManager.getDefaultKitFilesIds())
 
-
         initPadTimeStampArrayList()
 
 
@@ -119,7 +153,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
 
         ///Set up our live data observers
-        setUpLiveDataToObserve()
+       // setUpLiveDataToObserve()
 
 
     }
@@ -134,41 +168,54 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
         //Array list that holds the array map timestamps for each pad
         ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad1Index, pad1HitMap)
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad2Index, pad1HitMap)
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad3Index, pad1HitMap)
-        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad4Index, pad1HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad2Index, pad2HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad3Index, pad3HitMap)
+        ApplicationState.padHitSequenceArrayList!!.add(Definitions.pad4Index, pad4HitMap)
 
     }
 
     private fun setUpLiveDataToObserve() {
         //observe what pad needs to change state during playback
-        activity?.let {
-            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+//        activity?.let {
+//            val mainActivityViewModel = ViewModelProviders.of(it).get(MainActivityViewModel::class.java)
+//
+//            mainActivityViewModel.playbackPadId.observe(this, Observer {pad ->
+//                pad?.let {
+//                    padPlayBackchangePadState(it)
+//                    Log.d("pad1playback", "pad idroy= $it")
+//
+//                }
+//            })
+//        }
 
-            sharedViewModel.playbackPadId.observe(this, Observer {
-                it?.let {
-                    padPlayBackchangePadState(it)
-                    Log.d("pad1playback", "pad idroy= $it")
 
-                }
-            })
-        }
 
-        //observe the main slider/volume/pan/pitch ..ect value
-        activity?.let {
-            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-
-            sharedViewModel.mainSliderValue.observe(this, Observer {
-                it?.let { progress ->
-
-                    val volume = progress.toFloat() / 100
-                    setPadVolume(volume)
-
-                    Log.d("padVolumeValue", "pad volume value= $progress")
-
-                }
-            })
-        }
+//
+//        //observe the main slider/volume/pan/pitch ..ect value
+//        activity?.let {
+//            val sharedViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
+//
+//            sharedViewModel.mainSliderValue.observe(this, Observer {
+//                it?.let { progress ->
+//
+//                    val volume = progress.toFloat() / 100
+//                    setPadVolume(volume)
+//
+//                    Log.d("padVolumeValue", "pad volume value= $progress")
+//
+//                }
+//            })
+//
+//
+//            sharedViewModel.playbackPadId.observe(this, Observer {pad ->
+//                pad?.let {
+//                    padPlayBackchangePadState(it)
+//                    Log.d("pad1playback", "pad idroy= $it")
+//
+//                }
+//            })
+//
+//        }
 
 
     }
@@ -496,6 +543,8 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
             val soundPlayTimeStamp = ApplicationState.uiSequenceMillisecCounter
             addTimeStampToList(padIndex, soundId, soundPlayTimeStamp)
 
+            Log.d("soundPlayTimeStamp", "sound play sound stamp = $soundPlayTimeStamp")
+
         }
 
     }
@@ -533,7 +582,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
 
                     Log.d(
-                        "timestamp",
+                        "soundPlayTimeStamp",
                         "number hits for first pad = ${ApplicationState.padHitSequenceArrayList!![padHitIndex].size} "
                     )
 
@@ -645,7 +694,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener {
 
     private fun loadSoundDialogMenu() {
         val intent =
-            Intent(activity!!.applicationContext, LoadDrumSoundDialogActivity::class.java)
+            Intent(activity!!.applicationContext, LoadDialogActivity::class.java)
         startActivityForResult(intent, LOAD_REQUEST_CODE)
     }
 

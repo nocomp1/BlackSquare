@@ -12,6 +12,9 @@ class InstrumentFragment : Fragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
+        //Create you custom view practice
+
     }
 
 

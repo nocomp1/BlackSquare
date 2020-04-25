@@ -47,7 +47,7 @@
         </service>
 
         <activity
-            android:name="com.example.blacksquare.LoadDrumSoundDialogActivity"
+            android:name="com.example.blacksquare.LoadDialogActivity"
             android:label="@string/title_activity_load_drum_sound"
             android:theme="@style/dialog" />
         <activity

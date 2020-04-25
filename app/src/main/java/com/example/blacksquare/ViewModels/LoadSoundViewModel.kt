@@ -63,7 +63,7 @@ class LoadSoundViewModel : ViewModel() {
         // Get list of sounds from repository
         val listOfSoundObjects = mutableListOf<LoadSound>()
         Timber.d("$query")
-        val soundList = soundRepository.fetchLoopSounds(query, assets)
+        val soundList = soundRepository.fetchSounds(query, assets)
         for (x in soundList!!.indices) {
 
             val title = soundList.get(x)

@@ -5,7 +5,7 @@ import android.util.Log
 object Bpm {
 
     private var userBpm: Long = 0L
-    const val secondsInAminute = 60000L
+    const val millisecondsInAminute = 60000L
 
     /**
      * Set methods
@@ -22,7 +22,8 @@ object Bpm {
     fun getBeatPerMilliSeconds(): Long {
 
         //milliseconds per beat
-        val milliSecPerBeat = secondsInAminute / userBpm
+        //example: if the bpm is 120 then its 500 milliseconds per beat
+        val milliSecPerBeat = millisecondsInAminute / userBpm
         val finalBpm = milliSecPerBeat
 
         return finalBpm
@@ -30,6 +31,8 @@ object Bpm {
     }
 
     fun getPatternTimeInMilliSecs(): Long {
+        //example: if we have 500 milliseconds per beat times 1 bar times 4 = 2,000 milliseconds
+        //1 bar = 4beats
         return (getBeatPerMilliSeconds() * ApplicationState.selectedBarMeasure) * 4
     }
 

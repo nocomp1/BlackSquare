@@ -18,7 +18,7 @@ class LoopSoundItem(
             title: String,view: View
         )
 
-        fun onLoadSoundItemClicked(fileLocation: String, title: String,view: View)
+        fun onLoadLoopItemClicked(fileLocation: String, title: String, view: View)
 
     }
 
@@ -34,7 +34,7 @@ class LoopSoundItem(
             }
 
             viewHolder.itemView.load_sound.setOnClickListener {
-                clickListener.onLoadSoundItemClicked(fileLocation, title,it)
+                clickListener.onLoadLoopItemClicked(fileLocation, title,it)
             }
 
 

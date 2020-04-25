@@ -14,7 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 
 
-class LoadDrumSoundDialogActivity : AppCompatActivity() {
+class LoadDialogActivity : AppCompatActivity() {
 
 
     private var snackbarlayout = 0

@@ -30,19 +30,19 @@ class LoadProjectsFragment : Fragment() {
     }
 
     private fun setUpData() {
-        //write some project details to file
+//        //write some project details to file
         projectWriteJson = ProjectJsonUtils(activity!!.applicationContext)
-        val projectTree = projectWriteJson.getObject()
-        //Create project details
-        val projectDetails = ProjectJsonObjects.ProjectDetails()
-        projectDetails.name = "Project 2"
-        projectTree.project.projectList.add(projectDetails)
-        projectWriteJson.writeToFile(projectTree)
+//        val projectTree = projectWriteJson.getObject()
+//        //Create project details
+//        val projectDetails = ProjectJsonObjects.ProjectDetails()
+//        projectDetails.name = "Project 2"
+//        projectTree.project.projectList.add(projectDetails)
+//        projectWriteJson.writeToFile(projectTree)
 
         //Retrieve some project info from file
         val getProjectJsonFile = projectWriteJson.getObject()
         val projectList = getProjectJsonFile.project.projectList
-
+        //add to the list
         for (key in projectList.indices) {
             myListArray.add(projectList[key].name)
         }
@@ -62,7 +62,6 @@ class LoadProjectsFragment : Fragment() {
     ): View {
 
         val view = inflater.inflate(R.layout.drum_screen_load_kit_layout, container, false)
-
 
         return view
     }

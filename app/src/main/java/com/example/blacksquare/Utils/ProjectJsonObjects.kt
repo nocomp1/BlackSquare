@@ -12,12 +12,15 @@ class ProjectJsonObjects {
 
     data class ProjectDetails(
 
-        var name: String = "",
-        var pad1: Pad = Pad()
+        val projectId : Long = -1L,
+        var name: String,
+        var pads: ArrayList<Pad> = ArrayList(),
+        var instrumentTracks : ArrayList<Instrument> = ArrayList()
     )
 
     data class Pad(
-        var panRange: String = "",
+        var padId : Long,
+        var panRange: String,
         var soundLocation: String = "",
         var volumeLevel: String = "",
         var pitchRange: String = "",
@@ -40,7 +43,10 @@ class ProjectJsonObjects {
         var lowPassFilterAutomation: ArrayMap<Long, Double> = ArrayMap<Long, Double>(),
         var highPassFilterAutomation: ArrayMap<Long, Double> = ArrayMap<Long, Double>()
     )
+data class Instrument(
+    var instrumentId : Long
 
+)
 
 }
 

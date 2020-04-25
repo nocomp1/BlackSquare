@@ -11,18 +11,26 @@ import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.graphics.Typeface
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.*
+import android.widget.ImageButton
 import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.transition.Scene
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
@@ -33,7 +41,8 @@ import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
-import com.example.blacksquare.ViewModels.MainActivityViewModel
+import com.example.blacksquare.Utils.Kotlin.exhaustive
+import com.example.blacksquare.ViewModels.MainViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -43,23 +52,20 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    SeekBar.OnSeekBarChangeListener {
+    SeekBar.OnSeekBarChangeListener, MainViewModel.UpdateListener {
 
     private lateinit var padPlayback1: DrumPadPlayBack
     private lateinit var padPlayback2: DrumPadPlayBack
     private lateinit var padPlayback3: DrumPadPlayBack
     private lateinit var padPlayback4: DrumPadPlayBack
-    private lateinit var mainActivityViewModel: MainActivityViewModel
+    private lateinit var mainViewModel: MainViewModel
     private lateinit var volumeSlider: SeekBar
     private lateinit var soundsViewModel: SoundsViewModel
     private lateinit var sharedPref: SharedPreferences
-    private lateinit var playEngineExecutor: ScheduledExecutorService
+
     private lateinit var mygestureDetector: GestureDetector
 
     private var metronomeSoundId = R.raw.wood
@@ -68,11 +74,26 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var metronomeInterval: Long? = null
     private var currentBarMeasure: Int? = null
     private var currentTempo: Long? = null
-   // external fun stringFromJNI()
+
+    private lateinit var recordButton: ImageButton
+
+    // external fun stringFromJNI()
     private lateinit var mainControlsSceneRoot: ViewGroup
     private lateinit var mainUiControlsScene: Scene
     private lateinit var mainUiPatternControlScene: Scene
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var uiClock: TextView
+
+    /**
+     * UI clock variables
+     */
+    private var beatCount = 0
+
+    /**
+     * SoundPool (Metronome) variables
+     */
+    private lateinit var soundPool: SoundPool
+    private var sound = 0
 
 
     external fun startEngine(assetManager: AssetManager)
@@ -90,11 +111,60 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mainActivityViewModel = MainActivityViewModel(applicationContext)
+        //mainViewModel = MainViewModel(application)
+
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel.setListener(this)
+
+
+        recordButton = findViewById(R.id.record_btn)
+
+
+        mainViewModel.viewState.observe(this, Observer { viewState ->
+//            if (viewState.updateTimeLineProgress) {
+//                updateTimeLineProgressBar()
+//            }
+//            if (viewState.playMetronome) {
+//                playMetronomeSound()
+//            }
+
+        })
+
+
+        mainViewModel.event.observe(this, Observer { event ->
+
+
+            when (event) {
+
+                is MainViewModel.Event.UndoLisEmptyMsg -> {
+                    Toast.makeText(applicationContext, "Undo List Empty!", Toast.LENGTH_SHORT)
+                        .show()
+                }
+                MainViewModel.Event.ShowSettings -> {
+                    val intent = Intent(this, SettingsDialogActivity::class.java)
+                    startActivityForResult(intent, SETTINGS_REQUEST_CODE)
+                }
+                MainViewModel.Event.ShowLoadMenu -> {
+                    val intent = Intent(this, LoadDialogActivity::class.java)
+                    startActivityForResult(intent, LOAD_REQUEST_CODE)
+                }
+                is MainViewModel.Event.ActivateNoteRepeat -> {
+                    ApplicationState.noteRepeatActive = event.isNoteRepeatActivated
+                }
+                MainViewModel.Event.ShowNoteRepeatMenu -> {
+                    val intent = Intent(applicationContext, NoteRepeatDialogActivity::class.java)
+                    startActivityForResult(intent, NOTE_REPEAT_REQUEST_CODE)
+                }
+                is MainViewModel.Event.ActivateRecord -> {
+                    ApplicationState.isRecording = event.isRecording
+                }
+            }.exhaustive
+
+        })
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-
+        uiClock = findViewById(R.id.millisec_clock)
 
 
 
@@ -137,8 +207,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
-        mainActivityViewModel.setUpMetronomeSoundPool()
-        mainActivityViewModel.loadMetronomeSound()
+        setUpMetronomeSoundPool()
+        loadMetronomeSound()
         metronomeInterval = Bpm.getBeatPerMilliSeconds()
 
         //full screen
@@ -161,10 +231,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
 
-        //Setting up View model to communicate to our fragments
-        this.let {
-            soundsViewModel = ViewModelProviders.of(it).get(SoundsViewModel::class.java)
-        }
+
 
         initializeUiComponents()
 
@@ -198,11 +265,43 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             this.assets,
             "Digital3.ttf"
         )
-        millisec_clock.typeface = myTypeface
-        resetUiClock()
+        uiClock.typeface = myTypeface
+
 
     }
 
+    /**
+     * Metronome
+     * call this method after changing the sound
+     */
+
+    private fun loadMetronomeSound() {
+        sound = soundPool.load(applicationContext, Metronome.getSoundId(), 1)
+    }
+
+    private fun setUpMetronomeSoundPool() {
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .build()
+    }
+
+    private fun playMetronomeSound() {
+        //Play the sound
+        soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
+    }
+
+    override fun updateMetronomeSound() {
+        playMetronomeSound()
+    }
+
+    override fun updateTimeLineProgress() {
+        updateTimeLineProgressBar()
+    }
 
     /**
      * ------------------------PRACTICING READING WAVE FILES----------------------------------------------------------------------------------------
@@ -285,11 +384,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     //external fun add(a: Int, b: Int): Int
     external fun startPlayEngineFromNative(): String
 
-    external fun stopPlayEngineFromNative()
+    // external fun stopPlayEngineFromNative()
 
     var count: Int = 0
     fun messageMe(text: String) {
-        updateUiClockEveryMilliSec()
+        // updateEngineClockEveryMilliSec()
         count++
         //Log.d("nativeCode", text)
         Log.d("nativeCode", "${count} second")
@@ -310,7 +409,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             val dialogClickListener = DialogInterface.OnClickListener { _, which ->
                 when (which) {
                     DialogInterface.BUTTON_POSITIVE -> {
-                        undoLastSequence()
+                        mainViewModel.onAction(MainViewModel.Action.OnUndoTapped)
                     }
                     DialogInterface.BUTTON_NEGATIVE -> {
                         dialog.dismiss()
@@ -329,30 +428,28 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
 
-
-    private fun undoLastSequence() {
-        mainActivityViewModel.undoLastSequence()
-    }
-
     /**
      * Pad playbacks (called every millisecond)
      */
     private fun showPadHitState(padIndex: Int) {
-
         if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(ApplicationState.uiSequenceMillisecCounter)) {
             Log.d("pad1playback", "pad playback is triggered")
             //show pad being triggered
-            soundsViewModel.playbackPadId.postValue(padIndex)
+            mainViewModel.playbackPadId.postValue(padIndex)
         }
     }
 
     private fun pad1Playback() {
-        padPlayback1.padPlayback(
-            Definitions.pad1Index,
-            sharedPref.getFloat(Definitions.pad1LftVolume, Definitions.padVolumeDefault)
-            , sharedPref.getFloat(Definitions.pad1RftVolume, Definitions.padVolumeDefault)
-        )
-        showPadHitState(Definitions.pad1Index)
+
+        mainViewModel.pad1Playback()
+
+
+//        padPlayback1.padPlayback(
+//            Definitions.pad1Index,
+//            sharedPref.getFloat(Definitions.pad1LftVolume, Definitions.padVolumeDefault)
+//            , sharedPref.getFloat(Definitions.pad1RftVolume, Definitions.padVolumeDefault)
+//        )
+//        showPadHitState(Definitions.pad1Index)
     }
 
     private fun pad2Playback() {
@@ -386,73 +483,65 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      * Main progress bar --- This is called every millisecond and updated every beat
      */
 
-    fun updateProgressBar() {
+    private fun updateTimeLineProgressBar() {
 
-        //increase every beat
-        if ((ApplicationState.uiProgressBarMillisecCounter == Bpm.getBeatPerMilliSeconds()) || (ApplicationState.uiProgressBarMillisecCounter == 0L)) {
+        var maxMetronomeIncrement: Int?
+        Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
 
-            var maxMetronomeIncrement: Int?
-            Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
+        when (ApplicationState.selectedBarMeasure) {
 
-            when (ApplicationState.selectedBarMeasure) {
-
-                Definitions.oneBar -> {
-                    maxMetronomeIncrement = 25
-                    fabProgress.max = 100
-                    if (fabProgress.progress <= 100) {
-                        if (fabProgress.progress == 100) {
-                            fabProgress.progress = 0
-                        }
-                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                        Log.d("xxx", "progress ${fabProgress.progress}")
+            Definitions.oneBar -> {
+                maxMetronomeIncrement = 25
+                fabProgress.max = 100
+                if (fabProgress.progress <= 100) {
+                    if (fabProgress.progress == 100) {
+                        fabProgress.progress = 0
                     }
-                }
-
-                Definitions.twoBars -> {
-                    maxMetronomeIncrement = 10
-                    fabProgress.max = 80
-                    if (fabProgress.progress <= 80) {
-                        if (fabProgress.progress == 80) {
-                            fabProgress.progress = 0
-                        }
-                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                        Log.d("xxx", "progress ${fabProgress.progress}")
-                    }
-                }
-
-                Definitions.fourBars -> {
-                    maxMetronomeIncrement = 10
-                    fabProgress.max = 160
-                    if (fabProgress.progress <= 160) {
-                        if (fabProgress.progress == 160) {
-                            fabProgress.progress = 0
-                        }
-                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                        Log.d("xxx", "progress ${fabProgress.progress}")
-                    }
-
-                }
-                Definitions.eightBars -> {
-                    maxMetronomeIncrement = 10
-                    fabProgress.max = 320
-                    if (fabProgress.progress <= 320) {
-                        if (fabProgress.progress == 320) {
-                            fabProgress.progress = 0
-                        }
-                        fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                        Log.d("xxx", "progress ${fabProgress.progress}")
-                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
                 }
             }
-            //Reset counter
-            ApplicationState.uiProgressBarMillisecCounter = 0L
-        }
 
-        ApplicationState.uiProgressBarMillisecCounter++
+            Definitions.twoBars -> {
+                maxMetronomeIncrement = 10
+                fabProgress.max = 80
+                if (fabProgress.progress <= 80) {
+                    if (fabProgress.progress == 80) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+            }
+
+            Definitions.fourBars -> {
+                maxMetronomeIncrement = 10
+                fabProgress.max = 160
+                if (fabProgress.progress <= 160) {
+                    if (fabProgress.progress == 160) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+
+            }
+            Definitions.eightBars -> {
+                maxMetronomeIncrement = 10
+                fabProgress.max = 320
+                if (fabProgress.progress <= 320) {
+                    if (fabProgress.progress == 320) {
+                        fabProgress.progress = 0
+                    }
+                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
+                    Log.d("xxx", "progress ${fabProgress.progress}")
+                }
+            }
+        }
 
     }
 
-    private fun resetProgressBar() {
+    override fun resetProgressBar() {
         fabProgress.progress = 0
     }
 
@@ -460,30 +549,24 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      * UICLOCK
      */
 
-    private fun updateUiClockEveryMilliSec() {
+    override fun updateUiClockEveryMilliSec(
+        uIClockMilliSecondCounter: Long,
+        beatCount: Long
+    ) {
 
-        millisec_clock.post {
-            millisec_clock.text = mainActivityViewModel.updateUiClockEveryMilliSec()
-        }
+        val milliSecPerBeat = String.format("%04d", uIClockMilliSecondCounter)
+        val beats = String.format("%02d", beatCount)
+        val uIClock = SpannableStringBuilder(beats)
+        uIClock.setSpan(
+            ForegroundColorSpan(ContextCompat.getColor(applicationContext, R.color.colorAccent)),
+            0, 2,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
 
-        updateUIeveryMillisecond()
+        uIClock.append(" : ")
+        uIClock.append(milliSecPerBeat)
 
-    }
-
-    private fun updateUIeveryMillisecond() {
-        mainActivityViewModel.playMetronomeSound()
-        updateProgressBar()
-        pad1Playback()
-        pad2Playback()
-        pad3Playback()
-        pad4Playback()
-
-    }
-
-    private fun resetUiClock() {
-        millisec_clock.post {
-            millisec_clock.text = mainActivityViewModel.resetUiClock()
-        }
+        uiClock.text = uIClock
     }
 
     /**
@@ -491,6 +574,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      */
 
     private fun setUpMenuForMainVolumeSlider() {
+        // default label
+        var label = getString(R.string.main_slider_short_volume_label)
+        seekbar_slider_menu_toggle.text =
+            sharedPref.getString(getString(R.string.main_slider_prefs_key), label)
 
         seekbar_slider_menu_toggle.setOnClickListener {
 
@@ -502,15 +589,23 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
                 // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
                 if (it.title == getString(R.string.volume)) {
-                    seekbar_slider_menu_toggle.text = "V"
+                    label = getString(R.string.main_slider_short_volume_label)
+                    seekbar_slider_menu_toggle.text = label
+
                 }
                 if (it.title == getString(R.string.pan)) {
-                    seekbar_slider_menu_toggle.text = "P"
+                    label = getString(R.string.main_slider_short_pan_label)
+                    seekbar_slider_menu_toggle.text = label
                 }
                 if (it.title == getString(R.string.pitch)) {
-                    seekbar_slider_menu_toggle.text = "Pi"
+                    label = getString(R.string.main_slider_short_pitch_label)
+                    seekbar_slider_menu_toggle.text = label
                 }
 
+                sharedPref.edit().putString(getString(R.string.main_slider_prefs_key), label)
+                    .apply()
+
+                mainViewModel.onAction(MainViewModel.Action.OnMainSliderMenuSelection(label))
                 true
             }
             popupMenu.show()
@@ -520,8 +615,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        //Move this variable tho mainActivity viewmodel
-        soundsViewModel.mainSliderValue.postValue(progress)
+        mainViewModel.onAction(MainViewModel.Action.OnMainSliderProgressChange(progress))
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -557,32 +651,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
 
-    /**
-     * Main play engine
-     */
-
-    private fun startPlayEngine() {
-        val task = Runnable { updateUiClockEveryMilliSec() }
-        playEngineExecutor = Executors.newScheduledThreadPool(1)
-        playEngineExecutor.scheduleAtFixedRate(task, 0, 1000, TimeUnit.MICROSECONDS)
-
-    }
-
-    private fun stopPlayEngine() {
-        playEngineExecutor.shutdownNow()
-
-        resetUiClock()
-        resetProgressBar()
-        //reset counters
-        ApplicationState.metronomeMillisecCounter = 0L
-        ApplicationState.uiProgressBarMillisecCounter = 0L
-        ApplicationState.uiSequenceMillisecCounter = 0L
-        padPlayback1.resetCounter()
-        padPlayback2.resetCounter()
-        padPlayback3.resetCounter()
-        padPlayback4.resetCounter()
-
-    }
 
     /**
      * Touch and click events
@@ -618,14 +686,20 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         main_ui_button_controls.animate()
             .translationY(main_ui_button_controls.height.toFloat())
-            .setListener(object : Animator.AnimatorListener{
+            .setListener(object : Animator.AnimatorListener {
                 override fun onAnimationRepeat(animation: Animator?) {}
                 override fun onAnimationEnd(animation: Animator?) {
                     main_ui_button_controls.visibility = View.INVISIBLE
+
+                    mainViewModel.onAction(MainViewModel.Action.OnShowPatternUi)
+
                 }
+
                 override fun onAnimationCancel(animation: Animator?) {}
                 override fun onAnimationStart(animation: Animator?) {}
             })
+
+
     }
 
     fun onShowMainUi(view: View) {
@@ -633,28 +707,29 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         main_ui_button_controls.animate()
             .translationY(0f)
             .setListener(null)
+        mainViewModel.onAction(MainViewModel.Action.OnShowMainUi)
     }
 
     override fun onFabSingleTapConfirmed(e: MotionEvent?) {
         /////////////////NOTE REPEAT //////////////
         if (ApplicationState.noteRepeatActive) {
             note_repeat_btn.setBackgroundResource(R.drawable.default_pad)
-            ApplicationState.noteRepeatActive = false
+            mainViewModel.onAction(MainViewModel.Action.OnNoteRepeatTapped(false))
 
         } else {
 
             note_repeat_btn.setBackgroundResource(R.drawable.note_repeat_selected_state)
-            ApplicationState.noteRepeatActive = true
+            mainViewModel.onAction(MainViewModel.Action.OnNoteRepeatTapped(true))
+
         }
 
     }
 
     override fun onFabDoubleTap(e: MotionEvent?) {
         ///Note repeat menu double tapped
-        val intent = Intent(applicationContext, NoteRepeatDialogActivity::class.java)
-        startActivityForResult(intent, Companion.LOAD_SOUND_REQUEST_CODE)
-    }
+        mainViewModel.onAction(MainViewModel.Action.OnNoteRepeatDoubleTapped)
 
+    }
 
     fun onPlayStopTapped(view: View) {
 
@@ -670,7 +745,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             ///////Set the play state//////
             ApplicationState.isPlaying = true
-            startPlayEngine()
+            mainViewModel.onAction(MainViewModel.Action.OnPlay)
 
             if (!ApplicationState.isRecording) {
 
@@ -686,7 +761,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             ApplicationState.isMillisecondClockPlaying = false
 
             fabProgress.progress = 0
-            stopPlayEngine()
+            mainViewModel.onAction(MainViewModel.Action.OnStop)
             if (Metronome.isActive()) {
 
             }
@@ -698,31 +773,30 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     fun onRecordTapped(view: View) {
         //start recording
         if (!ApplicationState.isRecording) {
-            record_btn.setImageResource(R.drawable.ic_recording_color)
+            recordButton.setImageResource(R.drawable.ic_recording_color)
             fabProgress.indeterminateDrawable.setColorFilter(
                 ContextCompat.getColor(this, R.color.recording),
                 android.graphics.PorterDuff.Mode.MULTIPLY
             )
-            ApplicationState.isRecording = true
+            mainViewModel.onAction(MainViewModel.Action.OnRecordTapped(true))
 
         } else {
 
-            record_btn.setImageResource(R.drawable.ic_record_default)
-            ApplicationState.isRecording = false
+            recordButton.setImageResource(R.drawable.ic_record_default)
+            mainViewModel.onAction(MainViewModel.Action.OnRecordTapped(false))
 
         }
     }
 
     fun onSettingsTapped(view: View) {
+        mainViewModel.onAction(MainViewModel.Action.OnSettingsTapped)
 
-        val intent = Intent(this, SettingsDialogActivity::class.java)
-        startActivityForResult(intent, Companion.SETTINGS_REQUEST_CODE)
     }
 
 
     fun onLoadTapped(view: View) {
-        val intent = Intent(this, LoadDrumSoundDialogActivity::class.java)
-        startActivityForResult(intent, Companion.LOAD_SOUND_REQUEST_CODE)
+        mainViewModel.onAction(MainViewModel.Action.OnLoadTapped)
+
     }
 
     override fun onScroll(
@@ -758,8 +832,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //|| (currentTempo != Bpm.getProjectTempo())
         ) {
             if (ApplicationState.isPlaying) {
-                stopPlayEngine()
-                startPlayEngine()
+                //stopPlayEngine()
+                // startPlayEngine()
             }
         }
 
@@ -773,7 +847,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     companion object {
         const val SETTINGS_REQUEST_CODE: Int = 200
-        const val LOAD_SOUND_REQUEST_CODE: Int = 300
+        const val LOAD_REQUEST_CODE: Int = 300
+        const val NOTE_REPEAT_REQUEST_CODE: Int = 100
         const val DRUMS_SCREEN_NAME = "Drums"
         const val INSTRUMENTS_SCREEN_NAME = "Instruments"
         const val SEQUENCE_SCREEN_NAME = "Sequence"
@@ -786,7 +861,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == LOAD_REQUEST_CODE) {
 
+        }
+
+        super.onActivityResult(requestCode, resultCode, data)
+    }
 }
 
 

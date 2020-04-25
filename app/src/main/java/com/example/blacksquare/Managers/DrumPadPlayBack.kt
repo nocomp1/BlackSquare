@@ -2,9 +2,11 @@ package com.example.blacksquare.Managers
 
 import android.content.Context
 import android.util.ArrayMap
+import android.util.Log
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
+import timber.log.Timber
 
 class DrumPadPlayBack(applicationContext: Context) {
 
@@ -63,13 +65,20 @@ class DrumPadPlayBack(applicationContext: Context) {
 
     }
 
+    //triggered every millisecond
     fun padPlayback(padIndex: Int, padLftVolume: Float, padRftVolume: Float) {
 
+        millisecSequenceIndexCounter = ApplicationState.uiSequenceMillisecCounter
+        //Timber.d("millisecond counter $millisecSequenceIndexCounter")
+       // Log.d("fuckJACK","millisecSequenceIndexCounter= ${ApplicationState.uiSequenceMillisecCounter}")
 
-        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(
-                millisecSequenceIndexCounter
-            )
+        //check if the pad contains a millisecond time stamp that matches the ApplicationState
+        //sequence counter. Example: if we recorded a drum hit time stamp at 22 milliseconds
+        // into the sequence we will play that sound every 22 milliseconds into the sequence
+
+        if (ApplicationState.padHitSequenceArrayList!![padIndex].contains(millisecSequenceIndexCounter)
         ) {
+            //Log.d("soundPlayTimeStamp","key/timestamp for  retreived playback= ${ApplicationState.uiSequenceMillisecCounter}")
 
             soundPool2.startSound(
                 ApplicationState.padHitSequenceArrayList!![padIndex][millisecSequenceIndexCounter]!!.soundId,
@@ -104,34 +113,10 @@ class DrumPadPlayBack(applicationContext: Context) {
                         //Add the array list of array maps to the undo list
                         padHitUndoSequenceList.add(arrayListcopy)
 
-
-//
-//                        Log.d(
-//                            "undoff",
-//                            "padHitUndoSequenceList Size= ${ApplicationState.padHitUndoSequenceList!![padIndexCounter][timeStampArrayMapIndex].size} hits"
-//                        )
-//
-//                        Log.d(
-//                            "undoff",
-//                            "padHitUndoSequenceList Size= ${ApplicationState.padHitUndoSequenceList!![padIndexCounter].size} size"
-//                        )
-//                        Log.d(
-//                            "undoff",
-//                            "padHitSequenceArrayList value= ${ApplicationState.padHitSequenceArrayList!![padIndexCounter]} timestamps"
-//                        )
-//                        Log.d(
-//                            "undoff",
-//                            "padHitUndoSequenceList Size= ${ApplicationState.padHitUndoSequenceList!![padIndexCounter][0].size} "
-//                        )
-
-
                         //move to the next pad index to check
                         padIndexCounter++
                     }
 
-
-                    //exit
-                    //return
 
                 } else {
 
@@ -143,7 +128,9 @@ class DrumPadPlayBack(applicationContext: Context) {
                     // our sequence loop in milliseconds
                     if (millisecSequenceIndexCounter == Bpm.getPatternTimeInMilliSecs()) {
 
-                    //loop through all pads
+                        Log.d("sequencetime","iteration=")
+
+                        //loop through all pads
                     var padIndexCounter1 = 0
                     while (padIndexCounter1 < ApplicationState.padHitSequenceArrayList!!.size) {
 
@@ -187,17 +174,7 @@ class DrumPadPlayBack(applicationContext: Context) {
 
             }
 
-
-            if (ApplicationState.uiSequenceMillisecCounter == Bpm.getPatternTimeInMilliSecs()) {
-                millisecSequenceIndexCounter = 0
-
-            }
-            //move to the next index
-            millisecSequenceIndexCounter++
         }
-    }
-
-    private fun padPlaybackSelector(padIndex: Int) {
 
     }
 

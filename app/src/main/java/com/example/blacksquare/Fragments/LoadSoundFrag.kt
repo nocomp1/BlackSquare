@@ -62,7 +62,12 @@ class LoadSoundFrag : Fragment(), SoundItem.ItemClickListenerInterface,
 
     //Filter tag
     override fun onToggleButtonClicked(radioButton: RadioButton?) {
-        viewModel?.onAction(LoadSoundViewModel.Action.OnFilterSounds(radioButton?.text.toString(),activity!!.assets))
+        viewModel?.onAction(
+            LoadSoundViewModel.Action.OnFilterSounds(
+                radioButton?.text.toString(),
+                activity!!.assets
+            )
+        )
     }
 
     private fun initRecyclerView(items: List<SoundItem>) {
@@ -155,6 +160,7 @@ class LoadSoundFrag : Fragment(), SoundItem.ItemClickListenerInterface,
         }
     }
 
+    //The load sound button
     override fun onLoadSoundItemClicked(fileLocation: String, title: String, view: View) {
 
 
@@ -188,22 +194,28 @@ class LoadSoundFrag : Fragment(), SoundItem.ItemClickListenerInterface,
         mediaPlayer = MediaPlayer().apply {
             setAudioStreamType(AudioManager.STREAM_MUSIC)
             //show loading spinner
-            val  afd = activity!!.applicationContext.assets.openFd("sounds/$fileLocation")
-            setDataSource(afd.fileDescriptor,afd.startOffset,afd.length)
+            val afd = activity!!.applicationContext.assets.openFd("$FOLDER_NAME/$fileLocation")
+            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
 
             prepare()
             setOnPreparedListener {
 
                 start()
 
-            setOnCompletionListener { mp ->
+                setOnCompletionListener { mp ->
 
-                stopSoundItem(view)
+                    stopSoundItem(view)
+                }
             }
+
+
         }
 
 
     }
 
+    companion object {
 
-}}
+        const val FOLDER_NAME = "sounds"
+    }
+}
