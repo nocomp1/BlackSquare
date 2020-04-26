@@ -22,10 +22,7 @@ import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.*
-import android.widget.ImageButton
-import android.widget.SeekBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
@@ -41,6 +38,7 @@ import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Utils.CustomRadioButtonUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.ViewModels.MainViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
@@ -187,7 +185,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         FirebaseMessaging.getInstance().subscribeToTopic("all")
 
         //////Setting up project shared preferences/////////
-        sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+        sharedPref = this.getSharedPreferences(getString(R.string.application_shared_prefs),Context.MODE_PRIVATE)
 
         //////// Getting and setting our project tempo///////
         projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 120L)
@@ -762,6 +760,28 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     override fun onResume() {
         super.onResume()
+
+        //get all ids for the main pattern ui buttons
+        val mainUiPatternIds = CustomRadioButtonUtils.getRadioBtnGroupIds(main_ui_pattern_radio_group)
+       // Log.d("mainPattern","choice =$choice")
+        mainUiPatternIds.forEach { patternId ->
+            //set the choice if there is one
+            val choice = sharedPref.getString(getString(R.string.shared_prefs_pattern_selected),getString(R.string.p1))
+            val radioButton = findViewById<RadioButton>(patternId)
+            radioButton.isChecked = false
+
+            Log.d("mainPattern","radioBtnText =${radioButton.text}")
+
+
+            when (radioButton.text) {
+                choice -> {
+                    radioButton.isChecked = true
+                }
+                else -> Log.d("mainPattern","Could not select default pattern")
+            }
+        }
+
+
         Log.d("mainActivity", "onResume is triggerd")
         //restart the play engine if bar has changed
         if (currentBarMeasure == null) {

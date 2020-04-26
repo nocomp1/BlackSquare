@@ -211,7 +211,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         val view: View =
             inflater.inflate(R.layout.drum_screen_home_fragment_layout, container, false)
 
-        sharedPref = activity!!.getPreferences(Context.MODE_PRIVATE)
+        sharedPref = activity!!.getSharedPreferences(getString(R.string.application_shared_prefs),Context.MODE_PRIVATE)
 
         return view
     }

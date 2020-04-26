@@ -210,7 +210,7 @@
                             android:textSize="16sp" />
 
                         <RadioButton
-                            android:id="@+id/two_bar_measure"
+                            android:id="@+id/one_bar_measure"
                             android:layout_width="45dp"
                             android:layout_height="45dp"
                             android:layout_margin="4dp"
@@ -219,7 +219,7 @@
                             android:checked="false"
                             android:clickable="true"
                             android:onClick="onBarSelected"
-                            android:text="1"
+                            android:text="@string/one_bar_measure_text"
                             android:textAlignment="center" />
 
                         <RadioButton
@@ -231,7 +231,7 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
                             android:onClick="onBarSelected"
-                            android:text="2"
+                            android:text="@string/two_bar_measure_text"
                             android:textAlignment="center" />
 
                         <RadioButton
@@ -243,7 +243,7 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
                             android:onClick="onBarSelected"
-                            android:text="4"
+                            android:text="@string/four_bar_measure_text"
                             android:textAlignment="center" />
 
                         <RadioButton
@@ -255,7 +255,7 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
                             android:onClick="onBarSelected"
-                            android:text="8"
+                            android:text="@string/eight_bar_measure_text"
                             android:textAlignment="center" />
                     </TableRow>
                 </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>

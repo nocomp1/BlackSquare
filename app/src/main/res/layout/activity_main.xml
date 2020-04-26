@@ -90,7 +90,7 @@
                 android:orientation="horizontal">
 
                 <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
-                    android:id="@+id/bar_measure_radio_group"
+                    android:id="@+id/main_ui_pattern_radio_group"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center">

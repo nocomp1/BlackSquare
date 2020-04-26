@@ -50,26 +50,46 @@
     <string name="pitch">Pitch</string>
     <string name="volume">Volume</string>
     <string name="ui_clock">%1$d : %s</string>
-    <string name="p1">p1</string>
-    <string name="p2">p2</string>
-    <string name="p3">p3</string>
-    <string name="p4">p4</string>
-    <string name="p5">p5</string>
-    <string name="p6">p6</string>
-    <string name="p7">p7</string>
-    <string name="p8">p8</string>
-    <string name="p9">p9</string>
-    <string name="p10">p10</string>
-    <string name="p11">p11</string>
-    <string name="p12">p12</string>
+    <string name="p1">P1</string>
+    <string name="p2">P2</string>
+    <string name="p3">P3</string>
+    <string name="p4">P4</string>
+    <string name="p5">P5</string>
+    <string name="p6">P6</string>
+    <string name="p7">P7</string>
+    <string name="p8">P8</string>
+    <string name="p9">P9</string>
+    <string name="p10">P10</string>
+    <string name="p11">P11</string>
+    <string name="p12">P12</string>
     <string name="store_title">Store</string>
     <string name="sounds_title">Sounds</string>
     <string name="loops_title">Loops</string>
     <string name="projects_title">Projects</string>
     <string name="all_tag">All</string>
 
+    <string name="application_shared_prefs">App shared prefs</string>
     <string name="main_slider_short_volume_label">V</string>
     <string name="main_slider_short_pan_label">P</string>
     <string name="main_slider_short_pitch_label">PI</string>
+
+    <string name="shared_prefs_pattern_selected">pattern selected</string>
+    <string name="p1_bar">pattern 1</string>
+    <string name="p2_bar">pattern 2</string>
+    <string name="p3_bar">pattern 3</string>
+    <string name="p4_bar">pattern 4</string>
+    <string name="p5_bar">pattern 5</string>
+    <string name="p6_bar">pattern 6</string>
+    <string name="p7_bar">pattern 7</string>
+    <string name="p8_bar">pattern 8</string>
+    <string name="p9_bar">pattern 9</string>
+    <string name="p10_bar">pattern 10</string>
+    <string name="p11_bar">pattern 11</string>
+    <string name="p12_bar">pattern 12</string>
+    <string name="one_bar_measure_text">1</string>
+    <string name="two_bar_measure_text">2</string>
+    <string name="four_bar_measure_text">4</string>
+    <string name="eight_bar_measure_text">8</string>
+
 
 </resources>
