@@ -1,18 +1,10 @@
 package com.example.blacksquare.Tasks
 
 
-import android.R
-import android.app.Activity
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
-import android.util.Log
-import android.view.View
-import android.widget.TextView
-import com.example.blacksquare.MainActivity
-import com.example.blacksquare.Singleton.Bpm
 import com.example.blacksquare.Singleton.Metronome
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 class PlayEngineTask(applicationContext: Context) : Runnable {

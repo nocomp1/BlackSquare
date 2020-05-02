@@ -77,6 +77,8 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/fabProgress"
             android:id="@+id/main_ui_pattern_controls"
+            android:clickable="true"
+            android:focusable="true"
 
             >
 
@@ -108,7 +110,6 @@
                             android:checked="false"
                             android:clickable="true"
                             android:focusable="true"
-                            android:onClick="onBarSelected"
                             android:text="@string/p1"
                             android:textAlignment="center" />
 
@@ -121,7 +122,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p2"
                             android:textAlignment="center" />
 
@@ -134,7 +134,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p3"
                             android:textAlignment="center" />
 
@@ -147,7 +146,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p4"
                             android:textAlignment="center" />
 
@@ -161,7 +159,6 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
                             android:clickable="true"
-                            android:onClick="onBarSelected"
                             android:text="@string/p5"
                             android:textAlignment="center" />
 
@@ -174,7 +171,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p6"
                             android:textAlignment="center" />
 
@@ -187,7 +183,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p7"
                             android:textAlignment="center" />
 
@@ -200,7 +195,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p8"
                             android:textAlignment="center" />
 
@@ -214,7 +208,6 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
                             android:clickable="true"
-                            android:onClick="onBarSelected"
                             android:text="@string/p9"
                             android:textAlignment="center" />
 
@@ -227,7 +220,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p10"
                             android:textAlignment="center" />
 
@@ -240,7 +232,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p11"
                             android:textAlignment="center" />
 
@@ -253,7 +244,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:onClick="onBarSelected"
                             android:text="@string/p12"
                             android:textAlignment="center" />
                     </TableRow>

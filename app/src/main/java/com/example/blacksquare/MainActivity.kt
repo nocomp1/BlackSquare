@@ -35,13 +35,15 @@ import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.DrumPadPlayBack
 import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Bpm
+import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
-import com.example.blacksquare.Utils.CustomRadioButtonUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.ViewModels.MainViewModel
 import com.example.blacksquare.ViewModels.SoundsViewModel
+import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
+import com.example.blacksquare.Views.ToggleButtonGroupExtensions.setRadioBtnSelection
+import com.example.blacksquare.Views.ToggleButtonGroupTableLayout
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.messaging.FirebaseMessaging
@@ -53,7 +55,8 @@ import java.nio.ByteOrder
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    SeekBar.OnSeekBarChangeListener, MainViewModel.UpdateListener {
+    SeekBar.OnSeekBarChangeListener, MainViewModel.UpdateListener,
+    ToggleButtonGroupTableLayout.ToggleButtonListener {
 
     private lateinit var padPlayback1: DrumPadPlayBack
     private lateinit var padPlayback2: DrumPadPlayBack
@@ -74,6 +77,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var currentTempo: Long? = null
 
     private lateinit var recordButton: ImageButton
+    private val filterListener: ToggleButtonGroupTableLayout.ToggleButtonListener = this
 
     // external fun stringFromJNI()
     private lateinit var mainControlsSceneRoot: ViewGroup
@@ -109,16 +113,15 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //mainViewModel = MainViewModel(application)
 
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setListener(this)
 
+        main_ui_pattern_radio_group.setUpListener(filterListener)
 
         recordButton = findViewById(R.id.record_btn)
 
-
-        mainViewModel.viewState.observe(this, Observer { viewState ->
+        mainViewModel.sharedViewState.observe(this, Observer { viewState ->
 //            if (viewState.updateTimeLineProgress) {
 //                updateTimeLineProgressBar()
 //            }
@@ -185,11 +188,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         FirebaseMessaging.getInstance().subscribeToTopic("all")
 
         //////Setting up project shared preferences/////////
-        sharedPref = this.getSharedPreferences(getString(R.string.application_shared_prefs),Context.MODE_PRIVATE)
+        sharedPref = this.getSharedPreferences(
+            getString(R.string.application_shared_prefs),
+            Context.MODE_PRIVATE
+        )
 
         //////// Getting and setting our project tempo///////
         projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 120L)
-        Bpm.setProjectTempo(projectTempo)
+        BpmUtils.setProjectTempo(projectTempo)
 
         //////// Setting state of the metronome/////////
         isMetronomeOn = sharedPref.getBoolean(getString(R.string.isMetronomeOn), true)
@@ -198,7 +204,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         Metronome.setSoundId(metronomeSoundId)
         setUpMetronomeSoundPool()
         loadMetronomeSound()
-        metronomeInterval = Bpm.getBeatPerMilliSeconds()
+        metronomeInterval = BpmUtils.getBeatPerMilliSeconds()
 
         //full screen
         window.setFlags(
@@ -219,8 +225,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         adapter.addFragment(SongFragment(), SONG_SCREEN_NAME)
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
-
-
 
         initializeUiComponents()
 
@@ -707,6 +711,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+    //This for the main ui pattern buttons
+    override fun onToggleButtonClicked(radioButton: RadioButton?) {
+        val patternChoice = main_ui_pattern_radio_group.getRadioBtnText()
+        //store what pattern has been selected
+        sharedPref.edit()
+            .putString(
+                getString(R.string.shared_prefs_pattern_selected),
+                patternChoice
+            ).apply()
+
+        mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(patternChoice))
+    }
+
     fun onRecordTapped(view: View) {
         //start recording
         if (!ApplicationState.isRecording) {
@@ -753,34 +770,29 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      */
 
     override fun onPause() {
-        super.onPause()
+
+        val patternChoice = main_ui_pattern_radio_group.getRadioBtnText()
+        //store what pattern has been selected
+        sharedPref.edit()
+            .putString(
+                getString(R.string.shared_prefs_pattern_selected),
+                patternChoice
+            ).apply()
         currentBarMeasure = ApplicationState.selectedBarMeasure
-        currentTempo = Bpm.getProjectTempo()
+        currentTempo = BpmUtils.getProjectTempo()
+
+        super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
 
-        //get all ids for the main pattern ui buttons
-        val mainUiPatternIds = CustomRadioButtonUtils.getRadioBtnGroupIds(main_ui_pattern_radio_group)
-       // Log.d("mainPattern","choice =$choice")
-        mainUiPatternIds.forEach { patternId ->
-            //set the choice if there is one
-            val choice = sharedPref.getString(getString(R.string.shared_prefs_pattern_selected),getString(R.string.p1))
-            val radioButton = findViewById<RadioButton>(patternId)
-            radioButton.isChecked = false
-
-            Log.d("mainPattern","radioBtnText =${radioButton.text}")
-
-
-            when (radioButton.text) {
-                choice -> {
-                    radioButton.isChecked = true
-                }
-                else -> Log.d("mainPattern","Could not select default pattern")
-            }
-        }
-
+        //set the choice if there is one
+        val patternSelected = sharedPref.getString(
+            getString(R.string.shared_prefs_pattern_selected),
+            getString(R.string.p1)
+        )
+        main_ui_pattern_radio_group.setRadioBtnSelection(patternSelected)
 
         Log.d("mainActivity", "onResume is triggerd")
         //restart the play engine if bar has changed
@@ -827,6 +839,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         super.onActivityResult(requestCode, resultCode, data)
     }
+
+
 }
 
 

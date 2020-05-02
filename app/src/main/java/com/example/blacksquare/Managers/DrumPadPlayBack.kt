@@ -5,7 +5,7 @@ import android.util.ArrayMap
 import android.util.Log
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Bpm
+import com.example.blacksquare.Utils.BpmUtils
 
 class DrumPadPlayBack(applicationContext: Context) {
 
@@ -123,7 +123,7 @@ class DrumPadPlayBack(applicationContext: Context) {
                     //4. Update the global application drum pad undo list with local copy
 
                     // our sequence loop in milliseconds
-                    if (millisecSequenceIndexCounter == Bpm.getSequenceTimeInMilliSecs()) {
+                    if (millisecSequenceIndexCounter == BpmUtils.getSequenceTimeInMilliSecs()) {
 
                         Log.d("sequencetime","iteration=")
 

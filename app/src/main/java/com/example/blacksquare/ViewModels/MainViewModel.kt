@@ -1,11 +1,14 @@
 package com.example.blacksquare.ViewModels
 
+import android.util.ArrayMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.blacksquare.Objects.PadSequenceTimeStamp
+import com.example.blacksquare.Objects.Quantize
 import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Bpm
+import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Singleton.Metronome
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -49,10 +52,28 @@ class MainViewModel() : ViewModel() {
     private var uIClockMilliSecondCounter = 0L
     private var beatCount = 0L
 
-    val playbackPadId = MutableLiveData<Int>()
-    val mainSliderValue = MutableLiveData<Int>()
     private val _viewState: MediatorLiveData<ViewState> = MediatorLiveData()
-    val viewState: LiveData<ViewState> get() = _viewState
+    val sharedViewState: LiveData<ViewState> get() = _viewState
+
+
+    //////////////////////////////|Patterns|  |Pads| |Timestamp index| |object at index|
+    val drumPatternArrayList = MutableLiveData <ArrayMap<String,ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>>()
+        .also { _viewState.addSource(it){combineSources()} }
+
+    val playbackPadId = MutableLiveData<Int>()
+       .also { _viewState.addSource(it){combineSources()} }
+
+     val mainSliderValue = MutableLiveData<Int>()
+        .also { _viewState.addSource(it) { combineSources() } }
+
+    private val isQuantizeEnabled = MutableLiveData<Boolean>()
+        .also { _viewState.addSource(it) { combineSources() } }
+
+    private val quantizeStyle = MutableLiveData<Quantize>()
+        .also { _viewState.addSource(it) { combineSources() } }
+
+    private val patternSelected = MutableLiveData<String>()
+        .also { _viewState.addSource(it) { combineSources() } }
 
 
     private val _events: MutableLiveData<Event> = MediatorLiveData()
@@ -60,11 +81,24 @@ class MainViewModel() : ViewModel() {
 
 
     data class ViewState(
-        val updateTimeLineProgress: Boolean,
-        val playMetronome: Boolean
+        val playBackPadId: Int,
+        val mainSliderValue: Int,
+        val drumPatternList: ArrayMap<String,ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>,
+        val patternSelected : String,
+        val isQuantizeEnabled : Boolean,
+        val quantizeStyle : Quantize
     )
 
     private fun combineSources() {
+
+        ViewState(
+            playBackPadId = playbackPadId.value ?: -1,
+            mainSliderValue = mainSliderValue.value ?: -1,
+            drumPatternList = drumPatternArrayList.value ?: ArrayMap(),
+            patternSelected = patternSelected.value ?: "",
+            isQuantizeEnabled = isQuantizeEnabled.value ?: false,
+            quantizeStyle = quantizeStyle.value ?: Quantize.SixTenthNote
+        ).also { _viewState.value = it }
 
     }
 
@@ -151,7 +185,7 @@ class MainViewModel() : ViewModel() {
     private fun uIClock() {
         uIClockMilliSecondCounter++
         // start our clock and beat count at 1 and increment from there
-        if ((uIClockMilliSecondCounter == Bpm.getBeatPerMilliSeconds()) || (uIClockMilliSecondCounter == 0L)) {
+        if ((uIClockMilliSecondCounter == BpmUtils.getBeatPerMilliSeconds()) || (uIClockMilliSecondCounter == 0L)) {
             beatCount++
             uIClockMilliSecondCounter = 0L
         }
@@ -171,12 +205,12 @@ class MainViewModel() : ViewModel() {
 
         if (Metronome.isActive()) {
 
-            if (metronomeCounter == Bpm.getBeatPerMilliSeconds()) {
+            if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds()) {
                 callback.updateMetronomeSound()
                 //reset counter
                 metronomeCounter = 0L
             }
-        } else if (metronomeCounter == Bpm.getBeatPerMilliSeconds()) {
+        } else if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds()) {
             //reset counter
             metronomeCounter = 0L
         }
@@ -190,14 +224,14 @@ class MainViewModel() : ViewModel() {
         sequenceCallback.updateSeqPerMilliSec(sequenceMilliSecClock)
 
         //Reset the counter when we reach the end of sequence
-        if (sequenceMilliSecClock == Bpm.getSequenceTimeInMilliSecs()) {
+        if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs()) {
             sequenceMilliSecClock = 0
         }
     }
 
     private fun timeLineProgress() {
         uiProgressBarMilliSecCounter++
-        if (uiProgressBarMilliSecCounter == Bpm.getBeatPerMilliSeconds()) {
+        if (uiProgressBarMilliSecCounter == BpmUtils.getBeatPerMilliSeconds()) {
             callback.updateTimeLineProgress()
             //reset counter
             uiProgressBarMilliSecCounter = 0L
@@ -252,9 +286,14 @@ class MainViewModel() : ViewModel() {
             is Action.OnMainSliderMenuSelection -> TODO()
             Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
             Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
+            is Action.OnPatternSelected -> onPatternSelected(action.patternKey)
         }.exhaustive
 
 
+    }
+
+    private fun onPatternSelected(patternKey: String?) {
+        patternSelected.postValue(patternKey)
     }
 
     sealed class Action {
@@ -271,6 +310,7 @@ class MainViewModel() : ViewModel() {
         object OnShowMainUi : Action()
         object OnShowUndoErrorMsg : Action()
         object OnShowUndoConfirmMsg : Action()
+        data class OnPatternSelected(val patternKey : String?) : Action()
         data class OnMainSliderProgressChange(val progress: Int) : Action()
         data class OnRecordTapped(val isRecording: Boolean) : Action()
         data class OnMainSliderMenuSelection(val label: String) : MainViewModel.Action()

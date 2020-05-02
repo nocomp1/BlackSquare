@@ -19,7 +19,7 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
 
     public ToggleButtonListener listener;
     private static final String TAG = "ToggleButtonGroupTableLayout";
-    private RadioButton activeRadioButton;
+    public RadioButton activeRadioButton;
 
     /**
      * @param context
@@ -84,18 +84,18 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
     @Override
     public void addView(View child, android.view.ViewGroup.LayoutParams params) {
 
-//
-//        TableRow tableRow =(TableRow) child;
-//        int trCount = tableRow.getChildCount();
-//        for (int i=0; i < trCount; i++) {
-//            final View v = tableRow.getChildAt(i);
-//            if (v instanceof RadioButton) {
-//                if (((RadioButton) v).isChecked())
-//                    activeRadioButton =  ((RadioButton) v);
-//            }
-//
-//
-//        }
+
+        TableRow tableRow =(TableRow) child;
+        int trCount = tableRow.getChildCount();
+        for (int i=0; i < trCount; i++) {
+            final View v = tableRow.getChildAt(i);
+            if (v instanceof RadioButton) {
+                if (((RadioButton) v).isChecked())
+                    activeRadioButton =  ((RadioButton) v);
+            }
+
+
+        }
         super.addView(child, params);
         setChildrenOnClickListener((TableRow) child);
 
@@ -125,4 +125,5 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
         }
         return -1;
     }
+
 }
