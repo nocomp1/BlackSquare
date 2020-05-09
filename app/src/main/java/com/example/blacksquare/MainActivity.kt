@@ -33,14 +33,22 @@ import androidx.transition.Scene
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
-import com.example.blacksquare.Managers.DrumPadPlayBack
+import com.example.blacksquare.Managers.SharedPrefManager
 import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
+import com.example.blacksquare.Utils.SharedPrefKeys.APP_SHARED_PREFERENCES
+import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_DEFAULT
+import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_SELECTED
+import com.example.blacksquare.Utils.SharedPrefKeys.IS_METRONOME_ON
+import com.example.blacksquare.Utils.SharedPrefKeys.MAIN_SLIDER_CONTROL_TEXT_TITLE
+import com.example.blacksquare.Utils.SharedPrefKeys.METRONOME_SOUND_ID
+import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED
+import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED_DEFAULT
+import com.example.blacksquare.Utils.SharedPrefKeys.PROJECT_TEMPO
 import com.example.blacksquare.ViewModels.MainViewModel
-import com.example.blacksquare.ViewModels.SoundsViewModel
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.setRadioBtnSelection
 import com.example.blacksquare.Views.ToggleButtonGroupTableLayout
@@ -58,22 +66,17 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     SeekBar.OnSeekBarChangeListener, MainViewModel.UpdateListener,
     ToggleButtonGroupTableLayout.ToggleButtonListener {
 
-    private lateinit var padPlayback1: DrumPadPlayBack
-    private lateinit var padPlayback2: DrumPadPlayBack
-    private lateinit var padPlayback3: DrumPadPlayBack
-    private lateinit var padPlayback4: DrumPadPlayBack
+
     private lateinit var mainViewModel: MainViewModel
     private lateinit var volumeSlider: SeekBar
-    private lateinit var soundsViewModel: SoundsViewModel
     private lateinit var sharedPref: SharedPreferences
-
+    private var barMeasure = 2
     private lateinit var mygestureDetector: GestureDetector
 
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
     private var isMetronomeOn: Boolean = true
     private var metronomeInterval: Long? = null
-    private var currentBarMeasure: Int? = null
     private var currentTempo: Long? = null
 
     private lateinit var recordButton: ImageButton
@@ -189,17 +192,17 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         //////Setting up project shared preferences/////////
         sharedPref = this.getSharedPreferences(
-            getString(R.string.application_shared_prefs),
+            getString(APP_SHARED_PREFERENCES),
             Context.MODE_PRIVATE
         )
 
         //////// Getting and setting our project tempo///////
-        projectTempo = sharedPref.getLong(getString(R.string.project_tempo), 120L)
+        projectTempo = sharedPref.getLong(getString(PROJECT_TEMPO), 120L)
         BpmUtils.setProjectTempo(projectTempo)
 
         //////// Setting state of the metronome/////////
-        isMetronomeOn = sharedPref.getBoolean(getString(R.string.isMetronomeOn), true)
-        metronomeSoundId = sharedPref.getInt(getString(R.string.metronomeSoundId), metronomeSoundId)
+        isMetronomeOn = sharedPref.getBoolean(getString(IS_METRONOME_ON), true)
+        metronomeSoundId = sharedPref.getInt(getString(METRONOME_SOUND_ID), metronomeSoundId)
         Metronome.setState(isMetronomeOn)
         Metronome.setSoundId(metronomeSoundId)
         setUpMetronomeSoundPool()
@@ -218,13 +221,23 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         ////Set up our Tabs
         val adapter = TabsViewPagerAdapter(supportFragmentManager)
-        adapter.addFragment(DrumScreenHomeFragment(), DRUMS_SCREEN_NAME)
-        adapter.addFragment(InstrumentFragment(), INSTRUMENTS_SCREEN_NAME)
-        adapter.addFragment(SequenceFragment(), SEQUENCE_SCREEN_NAME)
-        adapter.addFragment(RecordingFragment(), RECORDING_SCREEN_NAME)
-        adapter.addFragment(SongFragment(), SONG_SCREEN_NAME)
+        adapter.addFragment(DrumScreenHomeFragment(), getString(R.string.drum_screen_name))
+        adapter.addFragment(InstrumentFragment(), getString(R.string.instruments_screen_name))
+        adapter.addFragment(SequenceFragment(), getString(R.string.sequence_screen_name))
+        adapter.addFragment(RecordingFragment(), getString(R.string.mixing_screen_name))
+        adapter.addFragment(SongFragment(), getString(R.string.song_screen_name))
         viewPager.adapter = adapter
         tabs.setupWithViewPager(viewPager)
+
+
+        //////////set up pattern choice
+        //set the choice if there is one
+        val patternSelected = sharedPref.getString(
+            getString(PATTERN_SELECTED),
+            getString(PATTERN_SELECTED_DEFAULT)
+        )
+        main_ui_pattern_radio_group.setRadioBtnSelection(patternSelected)
+
 
         initializeUiComponents()
 
@@ -309,8 +322,13 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     private fun playMetronomeSound() {
+        //  Log.d("soundPoolTest", "Before the sound pool")
+
         //Play the sound
         soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
+
+        //  Log.d("soundPoolTest", "After the sound pool")
+
     }
 
     override fun updateMetronomeSound() {
@@ -429,7 +447,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         var maxMetronomeIncrement: Int?
         Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
 
-        when (ApplicationState.selectedBarMeasure) {
+        when (barMeasure) {
 
             Definitions.oneBar -> {
                 maxMetronomeIncrement = 25
@@ -499,7 +517,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         val beats = String.format("%02d", beatCount)
         val uIClock = SpannableStringBuilder(beats)
         uIClock.setSpan(
-            ForegroundColorSpan(ContextCompat.getColor(applicationContext, R.color.colorAccent)),
+            ForegroundColorSpan(ContextCompat.getColor(this, R.color.colorAccent)),
             0, 2,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
@@ -507,7 +525,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         uIClock.append(" : ")
         uIClock.append(milliSecPerBeat)
 
-        uiClock.text = uIClock
+        //TODO BUG WILL NOT UPDATE CLOCK AND FREEZES THE UI
+        // uiClock.text = uIClock
+
+
     }
 
     /**
@@ -518,7 +539,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         // default label
         var label = getString(R.string.main_slider_short_volume_label)
         seekbar_slider_menu_toggle.text =
-            sharedPref.getString(getString(R.string.main_slider_prefs_key), label)
+            sharedPref.getString(getString(MAIN_SLIDER_CONTROL_TEXT_TITLE), label)
 
         seekbar_slider_menu_toggle.setOnClickListener {
 
@@ -543,7 +564,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                     seekbar_slider_menu_toggle.text = label
                 }
 
-                sharedPref.edit().putString(getString(R.string.main_slider_prefs_key), label)
+                sharedPref.edit().putString(getString(MAIN_SLIDER_CONTROL_TEXT_TITLE), label)
                     .apply()
 
                 mainViewModel.onAction(MainViewModel.Action.OnMainSliderMenuSelection(label))
@@ -596,21 +617,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     /**
      * Touch and click events
      */
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        when (event!!.action) {
-
-            MotionEvent.ACTION_DOWN -> {
-
-            }
-            MotionEvent.ACTION_MOVE -> {
-
-            }
-
-        }
-
-        return super.onTouchEvent(event)
-    }
-
 
     override fun onFabFling(
         e1: MotionEvent?,
@@ -711,17 +717,39 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    //This for the main ui pattern buttons
+    //This for the main ui pattern buttons onClick
     override fun onToggleButtonClicked(radioButton: RadioButton?) {
         val patternChoice = main_ui_pattern_radio_group.getRadioBtnText()
-        //store what pattern has been selected
-        sharedPref.edit()
-            .putString(
-                getString(R.string.shared_prefs_pattern_selected),
-                patternChoice
-            ).apply()
+        radioButton?.let { selection ->
 
-        mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(patternChoice))
+            //use the pattern choice as the key to get
+            // the saved bar for that pattern
+           barMeasure = sharedPref.getString(
+                selection.text.toString(),
+                getString(BAR_MEASURE_DEFAULT)
+            )!!.toInt()
+
+
+            //Match what pattern has been selected by title and send
+            //the resource id
+            SharedPrefManager.settingsPatternTitles().map { resouceId ->
+                val patternTitle = getString(resouceId)
+                //when we know the choice
+                if (patternTitle == patternChoice) {
+                    //send that id to the viewModel
+                    mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId))
+
+
+                }
+            }
+
+            //store what pattern has been selected
+            sharedPref.edit()
+                .putString(
+                    getString(PATTERN_SELECTED),
+                    patternChoice
+                ).apply()
+        }
     }
 
     fun onRecordTapped(view: View) {
@@ -770,18 +798,18 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      */
 
     override fun onPause() {
-
+        super.onPause()
         val patternChoice = main_ui_pattern_radio_group.getRadioBtnText()
         //store what pattern has been selected
         sharedPref.edit()
             .putString(
-                getString(R.string.shared_prefs_pattern_selected),
+                getString(PATTERN_SELECTED),
                 patternChoice
             ).apply()
-        currentBarMeasure = ApplicationState.selectedBarMeasure
+
         currentTempo = BpmUtils.getProjectTempo()
 
-        super.onPause()
+
     }
 
     override fun onResume() {
@@ -789,42 +817,36 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         //set the choice if there is one
         val patternSelected = sharedPref.getString(
-            getString(R.string.shared_prefs_pattern_selected),
-            getString(R.string.p1)
+            getString(PATTERN_SELECTED),
+            getString(PATTERN_SELECTED_DEFAULT)
         )
         main_ui_pattern_radio_group.setRadioBtnSelection(patternSelected)
-
-        Log.d("mainActivity", "onResume is triggerd")
-        //restart the play engine if bar has changed
-        if (currentBarMeasure == null) {
-            return
-        }
-        if ((currentBarMeasure != ApplicationState.selectedBarMeasure)
-        //|| (currentTempo != Bpm.getProjectTempo())
-        ) {
-            if (ApplicationState.isPlaying) {
-                //stopPlayEngine()
-                // startPlayEngine()
+        //Match what pattern has been selected by title and send
+        //the resource id to set the pattern selected
+        SharedPrefManager.settingsPatternTitles().map { resouceId ->
+            val patternTitle = getString(resouceId)
+            if (patternTitle == patternSelected) {
+                //send that id to the viewModel
+                mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId))
             }
         }
 
-        if (!Metronome.isActive()) {
-            if (ApplicationState.isPlaying) {
-                //resetProgressBar()
-            }
-        }
+        //Get updated bar measure
+        barMeasure = sharedPref.getInt(
+            getString(BAR_MEASURE_SELECTED),
+            getString(BAR_MEASURE_DEFAULT).toInt()
+        )
+        mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
+
 
     }
 
     companion object {
         const val SETTINGS_REQUEST_CODE: Int = 200
         const val LOAD_REQUEST_CODE: Int = 300
+        const val QUANTIZE_REQUEST_CODE: Int = 400
+
         const val NOTE_REPEAT_REQUEST_CODE: Int = 100
-        const val DRUMS_SCREEN_NAME = "Drums"
-        const val INSTRUMENTS_SCREEN_NAME = "Instruments"
-        const val SEQUENCE_SCREEN_NAME = "Sequence"
-        const val RECORDING_SCREEN_NAME = "Recording"
-        const val SONG_SCREEN_NAME = "Song"
 
         init {
             System.loadLibrary("native-lib")
@@ -833,7 +855,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == LOAD_REQUEST_CODE) {
+        if (requestCode == QUANTIZE_REQUEST_CODE) {
+
 
         }
 

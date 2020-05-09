@@ -8,6 +8,13 @@ androidExtensions {
     experimental = true
 }
 android {
+
+        compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
@@ -36,7 +43,6 @@ android {
 
     aaptOptions {
 
-        //noCompress ".wav"
     }
 
     // Encapsulates your external native build configurations.
@@ -49,6 +55,10 @@ android {
             path "CMakeLists.txt"
         }
     }
+
+
+
+
 
 }
 

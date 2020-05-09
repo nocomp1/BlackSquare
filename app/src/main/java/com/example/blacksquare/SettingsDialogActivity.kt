@@ -9,16 +9,28 @@ import android.view.Window
 import android.widget.NumberPicker
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProviders
+import com.example.blacksquare.Utils.SharedPrefKeys.APP_SHARED_PREFERENCES
+import com.example.blacksquare.Utils.SharedPrefKeys.IS_METRONOME_ON
+import com.example.blacksquare.Utils.SharedPrefKeys.MAIN_SLIDER_CONTROL_TEXT_TITLE
+import com.example.blacksquare.Utils.SharedPrefKeys.METRONOME_SOUND_ID
+import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED
+import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED_DEFAULT
+import com.example.blacksquare.Utils.SharedPrefKeys.PROJECT_TEMPO
+import com.example.blacksquare.Managers.SharedPrefManager
 import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Singleton.Metronome
-import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnGroupIds
+import com.example.blacksquare.Utils.BpmUtils
+import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_SELECTED
+import com.example.blacksquare.ViewModels.MainViewModel
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.setRadioBtnSelection
+import com.example.blacksquare.Views.ToggleButtonGroupTableLayout
 import kotlinx.android.synthetic.main.activity_dialog_settings_layout.*
 
 
-class SettingsDialogActivity : AppCompatActivity() {
+class SettingsDialogActivity : AppCompatActivity(),
+    ToggleButtonGroupTableLayout.ToggleButtonListener {
 
     private var bpm: Long = 0L
     private var isMetronomeOn = true
@@ -27,6 +39,7 @@ class SettingsDialogActivity : AppCompatActivity() {
 
     //60 seconds in a minute
     private val seconds = 60000L
+    private lateinit var sharedViewModel: MainViewModel
 
 
     lateinit var sharedPref: SharedPreferences
@@ -35,10 +48,13 @@ class SettingsDialogActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dialog_settings_layout)
 
-        mainActivity = MainActivity()
+        //  mainActivity = MainActivity()
+        this?.let {
+            sharedViewModel = ViewModelProviders.of(it).get(MainViewModel::class.java)
+        }
 
         sharedPref = this.getSharedPreferences(
-            getString(R.string.application_shared_prefs),
+            getString(APP_SHARED_PREFERENCES),
             Context.MODE_PRIVATE
         )
 
@@ -65,14 +81,18 @@ class SettingsDialogActivity : AppCompatActivity() {
             ApplicationState.tempoHasChanged = true
         })
 
-        // sharedPref.edit().clear().commit()
 
-        //Log.i("MyView",  ApplicationState.selectedBarMeasure.toString())
+        pattern_radio_group.setUpListener(this)
+        instrument_tracks_radio_group.setUpListener(this)
+        drum_bank_radio_group.setUpListener(this)
+        quantize_radio_group.setUpListener(this)
+        bar_measure_radio_group.setUpListener(this)
+
 
         ///Set up the pattern bar choice
-        setUpBarCountChoice()
+        setUpQuantizeChoice()
         ///Set up chosen pattern
-        setUpPatternChoice()
+        setUpPatternAndBarChoice()
         ///Set up Instrument track choice
         setUpInstrumentTrackChoice()
         ///Set up Drum Bank choice
@@ -81,57 +101,161 @@ class SettingsDialogActivity : AppCompatActivity() {
 
     }
 
-    private fun setUpDrumBankChoice() {
-        var selectedChoice = ApplicationState.selectedDrumBankRadioButtonId
+    override fun onToggleButtonClicked(radioButton: RadioButton?) {
 
-        if (selectedChoice != -1) {
-            findViewById<RadioButton>(selectedChoice).isChecked = true
-        } else {
+       //Saving selections to shared prefs when clicked
+        radioButton?.let {
 
-            ///Set pattern 1 (p1) default for pattern
-            val patternList = drum_bank_radio_group.getRadioBtnGroupIds()
-            findViewById<RadioButton>(patternList[0]).isChecked = true
+            //checking if radio button clicked is part of a certain group
+            if (radioButton.equals(pattern_radio_group.activeRadioButton)) {
+                val patternChoice = pattern_radio_group.getRadioBtnText()
+
+                //save pattern selection
+                sharedPref.edit()
+                    .putString(
+                        getString(PATTERN_SELECTED),
+                        pattern_radio_group.getRadioBtnText()
+                    ).apply()
+
+                //getting the button text and it is used as the key to get the
+                // bar measure for that  pattern-
+                // set the saved bar of the pattern
+                val barMeasure = sharedPref.getString(
+                    radioButton.text.toString(),
+                    getString(R.string.one_bar_measure_text)
+                )
+                bar_measure_radio_group.setRadioBtnSelection(barMeasure)
+
+                val currentBarSelected = bar_measure_radio_group.getRadioBtnText()
+
+                //save the bar measure thats selected
+
+                sharedPref.edit()
+                    .putInt(
+                        getString(BAR_MEASURE_SELECTED),
+                        currentBarSelected.toInt()
+                    ).apply()
+
+
+            }
+
+            //checking if the instrument button was clicked
+            if (radioButton.equals(instrument_tracks_radio_group.activeRadioButton)) {
+                //save Instrument selection
+                sharedPref.edit()
+                    .putString(
+                        getString(R.string.shared_prefs_instrument_selected),
+                        instrument_tracks_radio_group.getRadioBtnText()
+                    ).apply()
+                Log.d("settingsdialog", "Instrument group")
+            }
+
+
+            //Checking drum bank buttons
+            if (radioButton.equals(drum_bank_radio_group.activeRadioButton)) {
+
+                //save drum bank selection
+                sharedPref.edit()
+                    .putString(
+                        getString(R.string.shared_prefs_drum_bank_selected),
+                        drum_bank_radio_group.getRadioBtnText()
+                    ).apply()
+                Log.d("settingsdialog", "drum group")
+            }
+
+            //Checking quantize buttons
+            if (radioButton.equals(quantize_radio_group.activeRadioButton)) {
+                //save quantize selection
+                sharedPref.edit()
+                    .putString(
+                        getString(R.string.shared_prefs_quantize_selected),
+                        quantize_radio_group.getRadioBtnText()
+                    ).apply()
+                Log.d("settingsdialog", "quantize button was clicked group")
+            }
+
+
+            //Checking Bar buttons
+            if (radioButton.equals(bar_measure_radio_group.activeRadioButton)) {
+
+                val currentBarSelected = bar_measure_radio_group.getRadioBtnText()
+
+                //save the bar measure selected
+
+                sharedPref.edit()
+                    .putInt(
+                        getString(BAR_MEASURE_SELECTED),
+                        currentBarSelected.toInt()
+                    ).apply()
+
+
+
+
+                SharedPrefManager.settingsPatternTitles().map { resourceId ->
+
+                    val patternTitle = getString(resourceId)
+                    val currentPatternSelected = pattern_radio_group.getRadioBtnText()
+
+                    if (patternTitle == currentPatternSelected){
+                        //now we know what pattern this selection is for
+                        sharedPref.edit()
+                            .putString(currentPatternSelected, currentBarSelected)
+                            .apply()
+
+                    }
+
+                }
+
+                Log.d("settingsdialog", "quantize button was clicked group")
+            }
+
+
         }
+    }
 
+    private fun setUpDrumBankChoice() {
+        val choice = sharedPref.getString(
+            getString(R.string.shared_prefs_drum_bank_selected),
+            getString(R.string.drum_bank_1_title)
+        )
+        drum_bank_radio_group.setRadioBtnSelection(choice)
     }
 
     private fun setUpInstrumentTrackChoice() {
-
-        var selectedChoice = ApplicationState.selectedInstrumentTrackRadioButtonId
-
-        if (selectedChoice != -1) {
-            findViewById<RadioButton>(selectedChoice).isChecked = true
-        } else {
-
-            ///Set pattern 1 (p1) default for pattern
-            val patternList =
-                instrument_tracks_radio_group.getRadioBtnGroupIds()
-            findViewById<RadioButton>(patternList[0]).isChecked = true
-        }
-
+        val choice = sharedPref.getString(
+            getString(R.string.shared_prefs_instrument_selected),
+            getString(R.string.instrument_keys_title)
+        )
+        instrument_tracks_radio_group.setRadioBtnSelection(choice)
     }
 
-    private fun setUpPatternChoice() {
+    private fun setUpPatternAndBarChoice() {
         val choice = sharedPref.getString(
             getString(R.string.shared_prefs_pattern_selected),
             getString(R.string.p1)
         )
         pattern_radio_group.setRadioBtnSelection(choice)
-     //   val barChoice = sharedPref.getString(choice,getString(R.string.one_bar_measure_text))
-      //  bar_measure_radio_group.setRadioBtnSelection(barChoice)
 
+        val patternKeyForBar = choice.toString()
+        val barChoice =
+            sharedPref.getString(patternKeyForBar, getString(R.string.one_bar_measure_text))
+        bar_measure_radio_group.setRadioBtnSelection(barChoice)
 
     }
 
+    private fun setUpQuantizeChoice() {
+        val quantizeCheckboxChoice = sharedPref.getBoolean(
+            getString(R.string.shared_prefs_quantize_checkbox_selected),
+            true
+        )
 
+        val choice = sharedPref.getString(
+            getString(R.string.shared_prefs_quantize_selected),
+            getString(R.string.one_sixtenth_quantize)
+        )
 
-
-
-    private fun setUpBarCountChoice() {
-
-
-
-
+        quantize_radio_group.setRadioBtnSelection(choice)
+        quantize_checkbox.isChecked = quantizeCheckboxChoice
     }
 
 
@@ -141,11 +265,6 @@ class SettingsDialogActivity : AppCompatActivity() {
             true -> {
 
                 Metronome.setState(isActive)
-//                //set the state of the metronome inside shared preference
-//                with(sharedPref.edit()) {
-//                    putBoolean(getString(R.string.isMetronomeOn), isActive)
-//                    commit()
-//                }
 
             }
 
@@ -200,111 +319,10 @@ class SettingsDialogActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        var barSelection: RadioButton? = null
-        if (bar_measure_radio_group.checkedRadioButtonId != -1) {
-            ApplicationState.selectedBarMeasureRadioButtonId =
-                bar_measure_radio_group.checkedRadioButtonId
-
-
-            barSelection = findViewById(bar_measure_radio_group.checkedRadioButtonId)
-            if (barSelection != null) {
-                ApplicationState.selectedBarMeasure = (barSelection.text).toString().toInt()
-            }
-        }
-
-        if (pattern_radio_group.checkedRadioButtonId != -1) {
-           // ApplicationState.selectedPatternRadioButtonId = pattern_radio_group.checkedRadioButtonId
-            val patternSelected =
-                findViewById<RadioButton>(pattern_radio_group.checkedRadioButtonId)
-
-            sharedPref.edit()
-                .putString(
-                    getString(R.string.shared_prefs_pattern_selected),
-                    pattern_radio_group.getRadioBtnText()
-                ).apply()
-            Log.d("mainPattern", "radioBtnTextSettingDialog =${patternSelected.text}")
-
-            barSelection?.let {
-                //Save the pattern bar selection to shared prefs
-
-
-                when (patternSelected.text) {
-
-                    getString(R.string.p1) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p1), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p2) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p2), (barSelection.text).toString())
-                            .apply()
-                    }
-
-                    getString(R.string.p3) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p3), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p4) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p4), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p5) -> {
-
-                        sharedPref.edit()
-                            .putString(getString(R.string.p5), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p6) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p6), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p7) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p7), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p8) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p8), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p9) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p9), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p10) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p10), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p11) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p11), (barSelection.text).toString())
-                            .apply()
-                    }
-                    getString(R.string.p12) -> {
-                        sharedPref.edit()
-                            .putString(getString(R.string.p12), (barSelection.text).toString())
-                            .apply()
-                    }
-
-                    else -> {
-                    }
-                }
-            }
-        }
-
-        if (instrument_tracks_radio_group.checkedRadioButtonId != -1)
-            ApplicationState.selectedInstrumentTrackRadioButtonId =
-                instrument_tracks_radio_group.checkedRadioButtonId
-        if (drum_bank_radio_group.checkedRadioButtonId != -1)
-            ApplicationState.selectedDrumBankRadioButtonId =
-                drum_bank_radio_group.checkedRadioButtonId
+        sharedPref.edit().putBoolean(
+            getString(R.string.shared_prefs_quantize_checkbox_selected),
+            quantize_checkbox.isChecked
+        ).apply()
 
 
         super.onPause()
@@ -320,4 +338,6 @@ class SettingsDialogActivity : AppCompatActivity() {
 
         // Log.i("MyView", "hello")
     }
+
+
 }

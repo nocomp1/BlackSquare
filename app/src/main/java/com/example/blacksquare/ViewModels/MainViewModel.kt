@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Objects.Quantize
+import com.example.blacksquare.R
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Singleton.Metronome
@@ -63,7 +64,7 @@ class MainViewModel() : ViewModel() {
     val playbackPadId = MutableLiveData<Int>()
        .also { _viewState.addSource(it){combineSources()} }
 
-     val mainSliderValue = MutableLiveData<Int>()
+    private val mainSliderValue = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
     private val isQuantizeEnabled = MutableLiveData<Boolean>()
@@ -72,21 +73,25 @@ class MainViewModel() : ViewModel() {
     private val quantizeStyle = MutableLiveData<Quantize>()
         .also { _viewState.addSource(it) { combineSources() } }
 
-    private val patternSelected = MutableLiveData<String>()
+    private val patternSelected = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
 
     private val _events: MutableLiveData<Event> = MediatorLiveData()
     val event: LiveData<Event> get() = _events
 
+    private val barMeasure = MutableLiveData<Int>()
+        .also { _viewState.addSource(it) { combineSources() } }
+
 
     data class ViewState(
         val playBackPadId: Int,
         val mainSliderValue: Int,
         val drumPatternList: ArrayMap<String,ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>,
-        val patternSelected : String,
+        val patternSelected : Int,
         val isQuantizeEnabled : Boolean,
-        val quantizeStyle : Quantize
+        val quantizeStyle : Quantize,
+        val barMeasure : Int
     )
 
     private fun combineSources() {
@@ -95,9 +100,10 @@ class MainViewModel() : ViewModel() {
             playBackPadId = playbackPadId.value ?: -1,
             mainSliderValue = mainSliderValue.value ?: -1,
             drumPatternList = drumPatternArrayList.value ?: ArrayMap(),
-            patternSelected = patternSelected.value ?: "",
+            patternSelected = patternSelected.value ?: R.string.p1,
             isQuantizeEnabled = isQuantizeEnabled.value ?: false,
-            quantizeStyle = quantizeStyle.value ?: Quantize.SixTenthNote
+            quantizeStyle = quantizeStyle.value ?: Quantize.SixTenthNote,
+            barMeasure = barMeasure.value ?: 2
         ).also { _viewState.value = it }
 
     }
@@ -206,9 +212,11 @@ class MainViewModel() : ViewModel() {
         if (Metronome.isActive()) {
 
             if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds()) {
+                metronomeCounter = 0L
+
                 callback.updateMetronomeSound()
                 //reset counter
-                metronomeCounter = 0L
+
             }
         } else if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds()) {
             //reset counter
@@ -219,12 +227,12 @@ class MainViewModel() : ViewModel() {
 
     private fun sequenceClock() {
         //keeping track of current sequence by milliseconds
-        // ApplicationState.sequenceMillisecClock++
+
         sequenceMilliSecClock++
         sequenceCallback.updateSeqPerMilliSec(sequenceMilliSecClock)
 
         //Reset the counter when we reach the end of sequence
-        if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs()) {
+        if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2)) {
             sequenceMilliSecClock = 0
         }
     }
@@ -286,14 +294,15 @@ class MainViewModel() : ViewModel() {
             is Action.OnMainSliderMenuSelection -> TODO()
             Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
             Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
-            is Action.OnPatternSelected -> onPatternSelected(action.patternKey)
+            is Action.OnPatternSelected -> onPatternSelected(action.patternResourceId)
+            is Action.OnBarMeasureUpdate -> barMeasure.value = action.bar
         }.exhaustive
 
 
     }
 
-    private fun onPatternSelected(patternKey: String?) {
-        patternSelected.postValue(patternKey)
+    private fun onPatternSelected(patternResourceId : Int) {
+        patternSelected.postValue(patternResourceId)
     }
 
     sealed class Action {
@@ -310,10 +319,12 @@ class MainViewModel() : ViewModel() {
         object OnShowMainUi : Action()
         object OnShowUndoErrorMsg : Action()
         object OnShowUndoConfirmMsg : Action()
-        data class OnPatternSelected(val patternKey : String?) : Action()
+        data class OnPatternSelected(val patternResourceId : Int) : Action()
         data class OnMainSliderProgressChange(val progress: Int) : Action()
         data class OnRecordTapped(val isRecording: Boolean) : Action()
-        data class OnMainSliderMenuSelection(val label: String) : MainViewModel.Action()
+        data class OnMainSliderMenuSelection(val label: String) : Action()
+        data class OnBarMeasureUpdate(val bar: Int) : Action()
+
     }
 
     sealed class Event {

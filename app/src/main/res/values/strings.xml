@@ -50,6 +50,8 @@
     <string name="pitch">Pitch</string>
     <string name="volume">Volume</string>
     <string name="ui_clock">%1$d : %s</string>
+
+    <!-- settings Pattern titles -->
     <string name="p1">P1</string>
     <string name="p2">P2</string>
     <string name="p3">P3</string>
@@ -62,23 +64,51 @@
     <string name="p10">P10</string>
     <string name="p11">P11</string>
     <string name="p12">P12</string>
+
+    <!-- Settings quantize titles -->
+    <string name="quantize_checkbox">Quantize</string>
+    <string name="one_eight_quantize">1/8</string>
+    <string name="one_sixtenth_quantize">1/16</string>
+    <string name="one_thirty_two_quantize">1/32</string>
+    <string name="sixtenth_triplet_quantize">16/tp</string>
+    <string name="dotted_quantize">Dot</string>
+
+
+    <!-- store -->
     <string name="store_title">Store</string>
     <string name="sounds_title">Sounds</string>
     <string name="loops_title">Loops</string>
     <string name="projects_title">Projects</string>
     <string name="all_tag">All</string>
 
-    <string name="application_shared_prefs">App shared prefs</string>
     <string name="main_slider_short_volume_label">V</string>
     <string name="main_slider_short_pan_label">P</string>
     <string name="main_slider_short_pitch_label">PI</string>
 
+    <!-- shared prefs keys -->
+    <string name="application_shared_prefs">App shared prefs</string>
     <string name="shared_prefs_pattern_selected">pattern selected</string>
+    <string name="shared_prefs_bar_selected">bar selected</string>
+    <string name="shared_prefs_instrument_selected">instrument selected</string>
+    <string name="shared_prefs_drum_bank_selected">drum bank selected</string>
+    <string name="shared_prefs_quantize_selected">quantize selected</string>
+    <string name="shared_prefs_quantize_checkbox_selected">quantize checkbox selected</string>
 
+    <!-- music bar measure title -->
     <string name="one_bar_measure_text">1</string>
     <string name="two_bar_measure_text">2</string>
     <string name="four_bar_measure_text">4</string>
     <string name="eight_bar_measure_text">8</string>
+    <string name="instrument_keys_title">Keys</string>
+    <string name="instrument_horns_title">Horns</string>
+    <string name="instrument_strings_title">Strings</string>
+    <string name="instrument_guitar_title">Guitar</string>
+    <string name="drum_bank_1_title">Bank 1</string>
+    <string name="drum_screen_name">Drums</string>
+    <string name="instruments_screen_name">Instruments</string>
+    <string name="sequence_screen_name">Sequence</string>
+    <string name="mixing_screen_name">Mixing</string>
+    <string name="song_screen_name">Song</string>
 
 
 </resources>

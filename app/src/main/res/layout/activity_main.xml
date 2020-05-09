@@ -107,8 +107,7 @@
                             android:layout_margin="4dp"
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
-                            android:checked="false"
-                            android:clickable="true"
+                            android:checked="true"
                             android:focusable="true"
                             android:text="@string/p1"
                             android:textAlignment="center" />
@@ -158,7 +157,6 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:clickable="true"
                             android:text="@string/p5"
                             android:textAlignment="center" />
 

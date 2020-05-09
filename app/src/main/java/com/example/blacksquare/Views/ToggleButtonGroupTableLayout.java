@@ -27,7 +27,6 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
     public ToggleButtonGroupTableLayout(Context context) {
         super(context);
 
-        // TODO Auto-generated constructor stub
     }
 
     public void setUpListener(ToggleButtonListener listener) {
@@ -40,7 +39,6 @@ public class ToggleButtonGroupTableLayout extends TableLayout implements OnClick
      */
     public ToggleButtonGroupTableLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        // TODO Auto-generated constructor stub
     }
 
     @Override

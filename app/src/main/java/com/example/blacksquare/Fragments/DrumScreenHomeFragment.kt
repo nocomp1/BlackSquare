@@ -30,6 +30,8 @@ import com.example.blacksquare.SettingsDialogActivity
 import com.example.blacksquare.Singleton.ApplicationState
 import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Utils.BpmUtils
+import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_DEFAULT
+import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_SELECTED
 import com.example.blacksquare.ViewModels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.drum_bank1.*
@@ -53,7 +55,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
     private lateinit var pad1Button: Button
     private var drumNoteHasBeenRecorded = false
     private var patternSelected: String? = null
-
+    private  var barMeasure = 1
     private lateinit var volumeSeekBar: SeekBar
     private lateinit var sharedViewModel: MainViewModel
 
@@ -99,8 +101,10 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
     private var padsPattern: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>> =
         ArrayList()
 
+    private var currentPattern: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>> =  ArrayList()
+
     ////////////////////////|patterns| with |pattern Key||Pads| of |Timestamp index| |object at index|
-    private var sequencePattern =
+    private var sequencePatternList =
         ArrayMap<String, ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>()
 
     private var padHitUndoSequenceList: ArrayList<ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>> =
@@ -120,15 +124,25 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         val pager: ViewPager? = viewPager
         pager?.offscreenPageLimit = 5
 
+        sharedPref = activity!!.getSharedPreferences(
+            getString(R.string.application_shared_prefs),
+            Context.MODE_PRIVATE
+        )
+
+
+        patternSelected = sharedPref.getString(getString(R.string.shared_prefs_pattern_selected),getString(R.string.p1))
+
         activity?.let {
             sharedViewModel = ViewModelProviders.of(it).get(MainViewModel::class.java)
         }
+
+
 
         sharedViewModel.sharedViewState.observe(this, Observer { sharedViewState ->
 
             sharedViewState?.let { sharedViewState ->
                 //observe the patter user selects
-                onPatternChanged(sharedViewState.patternSelected)
+                onPatternChanged(getString(sharedViewState.patternSelected))
 
                 //main slider value
                 val volume = sharedViewState.mainSliderValue.toFloat() / 100
@@ -138,15 +152,17 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
                 val padId = sharedViewState.playBackPadId
                 padPlayBackchangePadState(padId)
 
-                //checkState Of Quantize selection
-                //TODO - ADD QUANTIZE SWITCH AND SELECTOR IN MAIN MENU
-                // isQuantizeEnabled = sharedViewState.isQuantizeEnabled
             }
 
 
         })
 
         sharedViewModel.setSeqListener(this)
+
+       // onPatternChanged(patternSelected!!)
+
+
+        initPadTimeStampArrayList()
     }
 
 
@@ -171,12 +187,17 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         //Load Default kit
         loadAsoundKit(SoundResManager.getDefaultKitFilesIds())
 
-        initPadTimeStampArrayList()
+
+
+        //Set the default pattern selection
+        //onPatternChanged(patternSelected!!)
+        //addPatternToListForPlayback()
 
     }
 
     private fun initPadTimeStampArrayList() {
         Log.d("drumFrag", "it called it")
+       // currentPattern = ArrayList()
         padsPattern = ArrayList()
         padTimeStampArrayMapList = arrayListOf()
 
@@ -223,10 +244,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         val view: View =
             inflater.inflate(R.layout.drum_screen_home_fragment_layout, container, false)
 
-        sharedPref = activity!!.getSharedPreferences(
-            getString(R.string.application_shared_prefs),
-            Context.MODE_PRIVATE
-        )
+
 
         return view
     }
@@ -358,6 +376,13 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
 
     override fun onResume() {
         super.onResume()
+
+        barMeasure = sharedPref.getInt( getString(BAR_MEASURE_SELECTED),getString(
+            BAR_MEASURE_DEFAULT).toInt())
+
+
+
+
 
         if (ApplicationState.drumScreenInitialLoad == -1) {
 
@@ -502,12 +527,18 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         if ((ApplicationState.isRecording) && (ApplicationState.isPlaying)) {
 
             val hitTimeStamp: Long
+            //TODO IF NOTE REPEAT IS ENABLED DISABLE THE QUANTIZE
+
+            val isQuantizeEnabled = sharedPref.getBoolean(
+                getString(R.string.shared_prefs_quantize_checkbox_selected),
+                true
+            )
+
 
             if (isQuantizeEnabled) {
 
                 val soundPlayTimeStamp = sequenceMilliSecClock
-                //TODO CHANGE THIS HARD CODED QUANTIZE.SIXTEENNOTE TO THE OBSERVED NOTE
-                hitTimeStamp = BpmUtils.quantizeNote(Quantize.SixTenthNote, soundPlayTimeStamp)
+                hitTimeStamp = BpmUtils.quantizeNote(getQuantizePreference(), soundPlayTimeStamp,barMeasure)
                 Log.d("calculateQuantize", " quantizedTimeStamp= ${hitTimeStamp}")
 
 
@@ -523,6 +554,27 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
 
         }
 
+    }
+
+    private fun getQuantizePreference(): Quantize {
+
+        //Get the quantize selection from sharedPrefs
+        val quantizePrefs = sharedPref.getString(
+            getString(R.string.shared_prefs_quantize_selected),
+            getString(R.string.one_sixtenth_quantize)
+        )
+
+        when (quantizePrefs) {
+
+            getString(R.string.one_eight_quantize) -> return Quantize.EightNote
+            getString(R.string.one_sixtenth_quantize) -> return Quantize.SixTenthNote
+            getString(R.string.one_thirty_two_quantize) -> return Quantize.ThirtyTwoNote
+            getString(R.string.sixtenth_triplet_quantize) -> return Quantize.SixteenthTriplet
+            getString(R.string.dotted_quantize) -> return Quantize.Dotted
+
+        }
+
+        return Quantize.SixTenthNote
     }
 
 
@@ -607,7 +659,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
 
         //after adding the note to our sequence list we add it to our
         //pattern list
-        addPatternToListForPlayback()
+        addPatternToListForPlayback(padsPattern)
     }
 
     private fun setPadSelected(padId: Int, padLftVolume: Float, padRftVolume: Float): Boolean {
@@ -788,10 +840,10 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         this.patternSelected = patternSelected
 
         //already have a pattern
-        if (sequencePattern.get(patternSelected) != null) {
+        if (sequencePatternList.get(patternSelected) != null) {
 
             //get the pattern
-            padsPattern = sequencePattern[patternSelected]!!
+            padsPattern = sequencePatternList[patternSelected]!!
 
         } else {
 
@@ -802,17 +854,25 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
 
     }
 
-    private fun addPatternToListForPlayback() {
+    private fun addPatternToListForPlayback(padsPattern: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>) {
+        Log.d("patternBug", "seqPatternSizeB4=  ${sequencePatternList.size}")
+        Log.d("patternBug", "patternSelected=  ${patternSelected}")
+       // Log.d("patternBug", "padsPatternSize=  ${padsPattern.size}")
+        padsPattern.forEachIndexed { index, arrayMap ->
 
+            Log.d("patternBug", "pad ${index+1}=  ${arrayMap.size} HitPadTimeStamp")
+
+        }
         //Add to Pattern map <key,value> pairs
-        sequencePattern.put(patternSelected, padsPattern)
+        sequencePatternList.put(patternSelected, padsPattern)
+Log.d("patternBug", "seqPatternSize=  ${sequencePatternList.size}")
+
 
         //post to our shared view model list
-        sharedViewModel.drumPatternArrayList.postValue(sequencePattern)
+        sharedViewModel.drumPatternArrayList.postValue(sequencePatternList)
 
     }
 
-    private lateinit var currentPattern: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>
 
     //This is call per milli second for the length of the sequence
     //then restarts over-
@@ -821,10 +881,10 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
         this.sequenceMilliSecClock = sequenceMilliSecClock
 
         patternSelected?.let { patternKey ->
-            if (sequencePattern.isNotEmpty()) {
+            if (sequencePatternList.isNotEmpty()) {
                 //if we have one /always checking to get current pattern
                 // to be played from patternList
-                sequencePattern.get(patternKey)?.let { pattern ->
+                sequencePatternList.get(patternKey)?.let { pattern ->
                     currentPattern = pattern
 
                     //playback our recorded sounds
@@ -897,7 +957,7 @@ class DrumScreenHomeFragment : BaseFragment(), View.OnClickListener,
                 // Log.d("undoff", "seqClock= $sequenceMilliSecClock")
 
                 // our sequence loop in milliseconds
-                if ((sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs()) || (!ApplicationState.isPlaying)) {
+                if ((sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs(barMeasure)) || (!ApplicationState.isPlaying)) {
 
                     //Log.d("undoff", "inside seq iteration=")
 

@@ -19,15 +19,28 @@ object BpmUtils {
 
     fun quantizeNote(
         quantize: Quantize,
-        soundPlayTimeStamp: Long
+        soundPlayTimeStamp: Long,
+        barMeasure: Int
     ): Long {
         when (quantize) {
             is Quantize.SixTenthNote -> {
-                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.SixTeen))
+                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.SixTeen),barMeasure)
             }
-            is Quantize.ThirtyTwoNote -> TODO()
-            is Quantize.EightNote -> TODO()
-            is Quantize.QuarterNote -> TODO()
+            is Quantize.ThirtyTwoNote -> {
+                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.ThirtyTwo),barMeasure)
+            }
+            is Quantize.EightNote -> {
+                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.Eight),barMeasure)
+            }
+            is Quantize.QuarterNote -> {
+                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.Quarter),barMeasure)
+            }
+            Quantize.SixteenthTriplet -> {
+                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.SixTeenTriplets),barMeasure)
+            }
+            Quantize.Dotted -> {
+                return calculateQuantize(soundPlayTimeStamp, getNoteEquation(Note.DottedEight),barMeasure)
+            }
         }.exhaustive
 
     }
@@ -39,12 +52,12 @@ object BpmUtils {
     // millisecond for each note (0,125,250,375,500,625 ...2000). - Then we figure out
     // the rang between each of the sets of notes (0...125) calculate what note(0 or 125)
     // is the provided noteTimeStamp is closet to then return the sum.
-    private fun calculateQuantize(note: Long, quantizationInterval: Long): Long {
+    private fun calculateQuantize(note: Long, quantizationInterval: Long, barMeasure : Int): Long {
         Log.d("calculateQuantize", " quantizationInterval= ${quantizationInterval}")
-        Log.d("calculateQuantize", " getSequenceTimeInMilliSecs= ${getSequenceTimeInMilliSecs()}")
+       // Log.d("calculateQuantize", " getSequenceTimeInMilliSecs= ${getSequenceTimeInMilliSecs()}")
 
         // how many notes at a given interval is in the sequence
-        val notesInSequence = getSequenceTimeInMilliSecs().div(quantizationInterval)
+        val notesInSequence = getSequenceTimeInMilliSecs(barMeasure).div(quantizationInterval)
         Log.d("calculateQuantize", " notesInSequence= ${notesInSequence}")
 
         //create a rang to loop through
@@ -102,16 +115,6 @@ object BpmUtils {
     /**
      * Get methods
      */
-//
-//    val quarterNoteEquation = 60000L / getProjectTempo()
-//    val eightNoteEquation = 30000L / getProjectTempo()
-//    val sixtenthNoteEquation = 15000L / getProjectTempo()
-//    val sixtyFourNoteEquation = (60000L / getProjectTempo()) * (4) / 64
-//    val thirtyTwoNoteEquation = (60000L / getProjectTempo()) * (4) / 32
-//    val quarterNoteTripletEquation = 40000L / getProjectTempo()
-//    val eightNoteTripletEquation = 20000L / getProjectTempo()
-//    val sixtenthNoteTripletEquation = 10000L / getProjectTempo()
-//    val dottedEightNoteEquation = 45000L / getProjectTempo()
     private fun getNoteEquation(note: Note): Long {
 
         (return when (note) {
@@ -138,10 +141,10 @@ object BpmUtils {
 
     }
 
-    fun getSequenceTimeInMilliSecs(): Long {
+    fun getSequenceTimeInMilliSecs(barMeasure : Int): Long {
         //example: if we have 500 milliseconds per beat times 1 bar times 4 = 2,000 milliseconds
         //1 bar = 4beats
-        return (getBeatPerMilliSeconds() * ApplicationState.selectedBarMeasure) * 4
+        return (getBeatPerMilliSeconds() * barMeasure) * 4
     }
 
     fun getProjectTempo(): Long {

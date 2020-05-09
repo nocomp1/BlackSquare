@@ -49,17 +49,19 @@ object ToggleButtonGroupExtensions {
         choice: String?
     ) {
 
-        choice?.let {
+        choice?.let {expectedText ->
             val selectionIDs = this.getRadioBtnGroupIds()
             selectionIDs.forEach { id ->
 
                 val radioButton = findViewById<RadioButton>(id)
-                val rbText = radioButton.text.toString()
+                val radioButtonText = radioButton.text.toString()
                 radioButton.isChecked = false
 
-                if (it == rbText) {
+                if (expectedText == radioButtonText) {
                     this.activeRadioButton =radioButton
+
                     radioButton.isChecked = true
+
                 }
             }
         }

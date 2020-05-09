@@ -127,7 +127,114 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!--  QUANTIZE MENU  -->
+    <LinearLayout
+        android:id="@+id/quantize_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark"
+        android:orientation="vertical">
+        <LinearLayout
+            android:id="@+id/quantize_menu_header"
+            style="@style/menu_headers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
+            <TextView
+                style="@style/menu_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Quantize"
+                android:textColor="@color/textColor" />
+        </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical">
+
+                <com.example.blacksquare.Views.ToggleButtonGroupTableLayout
+                    android:id="@+id/quantize_radio_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="8dp">
+
+                    <TableRow>
+
+                        <CheckBox
+                            android:id="@+id/quantize_checkbox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="4dp"
+                            android:text="@string/quantize_checkbox"
+                            android:textColor="@color/textColor"
+                            android:textSize="16sp"
+                            android:checked="true"
+                            />
+
+                        <RadioButton
+                            android:id="@+id/eight_quantize"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:onClick="onBarSelected"
+                            android:text="@string/one_eight_quantize"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/sixteen_quantize"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="true"
+                            android:onClick="onBarSelected"
+                            android:text="@string/one_sixtenth_quantize"
+                            android:textAlignment="center" />
+
+                        <RadioButton
+                            android:id="@+id/thirty_two_quantize"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:onClick="onBarSelected"
+                            android:text="@string/one_thirty_two_quantize"
+                            android:textAlignment="center" />
+                        <RadioButton
+                            android:id="@+id/sixteen_triplet_quantize"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/radio_button_background"
+                            android:button="@android:color/transparent"
+                            android:checked="false"
+                            android:onClick="onBarSelected"
+                            android:text="@string/sixtenth_triplet_quantize"
+                            android:textAlignment="center" />
+
+
+                    </TableRow>
+                </com.example.blacksquare.Views.ToggleButtonGroupTableLayout>
+
+
+
+
+
+
+        </LinearLayout>
+    </LinearLayout>
         <!--  PATTERNS MENU  -->
 
         <LinearLayout
@@ -217,7 +324,7 @@
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
                             android:checked="false"
-                            android:clickable="true"
+                            android:clickable="false"
                             android:onClick="onBarSelected"
                             android:text="@string/one_bar_measure_text"
                             android:textAlignment="center" />
@@ -229,7 +336,7 @@
                             android:layout_margin="4dp"
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
-                            android:checked="false"
+                            android:checked="true"
                             android:onClick="onBarSelected"
                             android:text="@string/two_bar_measure_text"
                             android:textAlignment="center" />
@@ -276,7 +383,7 @@
                             android:layout_margin="4dp"
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
-                            android:checked="false"
+                            android:checked="true"
                             android:text="P1"
                             android:textAlignment="center" />
 
@@ -475,8 +582,8 @@
                             android:layout_margin="4dp"
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
-                            android:checked="false"
-                            android:text="Keys"
+                            android:checked="true"
+                            android:text="@string/instrument_keys_title"
                             android:textAlignment="center" />
 
                         <RadioButton
@@ -488,7 +595,7 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
 
-                            android:text="Horns"
+                            android:text="@string/instrument_horns_title"
                             android:textAlignment="center" />
 
                         <RadioButton
@@ -500,7 +607,7 @@
                             android:button="@android:color/transparent"
                             android:checked="false"
 
-                            android:text="Strings"
+                            android:text="@string/instrument_strings_title"
                             android:textAlignment="center" />
 
                         <RadioButton
@@ -512,7 +619,7 @@
                             android:button="@android:color/transparent"
 
                             android:checked="false"
-                            android:text="Guitar"
+                            android:text="@string/instrument_guitar_title"
                             android:textAlignment="center" />
                     </TableRow>
 
@@ -726,8 +833,8 @@
                             android:layout_margin="4dp"
                             android:background="@drawable/radio_button_background"
                             android:button="@android:color/transparent"
-                            android:checked="false"
-                            android:text="Bank 1"
+                            android:checked="true"
+                            android:text="@string/drum_bank_1_title"
                             android:textAlignment="center" />
 
                         <RadioButton
