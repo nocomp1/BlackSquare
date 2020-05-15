@@ -9,13 +9,15 @@ import com.example.blacksquare.Objects.PadSequenceTimeStamp
 import com.example.blacksquare.Objects.Quantize
 import com.example.blacksquare.R
 import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.google.firebase.analytics.FirebaseAnalytics
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.schedule
 
 class MainViewModel() : ViewModel() {
     //using interface for precision
@@ -58,16 +60,20 @@ class MainViewModel() : ViewModel() {
 
 
     //////////////////////////////|Patterns|  |Pads| |Timestamp index| |object at index|
-    val drumPatternArrayList = MutableLiveData <ArrayMap<String,ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>>()
-        .also { _viewState.addSource(it){combineSources()} }
+    val drumPatternArrayList =
+        MutableLiveData<ArrayMap<String, ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>>()
+            .also { _viewState.addSource(it) { combineSources() } }
 
     val playbackPadId = MutableLiveData<Int>()
-       .also { _viewState.addSource(it){combineSources()} }
+        .also { _viewState.addSource(it) { combineSources() } }
 
     private val mainSliderValue = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
     private val isQuantizeEnabled = MutableLiveData<Boolean>()
+        .also { _viewState.addSource(it) { combineSources() } }
+
+    private val timeLeftBeforePatternChange = MutableLiveData<Long>()
         .also { _viewState.addSource(it) { combineSources() } }
 
     private val quantizeStyle = MutableLiveData<Quantize>()
@@ -87,11 +93,12 @@ class MainViewModel() : ViewModel() {
     data class ViewState(
         val playBackPadId: Int,
         val mainSliderValue: Int,
-        val drumPatternList: ArrayMap<String,ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>,
-        val patternSelected : Int,
-        val isQuantizeEnabled : Boolean,
-        val quantizeStyle : Quantize,
-        val barMeasure : Int
+        val drumPatternList: ArrayMap<String, ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>,
+        val patternSelected: Int,
+        val isQuantizeEnabled: Boolean,
+        val quantizeStyle: Quantize,
+        val barMeasure: Int,
+        val timeLeftBeforePatternChange : Long
     )
 
     private fun combineSources() {
@@ -103,7 +110,8 @@ class MainViewModel() : ViewModel() {
             patternSelected = patternSelected.value ?: R.string.p1,
             isQuantizeEnabled = isQuantizeEnabled.value ?: false,
             quantizeStyle = quantizeStyle.value ?: Quantize.SixTenthNote,
-            barMeasure = barMeasure.value ?: 2
+            barMeasure = barMeasure.value ?: 2,
+            timeLeftBeforePatternChange = timeLeftBeforePatternChange.value ?: 0L
         ).also { _viewState.value = it }
 
     }
@@ -227,14 +235,15 @@ class MainViewModel() : ViewModel() {
 
     private fun sequenceClock() {
         //keeping track of current sequence by milliseconds
-
         sequenceMilliSecClock++
         sequenceCallback.updateSeqPerMilliSec(sequenceMilliSecClock)
 
         //Reset the counter when we reach the end of sequence
         if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2)) {
             sequenceMilliSecClock = 0
+            // callback.resetProgressBar()
         }
+
     }
 
     private fun timeLineProgress() {
@@ -250,14 +259,7 @@ class MainViewModel() : ViewModel() {
     private fun stopPlayEngine() {
 
         playEngineExecutor.shutdownNow()
-
-        //Reset all clocks/counters
-        callback.updateUiClockEveryMilliSec(0L, 0L)
-        callback.resetProgressBar()
-        uiProgressBarMilliSecCounter = 0L
-        metronomeCounter = 0L
-        uIClockMilliSecondCounter = 0L
-        beatCount = 0L
+        resetCounters()
 
     }
 
@@ -294,15 +296,51 @@ class MainViewModel() : ViewModel() {
             is Action.OnMainSliderMenuSelection -> TODO()
             Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
             Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
-            is Action.OnPatternSelected -> onPatternSelected(action.patternResourceId)
-            is Action.OnBarMeasureUpdate -> barMeasure.value = action.bar
+            is Action.OnPatternSelected -> onPatternSelected(action.patternResourceId, action.bar)
+            is Action.OnBarMeasureUpdate -> {
+            }//barMeasure.value = action.bar
         }.exhaustive
 
 
     }
 
-    private fun onPatternSelected(patternResourceId : Int) {
-        patternSelected.postValue(patternResourceId)
+    private fun onPatternSelected(patternResourceId: Int, bar: Int) {
+       if (ApplicationState.isPlaying) {
+
+           //while playing - change the pattern on the next start of the sequence
+           val delay =
+               BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2) - sequenceMilliSecClock
+
+           timeLeftBeforePatternChange.value = delay
+           println("countend = inside onPatternSelected")
+         Timer("SettingUp", false).schedule(delay) {
+               println("countend = inside Timer")
+               timeLeftBeforePatternChange.postValue(0L)
+               patternSelected.postValue(patternResourceId)
+               barMeasure.postValue(bar)
+
+               resetCounters()
+           }
+
+       }else{
+
+           patternSelected.postValue(patternResourceId)
+           barMeasure.postValue(bar)
+
+       }
+
+    }
+
+    private fun resetCounters() {
+        //Reset all clocks/counters
+        callback.updateUiClockEveryMilliSec(0L, 0L)
+        callback.resetProgressBar()
+        uiProgressBarMilliSecCounter = 0L
+        metronomeCounter = 0L
+        uIClockMilliSecondCounter = 0L
+        beatCount = 0L
+        sequenceMilliSecClock = 0
+
     }
 
     sealed class Action {
@@ -319,7 +357,7 @@ class MainViewModel() : ViewModel() {
         object OnShowMainUi : Action()
         object OnShowUndoErrorMsg : Action()
         object OnShowUndoConfirmMsg : Action()
-        data class OnPatternSelected(val patternResourceId : Int) : Action()
+        data class OnPatternSelected(val patternResourceId: Int, val bar: Int) : Action()
         data class OnMainSliderProgressChange(val progress: Int) : Action()
         data class OnRecordTapped(val isRecording: Boolean) : Action()
         data class OnMainSliderMenuSelection(val label: String) : Action()

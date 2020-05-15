@@ -3,7 +3,10 @@ package com.example.blacksquare.Views
 import android.widget.RadioButton
 import android.widget.TableLayout
 import android.widget.TableRow
+import com.example.blacksquare.Views.ToggleButtonGroupExtensions.blinkingTransitionState
 import java.util.*
+import kotlin.concurrent.fixedRateTimer
+import kotlin.concurrent.timerTask
 
 /**
  * This is to extract the ids from the pattern and track selection
@@ -49,7 +52,7 @@ object ToggleButtonGroupExtensions {
         choice: String?
     ) {
 
-        choice?.let {expectedText ->
+        choice?.let { expectedText ->
             val selectionIDs = this.getRadioBtnGroupIds()
             selectionIDs.forEach { id ->
 
@@ -58,13 +61,96 @@ object ToggleButtonGroupExtensions {
                 radioButton.isChecked = false
 
                 if (expectedText == radioButtonText) {
-                    this.activeRadioButton =radioButton
+                    this.activeRadioButton = radioButton
 
                     radioButton.isChecked = true
 
                 }
             }
         }
+    }
+
+    private fun ToggleButtonGroupTableLayout.getSelectionByText(choice: String?): RadioButton? {
+        choice?.let { expectedText ->
+            val selectionIDs = this.getRadioBtnGroupIds()
+            selectionIDs.forEach { id ->
+
+                val radioButton = findViewById<RadioButton>(id)
+                val radioButtonText = radioButton.text.toString()
+                //radioButton.isChecked = false
+
+                if (expectedText == radioButtonText) {
+                    // this.activeRadioButton =radioButton
+
+                    return radioButton
+
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     *This will do something right before setting the final selection
+     */
+    fun ToggleButtonGroupTableLayout.postSelectionTransitionState(selected: String?) {
+        selected?.let { selection ->
+
+            //Do something right before setting the final selection
+            setRadioBtnSelection(selection)
+        }
+
+    }
+
+    /**
+     * This creates a blinking state
+     */
+    fun ToggleButtonGroupTableLayout.blinkingTransitionState(
+        selected: String?,
+        milliSecRemaining: Long
+    ) {
+
+        val delayPeriod = 300L
+        val selectedPattern = getSelectionByText(selected)
+        var countEnd = milliSecRemaining.div(delayPeriod)
+
+        println("countend =$countEnd and millisecRemain = $milliSecRemaining")
+        selectedPattern?.let { selection ->
+
+            var off = true
+            var counter = 0L
+            Timer(
+                 "Patter-timer",  false
+            ).scheduleAtFixedRate(timerTask {
+
+                if (countEnd != 0L) {
+                    off = if (off) {
+                        counter++
+                        //println("Toggle- off")
+                        selection.isChecked = true
+                        false
+                    } else {
+                        counter++
+                        selection.isChecked = false
+                        //println("Toggle- on")
+                        true
+                    }
+
+                    if (counter == countEnd) {
+                        println("Toggle- im shutting down")
+                        this.cancel()
+                        countEnd = 0L
+                        counter = 0
+                        setRadioBtnSelection(selected)
+
+                    }
+
+                }
+
+            },0L,delayPeriod)
+
+        }
+
     }
 
     fun ToggleButtonGroupTableLayout.getRadioBtnText(): String {

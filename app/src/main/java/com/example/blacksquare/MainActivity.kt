@@ -50,6 +50,7 @@ import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED_DEFAULT
 import com.example.blacksquare.Utils.SharedPrefKeys.PROJECT_TEMPO
 import com.example.blacksquare.ViewModels.MainViewModel
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
+import com.example.blacksquare.Views.ToggleButtonGroupExtensions.blinkingTransitionState
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.setRadioBtnSelection
 import com.example.blacksquare.Views.ToggleButtonGroupTableLayout
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -120,17 +121,20 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setListener(this)
 
+
+       // val toggleLayout = findViewById<ToggleButtonGroupTableLayout>(R.id.main_ui_pattern_radio_group)
         main_ui_pattern_radio_group.setUpListener(filterListener)
 
         recordButton = findViewById(R.id.record_btn)
 
         mainViewModel.sharedViewState.observe(this, Observer { viewState ->
-//            if (viewState.updateTimeLineProgress) {
-//                updateTimeLineProgressBar()
-//            }
-//            if (viewState.playMetronome) {
-//                playMetronomeSound()
-//            }
+
+            barMeasure = viewState.barMeasure
+
+            println("countend = Shaaredviewmodel")
+
+            //Set state of view before a pattern change
+            main_ui_pattern_radio_group.blinkingTransitionState(getPatternSelected(),viewState.timeLeftBeforePatternChange)
 
         })
 
@@ -232,11 +236,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         //////////set up pattern choice
         //set the choice if there is one
-        val patternSelected = sharedPref.getString(
-            getString(PATTERN_SELECTED),
-            getString(PATTERN_SELECTED_DEFAULT)
-        )
-        main_ui_pattern_radio_group.setRadioBtnSelection(patternSelected)
+        main_ui_pattern_radio_group.setRadioBtnSelection(getPatternSelected())
 
 
         initializeUiComponents()
@@ -312,7 +312,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     private fun setUpMetronomeSoundPool() {
         soundPool = SoundPool.Builder()
-            .setMaxStreams(1)
+            .setMaxStreams(10)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -325,6 +325,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //  Log.d("soundPoolTest", "Before the sound pool")
 
         //Play the sound
+
         soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
 
         //  Log.d("soundPoolTest", "After the sound pool")
@@ -337,97 +338,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     override fun updateTimeLineProgress() {
         updateTimeLineProgressBar()
-    }
-
-    /**
-     * ------------------------PRACTICING READING WAVE FILES----------------------------------------------------------------------------------------
-     */
-    private fun testReadingWaveHeader(assets: AssetManager) {
-        //InputStream to a file path from the assets
-        val fileInputStream: InputStream = assets.open("sound1.wav")
-
-        //Read the file - we get an array with size of 4 to represent the first 4bytes of a wave file
-        // that contains the type characters are 1 byte long - expecting "RIFF"
-        val fourByteBuffers = ByteArray(4)
-        val twoByteBuffers = ByteArray(2)
-        //Now lets read our fileInputStream - which is at the 4bytes position
-        fileInputStream.read(fourByteBuffers)
-        // at this point, the buffer contains the 4 bytes
-        Log.d("testReadingWave", "marks the file as a RIFF = ${String(fourByteBuffers)}")
-
-        //Now lets read our fileSIZE /NEXT 4 BYTES == INTEGER which is at the 8bytes position
-        fileInputStream.read(fourByteBuffers)
-
-        // at this point, the buffer contains the 4 bytes
-        Log.d("testReadingWave", "FILE SIZE = ${littleEndianConversion(fourByteBuffers)}")
-        Log.d("testReadingWave", "FILE SIZE bigInteger = ${BigInteger(fourByteBuffers)}")
-
-        //next 4bytes we should ge the file type "WAVE" which is at the 12bytes position
-        fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave", "type of file = ${String(fourByteBuffers)}")
-
-        //Format chunk marker "String".= 16bytes position
-        fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave", "Format chunk = ${String(fourByteBuffers)}")
-
-        //Length of Format chunk = 20bytes position
-        fileInputStream.read(fourByteBuffers)
-        Log.d(
-            "testReadingWave",
-            "Length of Format chunk = ${littleEndianConversion(fourByteBuffers)}"
-        )
-
-        //File Format 1 = PCM"= 22bytes position
-        fileInputStream.read(twoByteBuffers)
-        Log.d(
-            "testReadingWave",
-            "File Format 1 equals PCM = ${littleEndianConversion(fourByteBuffers)}"
-        )
-
-        //Number of channels 1 = mono 2 = stereo"= 24bytes position
-        fileInputStream.read(twoByteBuffers)
-        Log.d(
-            "testReadingWave",
-            "Number of channels 1 = mono 2 = stereo = ${littleEndianConversion(fourByteBuffers)}"
-        )
-
-        //Sampling rate= 28bytes position
-        fileInputStream.read(fourByteBuffers)
-        Log.d("testReadingWave", "Sampling rate= = ${integerConversion(fourByteBuffers)}")
-        fileInputStream.close()
-
-
-    }
-
-
-    fun littleEndianConversion(bytes: ByteArray): Int {
-        var result = 0
-        for (i in bytes.indices) {
-            result = result or (bytes[i].toInt() shl 8 * i)
-        }
-        return result
-    }
-
-    fun integerConversion(bytes: ByteArray): Int {
-        var result = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).int
-
-        return result
-    }
-
-    /**
-     * ------------------------------------------------------------------------------------------------------------------------------
-     */
-    //external fun add(a: Int, b: Int): Int
-    external fun startPlayEngineFromNative(): String
-
-    // external fun stopPlayEngineFromNative()
-
-    var count: Int = 0
-    fun messageMe(text: String) {
-        // updateEngineClockEveryMilliSec()
-        count++
-        //Log.d("nativeCode", text)
-        Log.d("nativeCode", "${count} second")
     }
 
     /**
@@ -724,10 +634,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             //use the pattern choice as the key to get
             // the saved bar for that pattern
-           barMeasure = sharedPref.getString(
+         val  barMeasure = sharedPref.getString(
                 selection.text.toString(),
                 getString(BAR_MEASURE_DEFAULT)
             )!!.toInt()
+
+            //let the engine know that the bar has changed
+            //so the timers can adjust
+           // mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
 
 
             //Match what pattern has been selected by title and send
@@ -736,19 +650,22 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                 val patternTitle = getString(resouceId)
                 //when we know the choice
                 if (patternTitle == patternChoice) {
+
+                    //store what pattern has been selected
+                    sharedPref.edit()
+                        .putString(
+                            getString(PATTERN_SELECTED),
+                            patternChoice
+                        ).apply()
+
                     //send that id to the viewModel
-                    mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId))
+                    mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId,barMeasure))
 
 
                 }
             }
 
-            //store what pattern has been selected
-            sharedPref.edit()
-                .putString(
-                    getString(PATTERN_SELECTED),
-                    patternChoice
-                ).apply()
+
         }
     }
 
@@ -797,6 +714,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      * LifeCycle Events
      */
 
+    var currentBar = 2
     override fun onPause() {
         super.onPause()
         val patternChoice = main_ui_pattern_radio_group.getRadioBtnText()
@@ -809,35 +727,53 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         currentTempo = BpmUtils.getProjectTempo()
 
+        currentBar = sharedPref.getInt(
+            getString(BAR_MEASURE_SELECTED),
+            getString(BAR_MEASURE_DEFAULT).toInt()
+        )
+
 
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        //set the choice if there is one
-        val patternSelected = sharedPref.getString(
+    private fun getPatternSelected():String?{
+      return sharedPref.getString(
             getString(PATTERN_SELECTED),
             getString(PATTERN_SELECTED_DEFAULT)
         )
-        main_ui_pattern_radio_group.setRadioBtnSelection(patternSelected)
-        //Match what pattern has been selected by title and send
-        //the resource id to set the pattern selected
-        SharedPrefManager.settingsPatternTitles().map { resouceId ->
-            val patternTitle = getString(resouceId)
-            if (patternTitle == patternSelected) {
-                //send that id to the viewModel
-                mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId))
-            }
-        }
 
+    }
+    override fun onResume() {
+        super.onResume()
         //Get updated bar measure
         barMeasure = sharedPref.getInt(
             getString(BAR_MEASURE_SELECTED),
             getString(BAR_MEASURE_DEFAULT).toInt()
         )
-        mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
 
+        main_ui_pattern_radio_group.setRadioBtnSelection(getPatternSelected())
+
+        //Match what pattern has been selected by title and send
+        //the resource id to set the pattern selected
+        SharedPrefManager.settingsPatternTitles().map { resouceId ->
+            val patternTitle = getString(resouceId)
+            if (patternTitle == getPatternSelected()) {
+                //send that id to the viewModel
+                mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId,barMeasure))
+            }
+        }
+
+
+       // mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
+
+
+        if (ApplicationState.isPlaying){
+        //check if the barMeasure has changed
+            if (currentBar != barMeasure) {
+                mainViewModel.onAction(MainViewModel.Action.OnStop)
+                mainViewModel.onAction(MainViewModel.Action.OnPlay)
+
+            }
+    }
 
     }
 
@@ -863,6 +799,97 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+
+    /**
+     * ------------------------PRACTICING READING WAVE FILES----------------------------------------------------------------------------------------
+     */
+    private fun testReadingWaveHeader(assets: AssetManager) {
+        //InputStream to a file path from the assets
+        val fileInputStream: InputStream = assets.open("sound1.wav")
+
+        //Read the file - we get an array with size of 4 to represent the first 4bytes of a wave file
+        // that contains the type characters are 1 byte long - expecting "RIFF"
+        val fourByteBuffers = ByteArray(4)
+        val twoByteBuffers = ByteArray(2)
+        //Now lets read our fileInputStream - which is at the 4bytes position
+        fileInputStream.read(fourByteBuffers)
+        // at this point, the buffer contains the 4 bytes
+        Log.d("testReadingWave", "marks the file as a RIFF = ${String(fourByteBuffers)}")
+
+        //Now lets read our fileSIZE /NEXT 4 BYTES == INTEGER which is at the 8bytes position
+        fileInputStream.read(fourByteBuffers)
+
+        // at this point, the buffer contains the 4 bytes
+        Log.d("testReadingWave", "FILE SIZE = ${littleEndianConversion(fourByteBuffers)}")
+        Log.d("testReadingWave", "FILE SIZE bigInteger = ${BigInteger(fourByteBuffers)}")
+
+        //next 4bytes we should ge the file type "WAVE" which is at the 12bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave", "type of file = ${String(fourByteBuffers)}")
+
+        //Format chunk marker "String".= 16bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave", "Format chunk = ${String(fourByteBuffers)}")
+
+        //Length of Format chunk = 20bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d(
+            "testReadingWave",
+            "Length of Format chunk = ${littleEndianConversion(fourByteBuffers)}"
+        )
+
+        //File Format 1 = PCM"= 22bytes position
+        fileInputStream.read(twoByteBuffers)
+        Log.d(
+            "testReadingWave",
+            "File Format 1 equals PCM = ${littleEndianConversion(fourByteBuffers)}"
+        )
+
+        //Number of channels 1 = mono 2 = stereo"= 24bytes position
+        fileInputStream.read(twoByteBuffers)
+        Log.d(
+            "testReadingWave",
+            "Number of channels 1 = mono 2 = stereo = ${littleEndianConversion(fourByteBuffers)}"
+        )
+
+        //Sampling rate= 28bytes position
+        fileInputStream.read(fourByteBuffers)
+        Log.d("testReadingWave", "Sampling rate= = ${integerConversion(fourByteBuffers)}")
+        fileInputStream.close()
+
+
+    }
+
+
+    fun littleEndianConversion(bytes: ByteArray): Int {
+        var result = 0
+        for (i in bytes.indices) {
+            result = result or (bytes[i].toInt() shl 8 * i)
+        }
+        return result
+    }
+
+    fun integerConversion(bytes: ByteArray): Int {
+        var result = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).int
+
+        return result
+    }
+
+    /**
+     * ------------------------------------------------------------------------------------------------------------------------------
+     */
+    //external fun add(a: Int, b: Int): Int
+    external fun startPlayEngineFromNative(): String
+
+    // external fun stopPlayEngineFromNative()
+
+    var count: Int = 0
+    fun messageMe(text: String) {
+        // updateEngineClockEveryMilliSec()
+        count++
+        //Log.d("nativeCode", text)
+        Log.d("nativeCode", "${count} second")
+    }
 
 }
 
