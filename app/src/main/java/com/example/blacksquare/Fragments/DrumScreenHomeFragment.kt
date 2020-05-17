@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.ScaleAnimation
 import android.widget.Button
 import android.widget.SeekBar
 import androidx.lifecycle.Observer
@@ -53,8 +55,9 @@ class DrumScreenHomeFragment : BaseFragment(),
     private var LOAD_REQUEST_CODE: Int = 100
     private var SETTINGS_REQUEST_CODE: Int = 200
     private val padList = mutableListOf<PadClickListenerModel>()
-   //TODO- MAKE THIS COUNT THE LIST
-    private val numberOfPadsList = arrayListOf(1, 2, 3, 4,5,6,7,8,9,10)
+
+    //TODO- MAKE THIS COUNT THE LIST
+    private val numberOfPadsList = arrayListOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     private var sequenceMilliSecClock = 0L
     private lateinit var pad1Button: Button
 
@@ -309,15 +312,15 @@ class DrumScreenHomeFragment : BaseFragment(),
             val pad = index.pad
             val padIndex = index.padIndex
             val padId = index.padId
-            val action: Runnable = Runnable {
-                handlePadEvent(
-                    padIndex,
-                    padId
-                )
+//            val action: Runnable = Runnable {
+//                handlePadEvent(
+//                    padIndex,
+//                    padId
+//                )
+//
+//            }
 
-            }
-
-            pad.setOnTouchListener { v, m ->
+            pad.setOnTouchListener { view, m ->
 
                 // Perform tasks here
                 when (m.action) {
@@ -336,7 +339,14 @@ class DrumScreenHomeFragment : BaseFragment(),
                             pad.invalidate()
                             noteRepeatEngineExecutor = Executors.newScheduledThreadPool(1)
                             noteRepeatEngineExecutor.scheduleAtFixedRate(
-                                action,
+                                Runnable {
+                                    handlePadEvent(
+                                        padIndex,
+                                        padId,
+                                        view
+                                    )
+
+                                },
                                 0,
                                 noteRepeatInterval!!,
                                 TimeUnit.MICROSECONDS
@@ -345,12 +355,14 @@ class DrumScreenHomeFragment : BaseFragment(),
 
                         } else {
 
+                            scope.launch { showPadPlaying(view as Button) }
 
                             Log.d("NREPEAT", "Defualt handle Action down")
 
                             handlePadEvent(
                                 padIndex,
-                                padId
+                                padId,
+                                view
                             )
 
                         }
@@ -380,7 +392,7 @@ class DrumScreenHomeFragment : BaseFragment(),
                 }
 
 
-                ApplicationState.noteRepeatActive
+                true
             }
 
 
@@ -434,7 +446,9 @@ class DrumScreenHomeFragment : BaseFragment(),
     }
 
     //TODO REFACTOR THIS METHOD HANDLING PAD VOLUME
-    private fun handlePadEvent(padIndex: Int, padId: Int) {
+    private fun handlePadEvent(padIndex: Int, padId: Int, buttonView: View) {
+
+        startPadAnimation(buttonView)
 
         var padLftVolume = 0f
         var padRtVolume = 0f
@@ -542,6 +556,51 @@ class DrumScreenHomeFragment : BaseFragment(),
 
     }
 
+    private fun startPadAnimation(pad: View) {
+        val padAnimation = ScaleAnimation(
+
+            1f,
+            1.07f,
+            1f,
+            1.07f,
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f
+        )
+
+        padAnimation.fillAfter = true
+        padAnimation.duration = 100
+
+
+        val padAnimationEnd = ScaleAnimation(
+
+            1.07f,
+            1f,
+            1.07f,
+            1f,
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f
+        )
+        padAnimationEnd.fillAfter = true
+        padAnimationEnd.duration = 100
+        pad.startAnimation(padAnimation)
+        padAnimation.setAnimationListener(object : Animation.AnimationListener {
+
+
+            override fun onAnimationRepeat(animation: Animation?) {
+            }
+
+            override fun onAnimationEnd(animation: Animation?) {
+                pad.startAnimation(padAnimationEnd)
+
+            }
+
+            override fun onAnimationStart(animation: Animation?) {
+            }
+        })
+
+
+    }
+
     private fun playSound(
         soundId: Int?,
         padLftVolume: Float,
@@ -633,6 +692,8 @@ class DrumScreenHomeFragment : BaseFragment(),
         padList.forEach { padClickListenerModel ->
             if (padId == padClickListenerModel.padId) {
                 scope.launch { showPadPlaying(padClickListenerModel.pad) }
+                //play animation
+                startPadAnimation(padClickListenerModel.pad)
             }
         }
 
