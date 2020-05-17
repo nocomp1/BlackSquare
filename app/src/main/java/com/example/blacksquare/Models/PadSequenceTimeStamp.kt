@@ -1,4 +1,4 @@
-package com.example.blacksquare.Objects
+package com.example.blacksquare.Models
 
 data class PadSequenceTimeStamp(
     val soundId: Int?,

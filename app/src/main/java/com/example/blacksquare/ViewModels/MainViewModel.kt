@@ -5,11 +5,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.blacksquare.Objects.PadSequenceTimeStamp
-import com.example.blacksquare.Objects.Quantize
+import com.example.blacksquare.Helpers.ApplicationState
+import com.example.blacksquare.Helpers.Metronome
+import com.example.blacksquare.Models.PadSequenceTimeStamp
+import com.example.blacksquare.Models.Quantize
 import com.example.blacksquare.R
-import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Metronome
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -67,7 +67,7 @@ class MainViewModel() : ViewModel() {
     val playbackPadId = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
-    private val mainSliderValue = MutableLiveData<Int>()
+    val mainSliderValue = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
     private val isQuantizeEnabled = MutableLiveData<Boolean>()
@@ -98,7 +98,7 @@ class MainViewModel() : ViewModel() {
         val isQuantizeEnabled: Boolean,
         val quantizeStyle: Quantize,
         val barMeasure: Int,
-        val timeLeftBeforePatternChange : Long
+        val timeLeftBeforePatternChange: Long
     )
 
     private fun combineSources() {
@@ -110,7 +110,7 @@ class MainViewModel() : ViewModel() {
             patternSelected = patternSelected.value ?: R.string.p1,
             isQuantizeEnabled = isQuantizeEnabled.value ?: false,
             quantizeStyle = quantizeStyle.value ?: Quantize.SixTenthNote,
-            barMeasure = barMeasure.value ?: 2,
+            barMeasure = barMeasure.value ?: 1,
             timeLeftBeforePatternChange = timeLeftBeforePatternChange.value ?: 0L
         ).also { _viewState.value = it }
 
@@ -305,29 +305,30 @@ class MainViewModel() : ViewModel() {
     }
 
     private fun onPatternSelected(patternResourceId: Int, bar: Int) {
-       if (ApplicationState.isPlaying) {
+        if (ApplicationState.isPlaying) {
 
-           //while playing - change the pattern on the next start of the sequence
-           val delay =
-               BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2) - sequenceMilliSecClock
+            //while playing - change the pattern on the next start of the sequence
+            val delay =
+                BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2) - sequenceMilliSecClock
+            _events.value = Event.TimeRemainingBeforePatternChange(delay)
+           // timeLeftBeforePatternChange.value = delay
+            println("countend = inside onPatternSelected")
+            Timer("SettingUp", false).schedule(delay) {
+                println("countend = inside Timer")
+                _events.postValue(Event.TimeRemainingBeforePatternChange(0L))
+               // timeLeftBeforePatternChange.postValue(0L)
+                patternSelected.postValue(patternResourceId)
+                barMeasure.postValue(bar)
 
-           timeLeftBeforePatternChange.value = delay
-           println("countend = inside onPatternSelected")
-         Timer("SettingUp", false).schedule(delay) {
-               println("countend = inside Timer")
-               timeLeftBeforePatternChange.postValue(0L)
-               patternSelected.postValue(patternResourceId)
-               barMeasure.postValue(bar)
+                resetCounters()
+            }
 
-               resetCounters()
-           }
+        } else {
 
-       }else{
+            patternSelected.postValue(patternResourceId)
+            barMeasure.postValue(bar)
 
-           patternSelected.postValue(patternResourceId)
-           barMeasure.postValue(bar)
-
-       }
+        }
 
     }
 
@@ -372,6 +373,7 @@ class MainViewModel() : ViewModel() {
         object ShowUndoConfirmMsg : Event()
         data class ActivateNoteRepeat(val isNoteRepeatActivated: Boolean) : Event()
         data class ActivateRecord(val isRecording: Boolean) : Event()
+        data class TimeRemainingBeforePatternChange(val remainingTime: Long) : Event()
         object ShowNoteRepeatMenu : Event()
 
     }

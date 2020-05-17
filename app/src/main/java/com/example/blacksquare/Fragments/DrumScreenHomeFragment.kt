@@ -3,7 +3,6 @@ package com.example.blacksquare.Fragments
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
 import android.os.Bundle
 import android.util.ArrayMap
 import android.util.Log
@@ -16,29 +15,37 @@ import android.widget.SeekBar
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
+import com.example.blacksquare.Helpers.ApplicationState
+import com.example.blacksquare.Helpers.Definitions
+import com.example.blacksquare.Helpers.DrumScreenHelper
 import com.example.blacksquare.Managers.DrumPadSoundPool
 import com.example.blacksquare.Managers.SoundResManager
 import com.example.blacksquare.Models.PadClickListenerModel
-import com.example.blacksquare.Objects.PadSequenceTimeStamp
-import com.example.blacksquare.Objects.Quantize
-import com.example.blacksquare.Objects.ShowPadPlaying
+import com.example.blacksquare.Models.PadSequenceTimeStamp
+import com.example.blacksquare.Models.Quantize
 import com.example.blacksquare.R
-import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Definitions
 import com.example.blacksquare.Utils.BpmUtils
+import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_DEFAULT
 import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_SELECTED
+import com.example.blacksquare.ViewModels.DrumScreenViewModel
 import com.example.blacksquare.ViewModels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.drum_bank1.*
 import kotlinx.android.synthetic.main.drum_bank1.view.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-
+//TODO AUDIOTRACK IS CREATING UNNESASSARY THREADS EACH TIME IT PLAY A PAD
 class DrumScreenHomeFragment : BaseFragment(),
     MainViewModel.SequenceListener {
+
+    private val padIdList = DrumScreenHelper.getPadListIds()
     private lateinit var noteRepeatEngineExecutor: ScheduledExecutorService
     lateinit var sharedPref: SharedPreferences
     private lateinit var soundPool: DrumPadSoundPool
@@ -46,15 +53,18 @@ class DrumScreenHomeFragment : BaseFragment(),
     private var LOAD_REQUEST_CODE: Int = 100
     private var SETTINGS_REQUEST_CODE: Int = 200
     private val padList = mutableListOf<PadClickListenerModel>()
-    private val numberOfPadsList = arrayListOf(1, 2, 3, 4)
+   //TODO- MAKE THIS COUNT THE LIST
+    private val numberOfPadsList = arrayListOf(1, 2, 3, 4,5,6,7,8,9,10)
     private var sequenceMilliSecClock = 0L
     private lateinit var pad1Button: Button
+
     private var drumNoteHasBeenRecorded = false
     private var patternSelected: String? = null
     private var barMeasure = 1
     private lateinit var volumeSeekBar: SeekBar
     private lateinit var sharedViewModel: MainViewModel
     private var originalHitTime: Long? = null
+    private lateinit var drumScreenViewModel: DrumScreenViewModel
 
     /**
      *
@@ -114,6 +124,15 @@ class DrumScreenHomeFragment : BaseFragment(),
     private lateinit var pad2HitMap: ArrayMap<Long, PadSequenceTimeStamp>
     private lateinit var pad3HitMap: ArrayMap<Long, PadSequenceTimeStamp>
     private lateinit var pad4HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+    private lateinit var pad5HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+    private lateinit var pad6HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+    private lateinit var pad7HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+    private lateinit var pad8HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+    private lateinit var pad9HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+    private lateinit var pad10HitMap: ArrayMap<Long, PadSequenceTimeStamp>
+
+    //This is the reference for coroutines
+    private val scope = MainScope()
 
     private var isQuantizeEnabled = true
 
@@ -137,8 +156,19 @@ class DrumScreenHomeFragment : BaseFragment(),
             sharedViewModel = ViewModelProviders.of(it).get(MainViewModel::class.java)
         }
 
+        this.let {
+            drumScreenViewModel = ViewModelProviders.of(it).get(DrumScreenViewModel::class.java)
+        }
 
+        drumScreenViewModel.event.observe(this, Observer { events ->
 
+            when (events) {
+                is DrumScreenViewModel.Events.UpdateMainSliderProgress -> {
+                    sharedViewModel.mainSliderValue.postValue(events.progress)
+                }
+            }.exhaustive
+
+        })
         sharedViewModel.sharedViewState.observe(this, Observer { sharedViewState ->
 
             sharedViewState?.let { sharedViewState ->
@@ -149,10 +179,6 @@ class DrumScreenHomeFragment : BaseFragment(),
                 val volume = sharedViewState.mainSliderValue.toFloat() / 100
                 setPadVolume(volume)
 
-                //Drum pad id for playback
-                val padId = sharedViewState.playBackPadId
-                padPlayBackchangePadState(padId)
-
             }
 
 
@@ -160,26 +186,12 @@ class DrumScreenHomeFragment : BaseFragment(),
 
         sharedViewModel.setSeqListener(this)
 
-        // onPatternChanged(patternSelected!!)
-
-
         initPadTimeStampArrayList()
     }
 
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        volumeSeekBar = activity!!.findViewById(R.id.main_ui_volume_seek_slider)
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            // volumeSeekBar.setProgress(100,false)
-        } else {
-
-            //add support for older versions
-
-        }
 
         //////Sound Pool///////
         val drumPadSoundPool = DrumPadSoundPool(activity!!.applicationContext)
@@ -201,6 +213,12 @@ class DrumScreenHomeFragment : BaseFragment(),
         pad2HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
         pad3HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
         pad4HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+        pad5HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+        pad6HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+        pad7HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+        pad8HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+        pad9HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
+        pad10HitMap = ArrayMap<Long, PadSequenceTimeStamp>()
 
         padTimeStampArrayMapList.also { list ->
             //Array map that holds timestamps for each pad hit
@@ -208,6 +226,12 @@ class DrumScreenHomeFragment : BaseFragment(),
             list.add(pad2HitMap)
             list.add(pad3HitMap)
             list.add(pad4HitMap)
+            list.add(pad5HitMap)
+            list.add(pad6HitMap)
+            list.add(pad7HitMap)
+            list.add(pad8HitMap)
+            list.add(pad9HitMap)
+            list.add(pad10HitMap)
         }
 
         //Array list that holds the array map timestamps for each pad
@@ -216,6 +240,12 @@ class DrumScreenHomeFragment : BaseFragment(),
             list.add(Definitions.pad2Index, pad2HitMap)
             list.add(Definitions.pad3Index, pad3HitMap)
             list.add(Definitions.pad4Index, pad4HitMap)
+            list.add(Definitions.pad5Index, pad5HitMap)
+            list.add(Definitions.pad6Index, pad6HitMap)
+            list.add(Definitions.pad7Index, pad7HitMap)
+            list.add(Definitions.pad8Index, pad8HitMap)
+            list.add(Definitions.pad9Index, pad9HitMap)
+            list.add(Definitions.pad10Index, pad10HitMap)
         }
 
     }
@@ -263,10 +293,14 @@ class DrumScreenHomeFragment : BaseFragment(),
 
     }
 
+
     override fun onPause() {
         super.onPause()
+    }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
     }
 
     private fun setPadClickListeners() {
@@ -379,10 +413,6 @@ class DrumScreenHomeFragment : BaseFragment(),
             ).toInt()
         )
 
-
-
-
-
         if (ApplicationState.drumScreenInitialLoad == -1) {
 
             createPadList()
@@ -403,6 +433,7 @@ class DrumScreenHomeFragment : BaseFragment(),
 
     }
 
+    //TODO REFACTOR THIS METHOD HANDLING PAD VOLUME
     private fun handlePadEvent(padIndex: Int, padId: Int) {
 
         var padLftVolume = 0f
@@ -483,6 +514,7 @@ class DrumScreenHomeFragment : BaseFragment(),
                     soundId,
                     padLftVolume,
                     padRtVolume,
+                    padId,
                     padIndex
                 )
 
@@ -499,7 +531,8 @@ class DrumScreenHomeFragment : BaseFragment(),
                     soundLoadedMap[getString(R.string.soundID)],
                     padLftVolume,
                     padRtVolume,
-                    padId
+                    padId,
+                    padIndex
                 )
             }
 
@@ -513,6 +546,7 @@ class DrumScreenHomeFragment : BaseFragment(),
         soundId: Int?,
         padLftVolume: Float,
         padRftVolume: Float,
+        padId: Int,
         padIndex: Int
     ) {
 
@@ -552,9 +586,7 @@ class DrumScreenHomeFragment : BaseFragment(),
                 hitTimeStamp = sequenceMilliSecClock
             }
 
-
-            addTimeStampToList(padIndex, soundId, hitTimeStamp, padLftVolume, padRftVolume)
-
+            addTimeStampToList(padId, padIndex, soundId, hitTimeStamp, padLftVolume, padRftVolume)
             drumNoteHasBeenRecorded = true
 
             Log.d("soundPlayTimeStamp", "sound play sound stamp = $hitTimeStamp")
@@ -585,7 +617,6 @@ class DrumScreenHomeFragment : BaseFragment(),
         return Quantize.SixTenthNote
     }
 
-
     private fun setPadSelected(padId: Int, padLftVolume: Float, padRftVolume: Float): Boolean {
 
         if ((padId != ApplicationState.selectedPadId) ||
@@ -598,62 +629,26 @@ class DrumScreenHomeFragment : BaseFragment(),
 
     }
 
-
-    private fun padPlayBackchangePadState(padId: Int) {
-        when (padId) {
-            Definitions.pad1Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad1)
-            }
-            Definitions.pad2Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad2)
-            }
-            Definitions.pad3Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad3)
-            }
-            Definitions.pad4Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad4)
-            }
-            Definitions.pad5Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad5)
-            }
-            Definitions.pad6Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad6)
-            }
-            Definitions.pad7Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad7)
-            }
-            Definitions.pad8Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad8)
-            }
-            Definitions.pad9Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad9)
-            }
-            Definitions.pad10Index -> {
-                val showPadPlaying = ShowPadPlaying()
-                showPadPlaying.showPadPlaying(pad10)
+    private fun padPlayBackChangePadState(padId: Int) {
+        padList.forEach { padClickListenerModel ->
+            if (padId == padClickListenerModel.padId) {
+                scope.launch { showPadPlaying(padClickListenerModel.pad) }
             }
         }
+
+    }
+
+    private suspend fun showPadPlaying(pad: Button) {
+        pad.isPressed = true
+        pad.invalidate()
+        (delay(100))
+        pad.setPressed(false)
+        pad.invalidate()
     }
 
 
-    private fun setVolumeSliderProgress(leftV: Float, rightV: Float) {
-
-        val progress: Int
-        if (leftV == rightV) {
-            progress = (leftV * 100).toInt()
-
-            volumeSeekBar.progress = progress
-        }
-
+    private fun setVolumeSliderProgress(valueOne: Float, valueTwo: Float) {
+        drumScreenViewModel.setVolumeSliderProgress(valueOne, valueTwo)
     }
 
     private fun setPadVolume(volume: Float) {
@@ -710,11 +705,7 @@ class DrumScreenHomeFragment : BaseFragment(),
             apply()
         }
 
-
-
         Log.d("padVolumeValue", "${sharedPref!!.getFloat(padLftVolume, 0.0f)}")
-
-
     }
 
     private fun onPatternChanged(patternSelected: String) {
@@ -741,6 +732,7 @@ class DrumScreenHomeFragment : BaseFragment(),
      * This records user hit each note of the pad timestamp
      */
     private fun addTimeStampToList(
+        padId: Int,
         padIndex: Int,
         soundId: Int?,
         soundPlayTimeStamp: Long,
@@ -766,7 +758,7 @@ class DrumScreenHomeFragment : BaseFragment(),
                     pad[soundPlayTimeStamp] =
                         PadSequenceTimeStamp(
                             soundId,
-                            padIndex,
+                            padId,
                             soundPlayTimeStamp,
                             padLftVolume,
                             padRftVolume
@@ -786,7 +778,8 @@ class DrumScreenHomeFragment : BaseFragment(),
                     // inline for pads not triggered
                     val pad = padTimeStampArrayMapList.get(padHitIndex)
                     pad.put(
-                        null, PadSequenceTimeStamp(
+                        null,
+                        PadSequenceTimeStamp(
                             null,
                             padHitIndex,
                             null,
@@ -815,20 +808,11 @@ class DrumScreenHomeFragment : BaseFragment(),
         )
         ApplicationState.drumNoteHasBeenRecorded = true
 
-        //after adding the note to our sequence list we add it to our
-        //pattern list
-
-//        val padPatterCopy: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>> = ArrayList()
-//        padPatterCopy.addAll(padsPattern)
-
-
         addPatternToListForPlayback(padsPattern)
     }
 
     private fun addPatternToListForPlayback(padsPattern: ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>) {
-        Log.d("patternBug", "seqPatternSizeB4=  ${sequencePatternList.size}")
-        Log.d("patternBug", "patternSelected=  ${patternSelected}")
-        // Log.d("patternBug", "padsPatternSize=  ${padsPattern.size}")
+
         padsPattern.forEachIndexed { index, arrayMap ->
 
             Log.d("patternBug", "pad ${index + 1}=  ${arrayMap.size} HitPadTimeStamp")
@@ -837,33 +821,11 @@ class DrumScreenHomeFragment : BaseFragment(),
 
         sequencePatternList.put(patternSelected, padsPattern)
 
-//        if (isQuantizeEnabled) {
-//
-//            // if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs(barMeasure))
-//            val seqTimeRemaining =
-//                BpmUtils.getSequenceTimeInMilliSecs(barMeasure) - sequenceMilliSecClock
-//            Timer("Quantize-Timer", false).schedule(seqTimeRemaining) {
-//                //Add to Pattern at the end of sequence map <key,value> pairs
-//
-//                sequencePatternList.get(patternSelected)?.let { pattern ->
-//                    currentPattern = pattern
-//                }
-//
-//                println("quantizedTimeStampX = inside timer")
-//
-//            }
-//
-//            Log.d("patternBug", "seqPatternSize=  ${sequencePatternList.size}")
-//
-//        } else {
-//            //Add to Pattern map <key,value> pairs
-//           // sequencePatternList.put(patternSelected, padsPattern)
-//        }
-        //post to our shared view model list
-        // sharedViewModel.drumPatternArrayList.postValue(sequencePatternList)
-
     }
 
+
+    //TODO - BUG AFTER CREATING MULTIPLE DIFFERENT PATTERNS - GO BACK TO A OLD PATTERN AND
+    // ADD MORE TO IT AND THE WHOLE PATTERN WILL CHANGE
 
     //This is called per milli second for the length of the sequence
     //then restarts over-
@@ -886,69 +848,40 @@ class DrumScreenHomeFragment : BaseFragment(),
 
                                 if (list[pad].contains(sequenceMilliSecClock)) {
 
-                                    originalHitTime = if ((originalHitTime == sequenceMilliSecClock) || (originalHitTime == null)) {
-                                        println("quantizedTimeStampX = when the gate open =$sequenceMilliSecClock")
+                                    originalHitTime =
+                                        if ((originalHitTime == sequenceMilliSecClock) || (originalHitTime == null)) {
+                                            println("quantizedTimeStampX = when the gate open =$sequenceMilliSecClock")
 
-                                        soundPool.startSound(
-                                            list[pad][sequenceMilliSecClock]!!.soundId,
-                                            list[pad][sequenceMilliSecClock]!!.padLftVolume,
-                                            list[pad][sequenceMilliSecClock]!!.padRftVolume
-                                        )
+                                            soundPool.startSound(
+                                                list[pad][sequenceMilliSecClock]!!.soundId,
+                                                list[pad][sequenceMilliSecClock]!!.padLftVolume,
+                                                list[pad][sequenceMilliSecClock]!!.padRftVolume
+                                            )
 
-                                        null
+                                            null
 
-                                    } else {
-                                        null
-                                    }
+                                        } else {
+                                            null
+                                        }
 
-                                    //show pad being played
-                                     sharedViewModel.playbackPadId.postValue(list[pad][sequenceMilliSecClock]!!.padId)
+                                    //show pad being played on playback
+                                    padPlayBackChangePadState(list[pad][sequenceMilliSecClock]!!.padId)
 
-
-
-                                    // if (isQuantizeEnabled) {
-
-                                    //quantizedPattern = currentPattern
-                                    //Quantize the pattern hits after we playback sound to avoid feedback
-//                                    val newHitTimeStamp = BpmUtils.quantizeNote(
-//                                        getQuantizePreference(),
-//                                        sequenceMilliSecClock,
-//                                        barMeasure
-//                                    )
-//
-//                                    val padSequenceTimeStamp = list[pad].get(sequenceMilliSecClock)
-//                                    //update the timeHit with its new quantized value
-//                                    padSequenceTimeStamp!!.soundPlayTimeStamp = newHitTimeStamp
-//
-//                                    sequencePatternList[patternKey]!![pad][sequenceMilliSecClock] =
-//                                        padSequenceTimeStamp
-
-                                    //println("quantizedTimeStampX = after adding the new timestamp =${ sequencePatternList[patternKey]!![pad][sequenceMilliSecClock]!!.soundPlayTimeStamp}")
-
-                                    // println("quantizedTimeStampX = it should be =$newHitTimeStamp")
-
-                                    //quantizedPattern[pad][sequenceMilliSecClock] = padSequenceTimeStamp
-                                    //   }
 
                                 }
-
 
                                 //create a undoList - call outside of
                                 //condition because we need the sequenceMilliSecClick
                                 //to update every milliSec
-                                // storeUndoList(sequenceMilliSecClock)
+                                storeUndoList(sequenceMilliSecClock)
 
 
                             }
                         }
                     }
 
-
                 }
 
-
-                //update the sequence pattern
-                //sequencePatternList[patternSelected] = quantizedPattern
             }
         }
     }

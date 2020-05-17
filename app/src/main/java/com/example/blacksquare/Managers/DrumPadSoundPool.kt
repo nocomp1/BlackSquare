@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
 import com.example.blacksquare.R
-import com.example.blacksquare.Singleton.ApplicationState
+import com.example.blacksquare.Helpers.ApplicationState
 
 class DrumPadSoundPool(context: Context?) {
     private val soundPool: SoundPool

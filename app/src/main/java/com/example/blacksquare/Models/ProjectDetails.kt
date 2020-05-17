@@ -1,7 +1,6 @@
 package com.example.blacksquare.Models
 
 import android.util.ArrayMap
-import com.example.blacksquare.Objects.PadSequenceTimeStamp
 
 data class ProjectDetails(
 

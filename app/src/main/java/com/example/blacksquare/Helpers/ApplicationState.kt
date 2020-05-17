@@ -1,7 +1,7 @@
-package com.example.blacksquare.Singleton
+package com.example.blacksquare.Helpers
 
 import android.util.ArrayMap
-import com.example.blacksquare.Objects.PadSequenceTimeStamp
+import com.example.blacksquare.Models.PadSequenceTimeStamp
 
 class ApplicationState {
 
@@ -53,7 +53,7 @@ companion object {
      * Arraylist of notes triggered for each pad
      *
      */                         //|Pads|   |Timestamp index| |object at index|
-    val padHitSequenceArrayList : ArrayList<ArrayMap<Long,PadSequenceTimeStamp>>? = ArrayList()
+    val padHitSequenceArrayList : ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>? = ArrayList()
 
     /**
      * Sequence Arraylist for each pad for undo action

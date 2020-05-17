@@ -9,7 +9,7 @@ object SharedPrefKeys {
     const val  PATTERN_SELECTED_DEFAULT = R.string.p1
 
     const val  BAR_MEASURE_SELECTED = R.string.shared_prefs_bar_selected
-    const val  BAR_MEASURE_DEFAULT = R.string.two_bar_measure_text
+    const val  BAR_MEASURE_DEFAULT = R.string.one_bar_measure_text
 
 
 

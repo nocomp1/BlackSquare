@@ -114,11 +114,14 @@ object ToggleButtonGroupExtensions {
         val selectedPattern = getSelectionByText(selected)
         var countEnd = milliSecRemaining.div(delayPeriod)
 
-        println("countend =$countEnd and millisecRemain = $milliSecRemaining")
+        println("Patter-timer")
         selectedPattern?.let { selection ->
 
             var off = true
             var counter = 0L
+
+            //TODO - A THREAD IS CREATED EVERYTIME YOU CHANGE A PATTERN THIS IS CALLED
+            // FIND A WAY TO OPTIMIZE
             Timer(
                  "Patter-timer",  false
             ).scheduleAtFixedRate(timerTask {

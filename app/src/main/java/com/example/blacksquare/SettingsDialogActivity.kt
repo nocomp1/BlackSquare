@@ -11,15 +11,10 @@ import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
 import com.example.blacksquare.Utils.SharedPrefKeys.APP_SHARED_PREFERENCES
-import com.example.blacksquare.Utils.SharedPrefKeys.IS_METRONOME_ON
-import com.example.blacksquare.Utils.SharedPrefKeys.MAIN_SLIDER_CONTROL_TEXT_TITLE
-import com.example.blacksquare.Utils.SharedPrefKeys.METRONOME_SOUND_ID
 import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED
-import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED_DEFAULT
-import com.example.blacksquare.Utils.SharedPrefKeys.PROJECT_TEMPO
 import com.example.blacksquare.Managers.SharedPrefManager
-import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Helpers.ApplicationState
+import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_SELECTED
 import com.example.blacksquare.ViewModels.MainViewModel

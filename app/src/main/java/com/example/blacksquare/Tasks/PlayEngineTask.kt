@@ -4,7 +4,7 @@ package com.example.blacksquare.Tasks
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
-import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Helpers.Metronome
 
 
 class PlayEngineTask(applicationContext: Context) : Runnable {

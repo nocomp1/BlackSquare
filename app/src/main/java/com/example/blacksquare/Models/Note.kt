@@ -1,4 +1,4 @@
-package com.example.blacksquare.Objects
+package com.example.blacksquare.Models
 
 sealed class Note {
     object Quarter : Note()

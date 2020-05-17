@@ -16,7 +16,7 @@ import androidx.core.app.RemoteInput
 import com.example.blacksquare.Config.Config
 import com.example.blacksquare.R
 import com.example.blacksquare.SettingsDialogActivity
-import com.example.blacksquare.Singleton.Definitions
+import com.example.blacksquare.Helpers.Definitions
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.squareup.picasso.Picasso

@@ -1,4 +1,4 @@
-package com.example.blacksquare.Singleton
+package com.example.blacksquare.Helpers
 
 class Definitions {
     companion object {
@@ -138,4 +138,6 @@ class Definitions {
         const val fourBarsIndex: Int = 2
         const val eightBarsIndex: Int = 3
     }
+
+
 }

@@ -1,10 +1,9 @@
 package com.example.blacksquare.Utils
 
 import android.util.Log
-import com.example.blacksquare.Objects.Note
-import com.example.blacksquare.Objects.Quantize
-import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Definitions
+import com.example.blacksquare.Models.Note
+import com.example.blacksquare.Models.Quantize
+import com.example.blacksquare.Helpers.Definitions
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 
 object BpmUtils {

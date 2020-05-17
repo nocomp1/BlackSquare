@@ -7,7 +7,7 @@ import android.widget.RadioButton
 import android.widget.TableLayout
 import android.widget.TableRow
 import androidx.appcompat.app.AppCompatActivity
-import com.example.blacksquare.Singleton.ApplicationState
+import com.example.blacksquare.Helpers.ApplicationState
 import com.example.blacksquare.Views.ToggleButtonGroupTableLayout
 import kotlinx.android.synthetic.main.activity_note_repeat_dialog.*
 import java.util.*

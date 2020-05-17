@@ -1,4 +1,4 @@
-package com.example.blacksquare.Singleton
+package com.example.blacksquare.Helpers
 
 object Metronome {
 

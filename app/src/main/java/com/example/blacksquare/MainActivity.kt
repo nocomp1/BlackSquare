@@ -12,7 +12,6 @@ import android.content.res.AssetManager
 import android.graphics.Typeface
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.SoundPool
 import android.media.midi.MidiManager
 import android.os.Build
@@ -34,9 +33,9 @@ import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.SharedPrefManager
-import com.example.blacksquare.Singleton.ApplicationState
-import com.example.blacksquare.Singleton.Definitions
-import com.example.blacksquare.Singleton.Metronome
+import com.example.blacksquare.Helpers.ApplicationState
+import com.example.blacksquare.Helpers.Definitions
+import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.Utils.SharedPrefKeys.APP_SHARED_PREFERENCES
@@ -129,12 +128,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         mainViewModel.sharedViewState.observe(this, Observer { viewState ->
 
+            main_ui_volume_seek_slider.progress = viewState.mainSliderValue
             barMeasure = viewState.barMeasure
-
-            println("countend = Shaaredviewmodel")
-
-            //Set state of view before a pattern change
-            main_ui_pattern_radio_group.blinkingTransitionState(getPatternSelected(),viewState.timeLeftBeforePatternChange)
 
         })
 
@@ -166,7 +161,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                     ApplicationState.isRecording = event.isRecording
                 }
                 MainViewModel.Event.ShowUndoConfirmMsg -> showUndoConfirmMsg()
+                is MainViewModel.Event.TimeRemainingBeforePatternChange -> {
+                    //Set state of view before a pattern change
+                    main_ui_pattern_radio_group.blinkingTransitionState(getPatternSelected(),event.remainingTime)
 
+                }
             }.exhaustive
 
         })
@@ -176,19 +175,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         uiClock = findViewById(R.id.millisec_clock)
 
 
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            val myAudioMgr: AudioManager =
-                applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
-            val defaultSampleRate = Integer.parseInt(sampleRateStr)
-            val framesPerBurstStr =
-                myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
-            val defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr)
-
-            setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
-            // startEngine()
-        }
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            val myAudioMgr: AudioManager =
+//                applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+//            val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
+//            val defaultSampleRate = Integer.parseInt(sampleRateStr)
+//            val framesPerBurstStr =
+//                myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
+//            val defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr)
+//
+//            setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
+//            // startEngine()
+//        }
 
         //Subscribe app to channel "all" for cloud messages
         //post to topics/app
