@@ -3,6 +3,9 @@ package com.example.blacksquare.Fragments
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.drawable.DrawableContainer
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
 import android.util.ArrayMap
 import android.util.Log
@@ -14,6 +17,7 @@ import android.view.animation.Animation
 import android.view.animation.ScaleAnimation
 import android.widget.Button
 import android.widget.SeekBar
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
@@ -552,7 +556,7 @@ class DrumScreenHomeFragment : BaseFragment(),
 
         }
 
-        setPadSelected(padId, padLftVolume, padRtVolume)
+        setPadSelected(padId, padLftVolume, padRtVolume, buttonView)
 
     }
 
@@ -676,12 +680,44 @@ class DrumScreenHomeFragment : BaseFragment(),
         return Quantize.SixTenthNote
     }
 
-    private fun setPadSelected(padId: Int, padLftVolume: Float, padRftVolume: Float): Boolean {
+    private fun setPadSelected(
+        padId: Int,
+        padLftVolume: Float,
+        padRftVolume: Float,
+        buttonView: View
+    ): Boolean {
+
 
         if ((padId != ApplicationState.selectedPadId) ||
             (ApplicationState.selectedPadId == null)
         ) {
             ApplicationState.selectedPadId = padId
+            padList.forEach { view ->
+                view.pad
+
+                val background = view.pad.background
+                val stateListDrawable = background as StateListDrawable
+                val dcs =
+                    stateListDrawable.constantState as DrawableContainer.DrawableContainerState
+                val drawableItems = dcs.children
+                val gradientDrawableChecked = drawableItems[0] as GradientDrawable
+                val gradientDrawableUnChecked = drawableItems[1] as GradientDrawable
+                //gradientDrawableUnChecked.setStroke(2, Color.RED)
+                gradientDrawableChecked.setStroke(
+                    2,
+                    ContextCompat.getColor(activity!!.applicationContext, R.color.colorPrimary)
+                )
+
+                if (buttonView == view.pad) {
+
+                    gradientDrawableChecked.setStroke(
+                        2,
+                        ContextCompat.getColor(activity!!.applicationContext, R.color.textColor)
+                    )
+                }
+
+            }
+
             setVolumeSliderProgress(padLftVolume, padRftVolume)
         }
         return false
