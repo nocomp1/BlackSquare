@@ -50,7 +50,6 @@
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
             android:indeterminate="false"
-            android:max="100"
             android:progress="0"
             app:layout_constraintBottom_toTopOf="@id/main_ui_button_controls"
             app:layout_constraintEnd_toEndOf="parent"

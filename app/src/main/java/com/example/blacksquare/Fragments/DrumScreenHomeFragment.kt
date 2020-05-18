@@ -712,7 +712,7 @@ class DrumScreenHomeFragment : BaseFragment(),
 
                     gradientDrawableChecked.setStroke(
                         2,
-                        ContextCompat.getColor(activity!!.applicationContext, R.color.textColor)
+                        ContextCompat.getColor(activity!!.applicationContext, R.color.colorAccent)
                     )
                 }
 

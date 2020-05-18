@@ -335,8 +335,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         playMetronomeSound()
     }
 
-    override fun updateTimeLineProgress() {
-        updateTimeLineProgressBar()
+    override fun updateTimeLineProgress(sequenceMilliSecClock: Long) {
+       // updateTimeLineProgressBar()
+        var maxProgress: Int?
+        maxProgress = BpmUtils.getSequenceTimeInMilliSecs(barMeasure).toInt()
+        fabProgress.max = maxProgress
+
+        if (fabProgress.progress < maxProgress) {
+            if (fabProgress.progress == maxProgress) {
+                fabProgress.progress = 0
+            }
+            fabProgress.progress = sequenceMilliSecClock.toInt()
+            Log.d("xxx", "progress ${fabProgress.progress}")
+        }
     }
 
     /**

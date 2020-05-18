@@ -33,7 +33,7 @@ class MainViewModel() : ViewModel() {
     interface UpdateListener {
         fun resetProgressBar()
         fun updateMetronomeSound()
-        fun updateTimeLineProgress()
+        fun updateTimeLineProgress(sequenceMilliSecClock : Long)
         fun updateUiClockEveryMilliSec(
             uIClockMilliSecondCounter: Long,
             beatCount: Long
@@ -247,12 +247,14 @@ class MainViewModel() : ViewModel() {
     }
 
     private fun timeLineProgress() {
-        uiProgressBarMilliSecCounter++
-        if (uiProgressBarMilliSecCounter == BpmUtils.getBeatPerMilliSeconds()) {
-            callback.updateTimeLineProgress()
-            //reset counter
-            uiProgressBarMilliSecCounter = 0L
-        }
+        callback.updateTimeLineProgress(sequenceMilliSecClock)
+
+//        uiProgressBarMilliSecCounter++
+//        if (uiProgressBarMilliSecCounter == BpmUtils.getBeatPerMilliSeconds()) {
+//
+//            //reset counter
+//            uiProgressBarMilliSecCounter = 0L
+//        }
     }
 
 
