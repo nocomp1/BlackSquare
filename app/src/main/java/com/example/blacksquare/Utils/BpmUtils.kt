@@ -45,10 +45,11 @@ object BpmUtils {
     }
 
     //this method calculates where a given note should be quantized based on note timestamp
-    //Example: if we want a note quantized to the 16th note we figure out how long is the
-    // sequence (2,000 milliseconds) - Find out how many note will fit in that sequence
-    // - 1 bar will give us 16 notes within the 2,000 millisecond. Then we find out the
-    // millisecond for each note (0,125,250,375,500,625 ...2000). - Then we figure out
+    //Example: at 120bpm if we want a note quantized to the 16th note we figure out how long the
+    // sequence (1 bar gives us 2,000 milliseconds) - Find out how many notes at 16th (quantizationInterval)
+    // will fit in that sequence
+    // 1 bar will give us 16 notes within the 2,000 millisecond. Then we find out the
+    // millisecond for 16note equation = (125) for each note (0,125,250,375,500,625 ...2000). - Then we figure out
     // the rang between each of the sets of notes (0...125) calculate what note(0 or 125)
     // is the provided noteTimeStamp is closet to then return the sum.
     private fun calculateQuantize(note: Long, quantizationInterval: Long, barMeasure : Int): Long {
@@ -63,8 +64,6 @@ object BpmUtils {
         val range = IntRange(0, notesInSequence.toInt())
 
         range.forEachIndexed { index, i ->
-
-            // Log.d("calculateQuantize", " RangeInclusive= ${range.endInclusive}")
 
             Log.d("calculateQuantize", " = ${i.times(quantizationInterval)}")
 

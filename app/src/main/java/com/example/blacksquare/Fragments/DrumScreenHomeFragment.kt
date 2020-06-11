@@ -14,7 +14,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
-import android.view.animation.ScaleAnimation
+import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.SeekBar
 import androidx.core.content.ContextCompat
@@ -140,6 +140,7 @@ class DrumScreenHomeFragment : BaseFragment(),
 
     //This is the reference for coroutines
     private val scope = MainScope()
+    private var countIn = 0
 
     private var isQuantizeEnabled = true
 
@@ -176,6 +177,9 @@ class DrumScreenHomeFragment : BaseFragment(),
             }.exhaustive
 
         })
+
+
+
         sharedViewModel.sharedViewState.observe(this, Observer { sharedViewState ->
 
             sharedViewState?.let { sharedViewState ->
@@ -189,6 +193,16 @@ class DrumScreenHomeFragment : BaseFragment(),
             }
 
 
+        })
+
+        sharedViewModel.event.observe(this, Observer {mainActivityEvent ->
+
+            when(mainActivityEvent){
+                is MainViewModel.Event.UpdateCountInClock -> {
+                   countIn = mainActivityEvent.countInCount
+                }
+
+            }
         })
 
         sharedViewModel.setSeqListener(this)
@@ -561,47 +575,20 @@ class DrumScreenHomeFragment : BaseFragment(),
     }
 
     private fun startPadAnimation(pad: View) {
-        val padAnimation = ScaleAnimation(
+        val padAnimation =
+            AnimationUtils.loadAnimation(activity!!.applicationContext, R.anim.pad_scale_out)
 
-            1f,
-            1.07f,
-            1f,
-            1.07f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
-
-        padAnimation.fillAfter = true
-        padAnimation.duration = 100
-
-
-        val padAnimationEnd = ScaleAnimation(
-
-            1.07f,
-            1f,
-            1.07f,
-            1f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
-        padAnimationEnd.fillAfter = true
-        padAnimationEnd.duration = 100
+        val padAnimationEnd =
+            AnimationUtils.loadAnimation(activity!!.applicationContext, R.anim.pad_scale_in)
         pad.startAnimation(padAnimation)
+
         padAnimation.setAnimationListener(object : Animation.AnimationListener {
-
-
-            override fun onAnimationRepeat(animation: Animation?) {
-            }
-
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {}
             override fun onAnimationEnd(animation: Animation?) {
                 pad.startAnimation(padAnimationEnd)
-
-            }
-
-            override fun onAnimationStart(animation: Animation?) {
             }
         })
-
 
     }
 
@@ -620,7 +607,7 @@ class DrumScreenHomeFragment : BaseFragment(),
         )
 
         //If we are recording log timestamp of note
-        if ((ApplicationState.isRecording) && (ApplicationState.isPlaying)) {
+        if (ApplicationState.isRecording) {
 
             val hitTimeStamp: Long
             //use this to filter a hit that was quantized ahead of time
@@ -652,7 +639,9 @@ class DrumScreenHomeFragment : BaseFragment(),
             addTimeStampToList(padId, padIndex, soundId, hitTimeStamp, padLftVolume, padRftVolume)
             drumNoteHasBeenRecorded = true
 
-            Log.d("soundPlayTimeStamp", "sound play sound stamp = $hitTimeStamp")
+            //Log.d("soundPlayTimeStamp", "count in outside if = $countIn")
+
+
 
         }
 
@@ -866,7 +855,7 @@ class DrumScreenHomeFragment : BaseFragment(),
 
                     Log.d(
                         "soundPlayTimeStamp",
-                        "number hits for pad $padHitIndex = ${padsPattern!![padHitIndex].size} "
+                        "number hits for pad $padHitIndex = ${padsPattern!![padHitIndex][0]?.soundPlayTimeStamp} "
                     )
 
                 } else {

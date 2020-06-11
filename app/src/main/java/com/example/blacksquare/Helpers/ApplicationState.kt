@@ -18,6 +18,8 @@ companion object {
     var hasLoadedASound: Boolean = false
     var hasLoadedAKit: Boolean = true
     var isPlaying: Boolean = false
+    var isCountInActivated : Boolean = true
+    //this represents a state where recording is armed and play has been pressed
     var isRecording: Boolean = false
     var isArmedToRecord: Boolean = false
     var noteRepeatActive: Boolean = false
@@ -32,6 +34,8 @@ companion object {
     var selectedPatternRadioButtonId = -1
     var selectedInstrumentTrackRadioButtonId = -1
     var selectedDrumBankRadioButtonId = -1
+    //default but get set in the  setting menu
+    var countInCountPreference = 4
     var selectedPadId: Int? = null
     var selectedNoteRepeatId = -1
     var selectedNoteRepeat = 0

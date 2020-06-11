@@ -1,4 +1,16 @@
 <resources>
+
+    <string-array name="DrumScreenEdit">
+        <item>Volume</item>
+        <item>Pan</item>
+        <item>Pitch</item>
+        <item>High Pass Filter</item>
+        <item>Low Pad Filter</item>
+        <item>Effects</item>
+    </string-array>
+
+
+
     <string name="app_name">NextSoundz</string>
     <string name="load_confirm">Load</string>
     <string name="load_alert_message">Load a sound</string>
@@ -89,6 +101,9 @@
     <string name="application_shared_prefs">App shared prefs</string>
     <string name="shared_prefs_pattern_selected">pattern selected</string>
     <string name="shared_prefs_bar_selected">bar selected</string>
+    <string name="shared_prefs_count_in_selected">count in selected</string>
+    <string name="count_in_default">4</string>
+
     <string name="shared_prefs_instrument_selected">instrument selected</string>
     <string name="shared_prefs_drum_bank_selected">drum bank selected</string>
     <string name="shared_prefs_quantize_selected">quantize selected</string>

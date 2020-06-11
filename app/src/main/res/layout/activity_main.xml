@@ -43,6 +43,23 @@
 
         </androidx.viewpager.widget.ViewPager>
 
+        <TextView
+            android:id="@+id/count_in_view"
+            style="@style/menu_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round_corner_bg_stroke_text"
+            android:gravity="center"
+            android:padding="8dp"
+            android:textSize="20sp"
+            android:visibility="gone"
+            android:animateLayoutChanges="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+           />
+
         <ProgressBar
             android:id="@+id/fabProgress"
             style="?android:attr/progressBarStyleHorizontal"
@@ -69,15 +86,15 @@
               </FrameLayout>
       -->
         <FrameLayout
+            android:id="@+id/main_ui_pattern_controls"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/fabProgress"
-            android:id="@+id/main_ui_pattern_controls"
-            android:clickable="true"
-            android:focusable="true"
 
             >
 
@@ -259,6 +276,7 @@
 
 
         </FrameLayout>
+
         <LinearLayout
             android:id="@+id/main_ui_button_controls"
             android:layout_width="match_parent"
@@ -347,7 +365,7 @@
                 android:thumb="@drawable/ic_volume_slider_knob" />
 
             <Button
-                android:id="@+id/seekbar_slider_menu_toggle"
+                android:id="@+id/edit_menu_button"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
                 android:layout_marginLeft="12dp"
@@ -370,12 +388,11 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginLeft="12dp"
-                android:gravity="end"
-                android:onClick="onShowPatternUi"
                 android:background="@drawable/ic_expand_more_black_24dp"
-                android:elevation="15dp"/>
+                android:elevation="15dp"
+                android:gravity="end"
+                android:onClick="onShowPatternUi" />
         </LinearLayout>
-
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

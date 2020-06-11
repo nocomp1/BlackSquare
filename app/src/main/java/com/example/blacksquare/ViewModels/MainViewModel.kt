@@ -33,7 +33,7 @@ class MainViewModel() : ViewModel() {
     interface UpdateListener {
         fun resetProgressBar()
         fun updateMetronomeSound()
-        fun updateTimeLineProgress(sequenceMilliSecClock : Long)
+        fun updateTimeLineProgress(sequenceMilliSecClock: Long)
         fun updateUiClockEveryMilliSec(
             uIClockMilliSecondCounter: Long,
             beatCount: Long
@@ -50,21 +50,22 @@ class MainViewModel() : ViewModel() {
 
     private var sequenceMilliSecClock = 0L
     private lateinit var playEngineExecutor: ScheduledExecutorService
+    private lateinit var countInExecutor: ScheduledExecutorService
     private var uiProgressBarMilliSecCounter = 0L
     private var metronomeCounter = 0L
     private var uIClockMilliSecondCounter = 0L
-    private var beatCount = 0L
+    private var uiClockBeatCount = 1L
 
     private val _viewState: MediatorLiveData<ViewState> = MediatorLiveData()
     val sharedViewState: LiveData<ViewState> get() = _viewState
 
 
     //////////////////////////////|Patterns|  |Pads| |Timestamp index| |object at index|
-    val drumPatternArrayList =
+    private val drumPatternArrayList =
         MutableLiveData<ArrayMap<String, ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>>()
             .also { _viewState.addSource(it) { combineSources() } }
 
-    val playbackPadId = MutableLiveData<Int>()
+    private val playbackPadId = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
     val mainSliderValue = MutableLiveData<Int>()
@@ -117,13 +118,6 @@ class MainViewModel() : ViewModel() {
     }
 
     private var mFirebaseAnalytics: FirebaseAnalytics? = null
-
-
-    // private var padPlayback1: DrumPadPlayBack
-    // private var sharedPref: SharedPreferences
-
-    //val playbackPadId = MutableLiveData<Int>()
-
 
     init {
         // Obtain the FirebaseAnalytics instance.
@@ -200,17 +194,17 @@ class MainViewModel() : ViewModel() {
         uIClockMilliSecondCounter++
         // start our clock and beat count at 1 and increment from there
         if ((uIClockMilliSecondCounter == BpmUtils.getBeatPerMilliSeconds()) || (uIClockMilliSecondCounter == 0L)) {
-            beatCount++
+            uiClockBeatCount++
             uIClockMilliSecondCounter = 0L
         }
 
-        if (beatCount > (ApplicationState.selectedBarMeasure * 4)) {
-            //resetting the beat count
-            beatCount = 1
+        if (uiClockBeatCount > (ApplicationState.selectedBarMeasure * 4)) {
+            //resetting the beat count - Start at 1
+            uiClockBeatCount = 1
 
         }
 
-        callback.updateUiClockEveryMilliSec(uIClockMilliSecondCounter, beatCount)
+        callback.updateUiClockEveryMilliSec(uIClockMilliSecondCounter, uiClockBeatCount)
     }
 
 
@@ -219,13 +213,25 @@ class MainViewModel() : ViewModel() {
 
         if (Metronome.isActive()) {
 
-            if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds()) {
+            if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds() || metronomeCounter == 0L) {
                 metronomeCounter = 0L
 
                 callback.updateMetronomeSound()
-                //reset counter
+
+//                //Trigger the countIn if activated
+//                if (ApplicationState.isCountInActivated && ApplicationState.isRecording) {
+//
+//                    if (countInCount <= ApplicationState.countInCountPreference) {
+//                        _events.postValue(Event.UpdateCountInClock(countInCount))
+//                        //to keep sequence clock on time we zero it out each count in
+//                        sequenceMilliSecClock = 0
+//
+//                    }
+//                    countInCount++
+//                }
 
             }
+
         } else if (metronomeCounter == BpmUtils.getBeatPerMilliSeconds()) {
             //reset counter
             metronomeCounter = 0L
@@ -233,78 +239,99 @@ class MainViewModel() : ViewModel() {
 
     }
 
+    /**
+     * When play is engaged the sequence clock is always running - each millisecond
+     */
     private fun sequenceClock() {
         //keeping track of current sequence by milliseconds
         sequenceMilliSecClock++
         sequenceCallback.updateSeqPerMilliSec(sequenceMilliSecClock)
 
         //Reset the counter when we reach the end of sequence
-        if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2)) {
+        if (sequenceMilliSecClock == BpmUtils.getSequenceTimeInMilliSecs(
+                barMeasure.value ?: 2
+            )
+        ) {
             sequenceMilliSecClock = 0
-            // callback.resetProgressBar()
         }
-
     }
 
     private fun timeLineProgress() {
-        callback.updateTimeLineProgress(sequenceMilliSecClock)
+        //Count in conditions - don't start the  timeline until after count in
+        if (countInCount > ApplicationState.countInCountPreference
+            && ApplicationState.isCountInActivated && ApplicationState.isRecording
+        ) {
+            callback.updateTimeLineProgress(sequenceMilliSecClock)
+        } else if (!ApplicationState.isArmedToRecord || !ApplicationState.isCountInActivated) {
+            callback.updateTimeLineProgress(sequenceMilliSecClock)
+        }
 
-//        uiProgressBarMilliSecCounter++
-//        if (uiProgressBarMilliSecCounter == BpmUtils.getBeatPerMilliSeconds()) {
-//
-//            //reset counter
-//            uiProgressBarMilliSecCounter = 0L
-//        }
     }
 
 
     private fun stopPlayEngine() {
 
+        countInExecutor.shutdown()
         playEngineExecutor.shutdownNow()
         resetCounters()
 
     }
 
+    private var countInCount = 1
+    private val engineTask = Runnable { runEngine() }
+    private val countInTask = Runnable {
+
+        if (countInCount <= ApplicationState.countInCountPreference) {
+
+            _events.postValue(Event.UpdateCountInClock(countInCount))
+            callback.updateMetronomeSound()
+            println("inside of the countInTask")
+
+        } else if (countInCount > ApplicationState.countInCountPreference) {
+            countInExecutor.shutdown()
+            callback.updateMetronomeSound()
+
+            playEngineExecutor.scheduleAtFixedRate(engineTask, 0, 1000, TimeUnit.MICROSECONDS)
+
+
+        }
+
+        countInCount++
+
+    }
+
     private fun startPlayEngine() {
-        val task = Runnable { runEngine() }
-        playEngineExecutor = Executors.newScheduledThreadPool(1)
-        playEngineExecutor.scheduleAtFixedRate(task, 0, 1000, TimeUnit.MICROSECONDS)
+
+        //println("inside of the countInTask")
+        // countInExecutor = Executors.newScheduledThreadPool(1)
+        // countInExecutor.scheduleAtFixedRate(countInTask, 0, BpmUtils.getBeatPerMilliSeconds()*1000, TimeUnit.MICROSECONDS)
+
+        //playEngineExecutor = Executors.newScheduledThreadPool(1)
+        // playEngineExecutor.scheduleAtFixedRate(task, 0, 1000, TimeUnit.MICROSECONDS)
+
+        countInExecutor = Executors.newScheduledThreadPool(2)
+        playEngineExecutor = Executors.newSingleThreadScheduledExecutor()
+
+        if (ApplicationState.isRecording && ApplicationState.isCountInActivated) {
+
+            countInExecutor.scheduleAtFixedRate(
+                countInTask,
+                0,
+                BpmUtils.getBeatPerMilliSeconds() * 1000,
+                TimeUnit.MICROSECONDS
+            )
+
+        } else {
+
+            playEngineExecutor.scheduleAtFixedRate(engineTask, 0, 1000, TimeUnit.MICROSECONDS)
+        }
+
     }
 
     private fun mainSlider(progress: Int) {
         mainSliderValue.postValue(progress)
     }
 
-    fun onAction(action: Action) {
-
-        when (action) {
-            Action.Run -> runEngine()
-            Action.OnUndoTapped -> onUndoTapped()
-            Action.OnUndoConfirmed -> onUndoConfirmed()
-            Action.OnPlay -> startPlayEngine()
-            Action.OnStop -> stopPlayEngine()
-            Action.OnSettingsTapped -> _events.value = Event.ShowSettings
-            Action.OnLoadTapped -> _events.value = Event.ShowLoadMenu
-            is Action.OnNoteRepeatTapped -> _events.value =
-                Event.ActivateNoteRepeat(action.isNoteRepeatActivated)
-            Action.OnNoteRepeatDoubleTapped -> _events.value = Event.ShowNoteRepeatMenu
-            Action.OnShowPatternUi -> {
-            }
-            Action.OnShowMainUi -> {
-            }
-            is Action.OnRecordTapped -> _events.value =
-                Event.ActivateRecord(action.isRecording)
-            is Action.OnMainSliderProgressChange -> mainSlider(action.progress)
-            is Action.OnMainSliderMenuSelection -> TODO()
-            Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
-            Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
-            is Action.OnPatternSelected -> onPatternSelected(action.patternResourceId, action.bar)
-            is Action.OnBarMeasureUpdate -> {
-            }//barMeasure.value = action.bar
-        }.exhaustive
-
-
-    }
 
     private fun onPatternSelected(patternResourceId: Int, bar: Int) {
         if (ApplicationState.isPlaying) {
@@ -313,12 +340,12 @@ class MainViewModel() : ViewModel() {
             val delay =
                 BpmUtils.getSequenceTimeInMilliSecs(barMeasure.value ?: 2) - sequenceMilliSecClock
             _events.value = Event.TimeRemainingBeforePatternChange(delay)
-           // timeLeftBeforePatternChange.value = delay
+            // timeLeftBeforePatternChange.value = delay
             println("countend = inside onPatternSelected")
             Timer("SettingUp", false).schedule(delay) {
                 println("countend = inside Timer")
                 _events.postValue(Event.TimeRemainingBeforePatternChange(0L))
-               // timeLeftBeforePatternChange.postValue(0L)
+                // timeLeftBeforePatternChange.postValue(0L)
                 patternSelected.postValue(patternResourceId)
                 barMeasure.postValue(bar)
 
@@ -341,8 +368,38 @@ class MainViewModel() : ViewModel() {
         uiProgressBarMilliSecCounter = 0L
         metronomeCounter = 0L
         uIClockMilliSecondCounter = 0L
-        beatCount = 0L
+        uiClockBeatCount = 1L
         sequenceMilliSecClock = 0
+        countInCount = 1
+
+    }
+
+    fun onAction(action: Action) {
+
+        when (action) {
+            Action.Run -> runEngine()
+            Action.OnUndoTapped -> onUndoTapped()
+            Action.OnUndoConfirmed -> onUndoConfirmed()
+            Action.OnPlay -> startPlayEngine()
+            Action.OnStop -> stopPlayEngine()
+            Action.OnSettingsTapped -> _events.value = Event.ShowSettings
+            Action.OnLoadTapped -> _events.value = Event.ShowLoadMenu
+            is Action.OnNoteRepeatTapped -> _events.value =
+                Event.ActivateNoteRepeat(action.isNoteRepeatActivated)
+            Action.OnNoteRepeatDoubleTapped -> _events.value = Event.ShowNoteRepeatMenu
+            Action.OnShowPatternUi -> {
+            }
+            Action.OnShowMainUi -> {
+            }
+            is Action.OnMainSliderProgressChange -> mainSlider(action.progress)
+            is Action.OnMainSliderMenuSelection -> TODO()
+            Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
+            Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
+            is Action.OnPatternSelected -> onPatternSelected(action.patternResourceId, action.bar)
+            is Action.OnBarMeasureUpdate -> {
+            }
+
+        }.exhaustive
 
     }
 
@@ -362,7 +419,6 @@ class MainViewModel() : ViewModel() {
         object OnShowUndoConfirmMsg : Action()
         data class OnPatternSelected(val patternResourceId: Int, val bar: Int) : Action()
         data class OnMainSliderProgressChange(val progress: Int) : Action()
-        data class OnRecordTapped(val isRecording: Boolean) : Action()
         data class OnMainSliderMenuSelection(val label: String) : Action()
         data class OnBarMeasureUpdate(val bar: Int) : Action()
 
@@ -374,9 +430,9 @@ class MainViewModel() : ViewModel() {
         object ShowLoadMenu : Event()
         object ShowUndoConfirmMsg : Event()
         data class ActivateNoteRepeat(val isNoteRepeatActivated: Boolean) : Event()
-        data class ActivateRecord(val isRecording: Boolean) : Event()
         data class TimeRemainingBeforePatternChange(val remainingTime: Long) : Event()
         object ShowNoteRepeatMenu : Event()
+        data class UpdateCountInClock(val countInCount: Int) : Event()
 
     }
 

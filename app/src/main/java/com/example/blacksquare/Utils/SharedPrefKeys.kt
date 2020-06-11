@@ -10,7 +10,8 @@ object SharedPrefKeys {
 
     const val  BAR_MEASURE_SELECTED = R.string.shared_prefs_bar_selected
     const val  BAR_MEASURE_DEFAULT = R.string.one_bar_measure_text
-
+    const val  COUNT_IN_SELECTED = R.string.shared_prefs_count_in_selected
+    const val  COUNT_IN_DEFAULT = R.string.count_in_default
 
 
     const val  MAIN_SLIDER_CONTROL_TEXT_TITLE = R.string.main_slider_prefs_key

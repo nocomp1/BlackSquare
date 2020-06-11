@@ -19,23 +19,24 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.transition.Slide
 import android.util.Log
 import android.view.*
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.transition.Scene
 import com.example.blacksquare.Adapters.TabsViewPagerAdapter
 import com.example.blacksquare.Fragments.*
+import com.example.blacksquare.Helpers.ApplicationState
+import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.SharedPrefManager
-import com.example.blacksquare.Helpers.ApplicationState
-import com.example.blacksquare.Helpers.Definitions
-import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.Utils.SharedPrefKeys.APP_SHARED_PREFERENCES
@@ -48,8 +49,8 @@ import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED
 import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED_DEFAULT
 import com.example.blacksquare.Utils.SharedPrefKeys.PROJECT_TEMPO
 import com.example.blacksquare.ViewModels.MainViewModel
-import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.blinkingTransitionState
+import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.setRadioBtnSelection
 import com.example.blacksquare.Views.ToggleButtonGroupTableLayout
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var sharedPref: SharedPreferences
     private var barMeasure = 2
     private lateinit var mygestureDetector: GestureDetector
-
+    private lateinit var popupWindow: PopupWindow
     private var metronomeSoundId = R.raw.wood
     private var projectTempo: Long = 100L
     private var isMetronomeOn: Boolean = true
@@ -88,6 +89,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var mainUiPatternControlScene: Scene
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var uiClock: TextView
+    private lateinit var countInClock: TextView
 
     /**
      * UI clock variables
@@ -121,9 +123,9 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         mainViewModel.setListener(this)
 
 
-       // val toggleLayout = findViewById<ToggleButtonGroupTableLayout>(R.id.main_ui_pattern_radio_group)
+        // val toggleLayout = findViewById<ToggleButtonGroupTableLayout>(R.id.main_ui_pattern_radio_group)
         main_ui_pattern_radio_group.setUpListener(filterListener)
-
+        countInClock = findViewById(R.id.count_in_view)
         recordButton = findViewById(R.id.record_btn)
 
         mainViewModel.sharedViewState.observe(this, Observer { viewState ->
@@ -157,13 +159,20 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                     val intent = Intent(applicationContext, NoteRepeatDialogActivity::class.java)
                     startActivityForResult(intent, NOTE_REPEAT_REQUEST_CODE)
                 }
-                is MainViewModel.Event.ActivateRecord -> {
-                    ApplicationState.isRecording = event.isRecording
-                }
+
                 MainViewModel.Event.ShowUndoConfirmMsg -> showUndoConfirmMsg()
                 is MainViewModel.Event.TimeRemainingBeforePatternChange -> {
                     //Set state of view before a pattern change
-                    main_ui_pattern_radio_group.blinkingTransitionState(getPatternSelected(),event.remainingTime)
+                    main_ui_pattern_radio_group.blinkingTransitionState(
+                        getPatternSelected(),
+                        event.remainingTime
+                    )
+
+                }
+                is MainViewModel.Event.UpdateCountInClock -> {
+                    updateCountInView(event.countInCount)
+
+                    // runOnUiThread {   }
 
                 }
             }.exhaustive
@@ -198,6 +207,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             getString(APP_SHARED_PREFERENCES),
             Context.MODE_PRIVATE
         )
+
 
         //////// Getting and setting our project tempo///////
         projectTempo = sharedPref.getLong(getString(PROJECT_TEMPO), 120L)
@@ -239,7 +249,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
         initializeUiComponents()
-
 
     }
 
@@ -288,7 +297,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         volumeSlider.setOnSeekBarChangeListener(this)
 
         //Selector menu for volume slider
-        setUpMenuForMainVolumeSlider()
+        setUpEditPopUpMenu()
 
         ////////Ui clock/////////
         val myTypeface = Typeface.createFromAsset(
@@ -320,24 +329,62 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             .build()
     }
 
-    private fun playMetronomeSound() {
-        //  Log.d("soundPoolTest", "Before the sound pool")
-
-        //Play the sound
-
-        soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
-
-        //  Log.d("soundPoolTest", "After the sound pool")
-
-    }
-
+    /**
+     * This is called every beat
+     */
     override fun updateMetronomeSound() {
-        playMetronomeSound()
+        soundPool.play(sound, 1.0f, 1.0f, 10, 0, 1.0f)
     }
 
+    private fun updateCountInView(countInCount: Int) {
+        //show view on first count in
+        if (countInCount == 1) {
+            countInClock.visibility = View.VISIBLE
+        }
+        val count = ApplicationState.countInCountPreference.minus(countInCount)
+        countInClock.text = String.format("%1s %2s", "Count in:", count + 1)
+
+        val countInAnimationScaleOut =
+            AnimationUtils.loadAnimation(applicationContext, R.anim.pad_scale_out)
+        val countInAnimationScaleDwn =
+            AnimationUtils.loadAnimation(applicationContext, R.anim.pad_scale_in)
+        val countInAnimationFadeOUt =
+            AnimationUtils.loadAnimation(applicationContext, R.anim.fade_out)
+
+        countInClock.startAnimation(countInAnimationScaleOut)
+
+        countInAnimationScaleOut.setAnimationListener(object :
+            Animation.AnimationListener {
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                countInClock.startAnimation(countInAnimationScaleDwn)
+
+                if (countInCount == ApplicationState.countInCountPreference) {
+                    countInClock.startAnimation(countInAnimationFadeOUt)
+                }
+
+            }
+        })
+
+        countInAnimationFadeOUt.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                if (countInCount == ApplicationState.countInCountPreference) {
+                    countInClock.clearAnimation()
+                    countInClock.visibility = View.GONE
+                }
+            }
+        })
+    }
+
+    /**
+     * Main progress bar --- This is called every millisecond
+     */
     override fun updateTimeLineProgress(sequenceMilliSecClock: Long) {
-       // updateTimeLineProgressBar()
-        var maxProgress: Int?
+
+        val maxProgress: Int?
         maxProgress = BpmUtils.getSequenceTimeInMilliSecs(barMeasure).toInt()
         fabProgress.max = maxProgress
 
@@ -346,78 +393,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                 fabProgress.progress = 0
             }
             fabProgress.progress = sequenceMilliSecClock.toInt()
-            Log.d("xxx", "progress ${fabProgress.progress}")
         }
     }
-
-    /**
-     * Pad Playback methods
-     */
 
     fun onUndoTapped(view: View) {
         mainViewModel.onAction(MainViewModel.Action.OnUndoTapped)
-    }
-
-    /**
-     * Main progress bar --- This is called every millisecond and updated every beat
-     */
-
-    private fun updateTimeLineProgressBar() {
-
-        var maxMetronomeIncrement: Int?
-        Log.d("xxx", "progress ${ApplicationState.selectedBarMeasureRadioButtonId}")
-
-        when (barMeasure) {
-
-            Definitions.oneBar -> {
-                maxMetronomeIncrement = 25
-                fabProgress.max = 100
-                if (fabProgress.progress <= 100) {
-                    if (fabProgress.progress == 100) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-            }
-
-            Definitions.twoBars -> {
-                maxMetronomeIncrement = 10
-                fabProgress.max = 80
-                if (fabProgress.progress <= 80) {
-                    if (fabProgress.progress == 80) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-            }
-
-            Definitions.fourBars -> {
-                maxMetronomeIncrement = 10
-                fabProgress.max = 160
-                if (fabProgress.progress <= 160) {
-                    if (fabProgress.progress == 160) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-
-            }
-            Definitions.eightBars -> {
-                maxMetronomeIncrement = 10
-                fabProgress.max = 320
-                if (fabProgress.progress <= 320) {
-                    if (fabProgress.progress == 320) {
-                        fabProgress.progress = 0
-                    }
-                    fabProgress.progress = fabProgress.progress + maxMetronomeIncrement
-                    Log.d("xxx", "progress ${fabProgress.progress}")
-                }
-            }
-        }
-
     }
 
     override fun resetProgressBar() {
@@ -428,6 +408,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
      * UICLOCK
      */
 
+    //TODO CLOCK  AND TIMELINE WILL NOT RESET
     override fun updateUiClockEveryMilliSec(
         uIClockMilliSecondCounter: Long,
         beatCount: Long
@@ -445,52 +426,128 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         uIClock.append(" : ")
         uIClock.append(milliSecPerBeat)
 
-        //TODO BUG WILL NOT UPDATE CLOCK AND FREEZES THE UI
-        // uiClock.text = uIClock
-
+        runOnUiThread { uiClock.text = uIClock }
 
     }
 
     /**
      * Multi functional horizontal slider control
      */
+    private fun setUpEditPopUpMenu() {
+        var isEditMenuShowing = false
 
-    private fun setUpMenuForMainVolumeSlider() {
+
         // default label
         var label = getString(R.string.main_slider_short_volume_label)
-        seekbar_slider_menu_toggle.text =
+        edit_menu_button.text =
             sharedPref.getString(getString(MAIN_SLIDER_CONTROL_TEXT_TITLE), label)
 
-        seekbar_slider_menu_toggle.setOnClickListener {
+        // Initialize a new layout inflater instance
+        val inflater: LayoutInflater =
+            getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
-            val popupMenu = PopupMenu(this, seekbar_slider_menu_toggle)
-            //Inflating the Popup using xml file
-            popupMenu.menuInflater.inflate(R.menu.main_seekbar_popup_menu, popupMenu.menu)
+        // Inflate a custom view using layout inflater
+        val editMenuView = inflater.inflate(R.layout.edit_menu_view, null)
 
-            popupMenu.setOnMenuItemClickListener {
+        // Initialize a new instance of popup window
+        popupWindow = PopupWindow(
+            editMenuView, // Custom view to show in popup window
+            LinearLayout.LayoutParams.WRAP_CONTENT, // Width of popup window
+            LinearLayout.LayoutParams.WRAP_CONTENT // Window height
+        )
 
-                // Toast.makeText(this, "You Clicked : " + it.title, Toast.LENGTH_SHORT).show()
-                if (it.title == getString(R.string.volume)) {
-                    label = getString(R.string.main_slider_short_volume_label)
-                    seekbar_slider_menu_toggle.text = label
 
-                }
-                if (it.title == getString(R.string.pan)) {
-                    label = getString(R.string.main_slider_short_pan_label)
-                    seekbar_slider_menu_toggle.text = label
-                }
-                if (it.title == getString(R.string.pitch)) {
-                    label = getString(R.string.main_slider_short_pitch_label)
-                    seekbar_slider_menu_toggle.text = label
-                }
+        //popupWindow.isOutsideTouchable = true
+        popupWindow.setOnDismissListener {
+            isEditMenuShowing = false
+        }
 
-                sharedPref.edit().putString(getString(MAIN_SLIDER_CONTROL_TEXT_TITLE), label)
-                    .apply()
+        edit_menu_button.setOnClickListener {
 
-                mainViewModel.onAction(MainViewModel.Action.OnMainSliderMenuSelection(label))
-                true
+            // Set an elevation for the popup window
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                popupWindow.elevation = 10.0F
             }
-            popupMenu.show()
+
+            // If API level 23 or higher then execute the code
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // Create a new slide animation for popup window enter transition
+                val slideIn = Slide()
+                slideIn.slideEdge = Gravity.TOP
+                popupWindow.enterTransition = slideIn
+
+                // Slide animation for popup window exit transition
+                val slideOut = Slide()
+                slideOut.slideEdge = Gravity.RIGHT
+                popupWindow.exitTransition = slideOut
+
+            }
+
+            if (!isEditMenuShowing) {
+                // Finally, show the popup window on app
+                popupWindow.showAtLocation(
+                    editMenuView, // Location to display popup window
+                    Gravity.CENTER, // Exact position of layout to display popup
+                    0, // X offset
+                    0 // Y offset
+                )
+                isEditMenuShowing = true
+            }
+
+        }
+
+        val closeBtn = editMenuView.findViewById<ImageButton>(R.id.close_edit_menu)
+        closeBtn.setOnClickListener {
+            popupWindow.dismiss()
+            isEditMenuShowing = false
+
+        }
+
+        val spinner: Spinner = editMenuView.findViewById(R.id.edit_param_menu)
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.DrumScreenEdit,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
+        }
+
+
+        var dX: Float = 0f
+        var dY: Float = 0f
+        var updatX = 0
+        var updateY = 0
+        editMenuView.setOnTouchListener { view, event ->
+
+            when (event.action) {
+
+                MotionEvent.ACTION_DOWN -> {
+                    println("RawX = ${event.getRawX()}")
+                    println("X = ${event.getX()}")
+
+                    dX = (event.getRawX() - updatX)
+                    dY = (event.getRawY() - updateY)
+
+                    println("dx = ${dX}")
+                }
+                MotionEvent.ACTION_MOVE -> {
+
+                    updatX = (event.getRawX() - dX).toInt()
+                    updateY = (event.getRawY() - dY).toInt()
+                    popupWindow.update(updatX, updateY, -1, -1, true)
+
+                }
+
+                MotionEvent.ACTION_UP -> {
+
+
+                }
+            }
+            true
         }
 
     }
@@ -506,31 +563,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
         Log.d(" onStopTrackiTouch", seekBar.toString())
-    }
-
-    /**
-     * Midi
-     */
-
-    @TargetApi(23)
-    private fun setUpMidi() {
-        //Checking for Midi capabilities
-        if (this.packageManager.hasSystemFeature(PackageManager.FEATURE_MIDI)) {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                val m = this.getSystemService(Context.MIDI_SERVICE) as MidiManager
-                //Get List of Already Plugged In Entities
-                val info = m.devices
-
-                //notification when, for example, keyboards are plugged in or unplugged
-                // m.registerDeviceCallback({ x -> })
-            } else {
-                //customer can not use the controller feature of the app
-
-                TODO("VERSION.SDK_INT < M")
-            }
-        }
     }
 
 
@@ -612,12 +644,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             ///////Set the play state//////
             ApplicationState.isPlaying = true
-            mainViewModel.onAction(MainViewModel.Action.OnPlay)
 
-            if (!ApplicationState.isRecording) {
-
-
+            if (ApplicationState.isArmedToRecord) {
+                ApplicationState.isRecording = true
             }
+
+            mainViewModel.onAction(MainViewModel.Action.OnPlay)
 
         } else {
 
@@ -626,15 +658,34 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             ApplicationState.isPlaying = false
             ApplicationState.isMillisecondClockPlaying = false
+            ApplicationState.isRecording = false
 
-            fabProgress.progress = 0
             mainViewModel.onAction(MainViewModel.Action.OnStop)
-            if (Metronome.isActive()) {
-
-            }
 
         }
 
+    }
+
+    fun onRecordTapped(view: View) {
+        //start recording
+        if (!ApplicationState.isArmedToRecord) {
+            recordButton.setImageResource(R.drawable.ic_recording_color)
+            fabProgress.indeterminateDrawable.setColorFilter(
+                ContextCompat.getColor(this, R.color.recording),
+                android.graphics.PorterDuff.Mode.MULTIPLY
+            )
+            ApplicationState.isArmedToRecord = true
+
+            if (ApplicationState.isPlaying) {
+                ApplicationState.isRecording = true
+            }
+
+        } else {
+            ApplicationState.isArmedToRecord = false
+            ApplicationState.isRecording = false
+            recordButton.setImageResource(R.drawable.ic_record_default)
+
+        }
     }
 
     //This for the main ui pattern buttons onClick
@@ -644,15 +695,10 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             //use the pattern choice as the key to get
             // the saved bar for that pattern
-         val  barMeasure = sharedPref.getString(
+            val barMeasure = sharedPref.getString(
                 selection.text.toString(),
                 getString(BAR_MEASURE_DEFAULT)
             )!!.toInt()
-
-            //let the engine know that the bar has changed
-            //so the timers can adjust
-           // mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
-
 
             //Match what pattern has been selected by title and send
             //the resource id
@@ -669,7 +715,12 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                         ).apply()
 
                     //send that id to the viewModel
-                    mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId,barMeasure))
+                    mainViewModel.onAction(
+                        MainViewModel.Action.OnPatternSelected(
+                            resouceId,
+                            barMeasure
+                        )
+                    )
 
 
                 }
@@ -679,23 +730,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
     }
 
-    fun onRecordTapped(view: View) {
-        //start recording
-        if (!ApplicationState.isRecording) {
-            recordButton.setImageResource(R.drawable.ic_recording_color)
-            fabProgress.indeterminateDrawable.setColorFilter(
-                ContextCompat.getColor(this, R.color.recording),
-                android.graphics.PorterDuff.Mode.MULTIPLY
-            )
-            mainViewModel.onAction(MainViewModel.Action.OnRecordTapped(true))
-
-        } else {
-
-            recordButton.setImageResource(R.drawable.ic_record_default)
-            mainViewModel.onAction(MainViewModel.Action.OnRecordTapped(false))
-
-        }
-    }
 
     fun onSettingsTapped(view: View) {
         mainViewModel.onAction(MainViewModel.Action.OnSettingsTapped)
@@ -745,15 +779,19 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
-    private fun getPatternSelected():String?{
-      return sharedPref.getString(
+    private fun getPatternSelected(): String? {
+        return sharedPref.getString(
             getString(PATTERN_SELECTED),
             getString(PATTERN_SELECTED_DEFAULT)
         )
 
     }
+
     override fun onResume() {
         super.onResume()
+
+        // mainViewModel.test()
+
         //Get updated bar measure
         barMeasure = sharedPref.getInt(
             getString(BAR_MEASURE_SELECTED),
@@ -768,24 +806,55 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             val patternTitle = getString(resouceId)
             if (patternTitle == getPatternSelected()) {
                 //send that id to the viewModel
-                mainViewModel.onAction(MainViewModel.Action.OnPatternSelected(resouceId,barMeasure))
+                mainViewModel.onAction(
+                    MainViewModel.Action.OnPatternSelected(
+                        resouceId,
+                        barMeasure
+                    )
+                )
             }
         }
 
 
-       // mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
+        // mainViewModel.onAction(MainViewModel.Action.OnBarMeasureUpdate(barMeasure))
 
 
-        if (ApplicationState.isPlaying){
-        //check if the barMeasure has changed
+        if (ApplicationState.isPlaying) {
+            //check if the barMeasure has changed
             if (currentBar != barMeasure) {
                 mainViewModel.onAction(MainViewModel.Action.OnStop)
                 mainViewModel.onAction(MainViewModel.Action.OnPlay)
 
             }
-    }
+        }
 
     }
+
+    /**
+     * Midi
+     */
+
+    @TargetApi(23)
+    private fun setUpMidi() {
+        //Checking for Midi capabilities
+        if (this.packageManager.hasSystemFeature(PackageManager.FEATURE_MIDI)) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                val m = this.getSystemService(Context.MIDI_SERVICE) as MidiManager
+                //Get List of Already Plugged In Entities
+                val info = m.devices
+
+                //notification when, for example, keyboards are plugged in or unplugged
+                // m.registerDeviceCallback({ x -> })
+            } else {
+                //customer can not use the controller feature of the app
+
+                TODO("VERSION.SDK_INT < M")
+            }
+        }
+    }
+
 
     companion object {
         const val SETTINGS_REQUEST_CODE: Int = 200

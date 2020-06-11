@@ -86,7 +86,7 @@
             android:splitTrack="false"
             android:progressDrawable="@drawable/ic_volume_slider_bg"/>
         <Button
-            android:id="@+id/seekbar_slider_menu_toggle"
+            android:id="@+id/edit_menu_button"
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginLeft="12dp"
