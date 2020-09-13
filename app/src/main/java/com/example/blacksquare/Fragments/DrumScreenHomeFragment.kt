@@ -734,7 +734,7 @@ class DrumScreenHomeFragment : BaseFragment(),
 
 
     private fun setVolumeSliderProgress(valueOne: Float, valueTwo: Float) {
-        drumScreenViewModel.setVolumeSliderProgress(valueOne, valueTwo)
+        drumScreenViewModel.setEditKnobProgress(valueOne, valueTwo)
     }
 
     private fun setPadVolume(volume: Float) {

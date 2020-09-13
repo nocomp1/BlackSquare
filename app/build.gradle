@@ -14,13 +14,16 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
     
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId "com.example.nextsoundz"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"

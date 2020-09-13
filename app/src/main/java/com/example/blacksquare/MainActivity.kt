@@ -49,6 +49,7 @@ import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED
 import com.example.blacksquare.Utils.SharedPrefKeys.PATTERN_SELECTED_DEFAULT
 import com.example.blacksquare.Utils.SharedPrefKeys.PROJECT_TEMPO
 import com.example.blacksquare.ViewModels.MainViewModel
+import com.example.blacksquare.Views.RotaryKnobView
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.blinkingTransitionState
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.getRadioBtnText
 import com.example.blacksquare.Views.ToggleButtonGroupExtensions.setRadioBtnSelection
@@ -57,6 +58,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.edit_menu_view.*
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -64,7 +66,7 @@ import java.nio.ByteOrder
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    SeekBar.OnSeekBarChangeListener, MainViewModel.UpdateListener,
+    SeekBar.OnSeekBarChangeListener, RotaryKnobView.RotaryKnobListener, MainViewModel.UpdateListener,
     ToggleButtonGroupTableLayout.ToggleButtonListener {
 
 
@@ -90,6 +92,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var uiClock: TextView
     private lateinit var countInClock: TextView
+    private lateinit var mainRotaryKnobView: RotaryKnobView
 
     /**
      * UI clock variables
@@ -122,6 +125,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setListener(this)
 
+       // mainRotaryKnobView = findViewById(R.id.edit_knob)
+        edit_knob.listener =this
 
         // val toggleLayout = findViewById<ToggleButtonGroupTableLayout>(R.id.main_ui_pattern_radio_group)
         main_ui_pattern_radio_group.setUpListener(filterListener)
@@ -431,7 +436,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     }
 
     /**
-     * Multi functional horizontal slider control
+     * This brings up the edit popup window
      */
     private fun setUpEditPopUpMenu() {
         var isEditMenuShowing = false
@@ -461,6 +466,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         popupWindow.setOnDismissListener {
             isEditMenuShowing = false
         }
+
+
 
         edit_menu_button.setOnClickListener {
 
@@ -492,6 +499,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                     0 // Y offset
                 )
                 isEditMenuShowing = true
+
             }
 
         }
@@ -517,6 +525,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         }
 
 
+        //This is to move the window around on touch
         var dX: Float = 0f
         var dY: Float = 0f
         var updatX = 0
@@ -552,6 +561,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+    //Main edit rotary knob
+    override fun onRotate(value: Int) {
+
+
+    }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
         mainViewModel.onAction(MainViewModel.Action.OnMainSliderProgressChange(progress))
@@ -969,6 +983,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //Log.d("nativeCode", text)
         Log.d("nativeCode", "${count} second")
     }
+
+
 
 }
 

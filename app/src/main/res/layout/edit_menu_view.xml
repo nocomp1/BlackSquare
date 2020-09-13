@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:class="http://schemas.android.com/tools"
     android:background="@drawable/round_corner_bg"
     android:paddingStart="8dp"
     android:paddingBottom="8dp"
@@ -64,12 +65,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/mute_btn" />
 
-    <Button
-        android:id="@+id/control_view"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+    <com.example.blacksquare.Views.RotaryKnobView
+        android:id="@+id/main_edit_knob"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:layout_marginStart="8dp"
-
+        app:knobDrawable="@drawable/ic_rotary_knob"
+        app:initialValue="50"
+        app:maxValue="100"
+        app:minValue="0"
         app:layout_constraintStart_toEndOf="@id/automation_btn"
         app:layout_constraintTop_toBottomOf="@id/selected_callout" />
 
@@ -78,6 +82,6 @@
         android:layout_width="45dp"
         android:layout_height="100dp"
         android:layout_marginStart="8dp"
-        app:layout_constraintStart_toEndOf="@id/control_view"
+        app:layout_constraintStart_toEndOf="@id/main_edit_knob"
         app:layout_constraintTop_toBottomOf="@id/selected_callout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

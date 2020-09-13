@@ -14,7 +14,7 @@ class DrumScreenViewModel : ViewModel() {
         data class UpdateMainSliderProgress(val progress: Int) : Events()
     }
 
-    fun setVolumeSliderProgress(valueOne: Float, valueTwo: Float) {
+    fun setEditKnobProgress(valueOne: Float, valueTwo: Float) {
 
         val progress: Int
         //This logic is for volume
