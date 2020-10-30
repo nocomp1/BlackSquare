@@ -28,6 +28,8 @@ import com.example.blacksquare.Managers.DrumPadSoundPool
 import com.example.blacksquare.Managers.SoundResManager
 import com.example.blacksquare.Models.PadClickListenerModel
 import com.example.blacksquare.Models.PadSequenceTimeStamp
+import com.example.blacksquare.Models.PopUpMainEditMenu.MainEditRotaryKnob
+import com.example.blacksquare.Models.PopUpMainEditMenu.RotaryKnobType
 import com.example.blacksquare.Models.Quantize
 import com.example.blacksquare.R
 import com.example.blacksquare.Utils.BpmUtils
@@ -35,6 +37,7 @@ import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_DEFAULT
 import com.example.blacksquare.Utils.SharedPrefKeys.BAR_MEASURE_SELECTED
 import com.example.blacksquare.ViewModels.DrumScreenViewModel
+import com.example.blacksquare.ViewModels.DrumScreenViewModel.Events
 import com.example.blacksquare.ViewModels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.drum_bank1.*
@@ -171,8 +174,13 @@ class DrumScreenHomeFragment : BaseFragment(),
         drumScreenViewModel.event.observe(this, Observer { events ->
 
             when (events) {
-                is DrumScreenViewModel.Events.UpdateMainSliderProgress -> {
-                    sharedViewModel.mainSliderValue.postValue(events.progress)
+                is Events.SetEditRotaryKnobPosition -> {
+                    sharedViewModel.popupEditRotaryKnob.postValue(
+                        MainEditRotaryKnob(
+                            events.value,
+                            events.type
+                        )
+                    )
                 }
             }.exhaustive
 
@@ -186,28 +194,52 @@ class DrumScreenHomeFragment : BaseFragment(),
                 //observe the patter user selects
                 onPatternChanged(getString(sharedViewState.patternSelected))
 
-                //main slider value
-                val volume = sharedViewState.mainSliderValue.toFloat() / 100
-                setPadVolume(volume)
+                handlePopupEditRotaryKnob(sharedViewState)
+
 
             }
 
 
         })
 
-        sharedViewModel.event.observe(this, Observer {mainActivityEvent ->
+        sharedViewModel.event.observe(this, Observer { mainActivityEvent ->
 
-            when(mainActivityEvent){
+            when (mainActivityEvent) {
                 is MainViewModel.Event.UpdateCountInClock -> {
-                   countIn = mainActivityEvent.countInCount
+                    countIn = mainActivityEvent.countInCount
                 }
 
             }
         })
 
         sharedViewModel.setSeqListener(this)
-
         initPadTimeStampArrayList()
+    }
+
+    private fun handlePopupEditRotaryKnob(sharedViewState: MainViewModel.ViewState) {
+        when (sharedViewState.popupEditRotaryKnob.type) {
+
+            is RotaryKnobType.Volume -> {
+                Log.d("popup", "volume section")
+
+                //main slider value
+                val volume = sharedViewState.popupEditRotaryKnob.value.toFloat() / 100
+                setPadVolume(volume)
+
+            }
+            is RotaryKnobType.Pan -> {
+            }
+            is RotaryKnobType.Pitch -> {
+            }
+            is RotaryKnobType.HiPassFilter -> {
+            }
+            is RotaryKnobType.LowPassFilter -> {
+            }
+            is RotaryKnobType.Reverb -> {
+            }
+            is RotaryKnobType.Delay -> {
+            }
+        }.exhaustive
     }
 
 
@@ -225,7 +257,7 @@ class DrumScreenHomeFragment : BaseFragment(),
     }
 
     private fun initPadTimeStampArrayList() {
-        Log.d("drumFrag", "it called it")
+
         // currentPattern = ArrayList()
         padsPattern = ArrayList()
         padTimeStampArrayMapList = arrayListOf()
@@ -640,7 +672,6 @@ class DrumScreenHomeFragment : BaseFragment(),
             drumNoteHasBeenRecorded = true
 
             //Log.d("soundPlayTimeStamp", "count in outside if = $countIn")
-
 
 
         }

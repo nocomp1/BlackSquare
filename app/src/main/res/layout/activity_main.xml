@@ -341,18 +341,6 @@
                 android:onClick="onUndoTapped"
                 android:scaleY="-1"
                 app:srcCompat="@drawable/ic_undo" />
-            <view
-                class="com.example.blacksquare.Views.RotaryKnobView"
-                android:id="@+id/edit_knob"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                app:knobDrawable="@drawable/ic_rotary_knob"
-                app:initialValue="50"
-                app:maxValue="100"
-                app:minValue="0"
-                app:layout_constraintStart_toEndOf="@id/automation_btn"
-                app:layout_constraintTop_toBottomOf="@id/selected_callout" />
 
             <ImageButton
                 android:id="@+id/play_stop_btn"
@@ -364,6 +352,7 @@
                 android:scaleY="-1"
                 app:srcCompat="@drawable/play_to_stop_anim" />
 
+         <!--
             <SeekBar
 
                 android:id="@+id/main_ui_volume_seek_slider"
@@ -375,11 +364,11 @@
                 android:progressDrawable="@drawable/ic_volume_slider_bg"
                 android:splitTrack="false"
                 android:thumb="@drawable/ic_volume_slider_knob" />
-
+-->
             <Button
                 android:id="@+id/edit_menu_button"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
                 android:layout_marginLeft="12dp"
                 android:background="@drawable/default_pad"
                 android:elevation="15dp"

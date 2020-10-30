@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.example.blacksquare.Helpers.ApplicationState
 import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Models.PadSequenceTimeStamp
+import com.example.blacksquare.Models.PopUpMainEditMenu.*
 import com.example.blacksquare.Models.Quantize
 import com.example.blacksquare.R
 import com.example.blacksquare.Utils.BpmUtils
@@ -68,7 +69,7 @@ class MainViewModel() : ViewModel() {
     private val playbackPadId = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
-    val mainSliderValue = MutableLiveData<Int>()
+    val popupEditRotaryKnob = MutableLiveData<MainEditRotaryKnob>()
         .also { _viewState.addSource(it) { combineSources() } }
 
     private val isQuantizeEnabled = MutableLiveData<Boolean>()
@@ -93,7 +94,7 @@ class MainViewModel() : ViewModel() {
 
     data class ViewState(
         val playBackPadId: Int,
-        val mainSliderValue: Int,
+        val popupEditRotaryKnob: MainEditRotaryKnob,
         val drumPatternList: ArrayMap<String, ArrayList<ArrayMap<Long, PadSequenceTimeStamp>>>,
         val patternSelected: Int,
         val isQuantizeEnabled: Boolean,
@@ -106,7 +107,7 @@ class MainViewModel() : ViewModel() {
 
         ViewState(
             playBackPadId = playbackPadId.value ?: -1,
-            mainSliderValue = mainSliderValue.value ?: -1,
+            popupEditRotaryKnob = popupEditRotaryKnob.value ?: MainEditRotaryKnob(),
             drumPatternList = drumPatternArrayList.value ?: ArrayMap(),
             patternSelected = patternSelected.value ?: R.string.p1,
             isQuantizeEnabled = isQuantizeEnabled.value ?: false,
@@ -328,8 +329,8 @@ class MainViewModel() : ViewModel() {
 
     }
 
-    private fun mainSlider(progress: Int) {
-        mainSliderValue.postValue(progress)
+    private fun popupEditMenuRotaryKnob(value: Int, type : RotaryKnobType) {
+        popupEditRotaryKnob.postValue(MainEditRotaryKnob(value,type))
     }
 
 
@@ -391,7 +392,7 @@ class MainViewModel() : ViewModel() {
             }
             Action.OnShowMainUi -> {
             }
-            is Action.OnMainSliderProgressChange -> mainSlider(action.progress)
+            is Action.OnEditRotaryKnobProgressChange -> popupEditMenuRotaryKnob(action.value, action.type)
             is Action.OnMainSliderMenuSelection -> TODO()
             Action.OnShowUndoErrorMsg -> _events.value = Event.UndoLisEmptyMsg
             Action.OnShowUndoConfirmMsg -> _events.value = Event.ShowUndoConfirmMsg
@@ -418,7 +419,7 @@ class MainViewModel() : ViewModel() {
         object OnShowUndoErrorMsg : Action()
         object OnShowUndoConfirmMsg : Action()
         data class OnPatternSelected(val patternResourceId: Int, val bar: Int) : Action()
-        data class OnMainSliderProgressChange(val progress: Int) : Action()
+        data class OnEditRotaryKnobProgressChange(val value: Int, val type : RotaryKnobType) : Action()
         data class OnMainSliderMenuSelection(val label: String) : Action()
         data class OnBarMeasureUpdate(val bar: Int) : Action()
 

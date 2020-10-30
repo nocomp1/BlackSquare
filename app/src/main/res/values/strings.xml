@@ -1,14 +1,14 @@
 <resources>
 
     <string-array name="DrumScreenEdit">
-        <item>Volume</item>
-        <item>Pan</item>
-        <item>Pitch</item>
-        <item>High Pass Filter</item>
-        <item>Low Pad Filter</item>
-        <item>Effects</item>
+        <item>@string/volume</item>
+        <item>@string/pan</item>
+        <item>@string/pitch</item>
+        <item>@string/high_pass_filter</item>
+        <item>@string/low_pass_filter</item>
+        <item>@string/reverb</item>
+        <item>@string/delay</item>
     </string-array>
-
 
 
     <string name="app_name">NextSoundz</string>
@@ -58,9 +58,17 @@
     <string name="selectedDrumBank">selected drum bank</string>
     <string name="soundID">SoundFileId</string>
     <string name="padSelected">padSelected</string>
+
+
     <string name="pan">Pan</string>
     <string name="pitch">Pitch</string>
     <string name="volume">Volume</string>
+    <string name="high_pass_filter">High Pass Filter</string>
+    <string name="low_pass_filter">Low Pass Filter</string>
+    <string name="reverb">Reverb</string>
+    <string name="delay">Delay</string>
+
+
     <string name="ui_clock">%1$d : %s</string>
 
     <!-- settings Pattern titles -->
@@ -96,6 +104,7 @@
     <string name="main_slider_short_volume_label">V</string>
     <string name="main_slider_short_pan_label">P</string>
     <string name="main_slider_short_pitch_label">PI</string>
+    <string name="main_edit_menu_label">E</string>
 
     <!-- shared prefs keys -->
     <string name="application_shared_prefs">App shared prefs</string>

@@ -4,15 +4,17 @@ import android.content.Context
 import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.widget.ImageView
+import android.widget.ImageView.ScaleType
 import android.widget.RelativeLayout
 import androidx.core.view.GestureDetectorCompat
 import com.example.blacksquare.R
 import kotlinx.android.synthetic.main.rotary_knob_view.view.*
-import java.lang.Math.atan2
+import kotlin.math.atan2
+
 
 class RotaryKnobView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -112,7 +114,7 @@ class RotaryKnobView @JvmOverloads constructor(
         }
 
         val matrix = Matrix()
-        knobImageView.scaleType = ImageView.ScaleType.MATRIX
+        knobImageView.scaleType = ScaleType.MATRIX
         matrix.postRotate(deg, x, y)
         knobImageView.imageMatrix = matrix
     }
@@ -123,7 +125,7 @@ class RotaryKnobView @JvmOverloads constructor(
     fun setKnobPositionByValue(value: Int) {
         var angle = ((value - minValue) * divider) -150
         if (angle > 180) angle -= 360
-       // Log.i("KNOB", "seet position to $angle")
+        Log.i("KNOB", "seet position to $angle")
         setKnobPosition(angle)
     }
 
@@ -171,5 +173,4 @@ class RotaryKnobView @JvmOverloads constructor(
 
     // Unused. Needed for GestureDetector implementation
     override fun onShowPress(e: MotionEvent) {}
-
 }

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:class="http://schemas.android.com/tools"
+    android:id="@+id/edit_menu_layout"
     android:background="@drawable/round_corner_bg"
     android:paddingStart="8dp"
     android:paddingBottom="8dp"
@@ -67,8 +67,8 @@
 
     <com.example.blacksquare.Views.RotaryKnobView
         android:id="@+id/main_edit_knob"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         app:knobDrawable="@drawable/ic_rotary_knob"
         app:initialValue="50"

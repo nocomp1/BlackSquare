@@ -37,6 +37,7 @@ import com.example.blacksquare.Helpers.ApplicationState
 import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.SharedPrefManager
+import com.example.blacksquare.Models.PopUpMainEditMenu.RotaryKnobType
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
 import com.example.blacksquare.Utils.SharedPrefKeys.APP_SHARED_PREFERENCES
@@ -58,7 +59,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.edit_menu_view.*
+import timber.log.Timber
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -66,7 +67,8 @@ import java.nio.ByteOrder
 
 
 class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGestureListener,
-    SeekBar.OnSeekBarChangeListener, RotaryKnobView.RotaryKnobListener, MainViewModel.UpdateListener,
+    SeekBar.OnSeekBarChangeListener, RotaryKnobView.RotaryKnobListener,
+    MainViewModel.UpdateListener,
     ToggleButtonGroupTableLayout.ToggleButtonListener {
 
 
@@ -82,6 +84,16 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var metronomeInterval: Long? = null
     private var currentTempo: Long? = null
 
+    //Edit menu controls
+    private  var editMenuRotaryKnob: RotaryKnobView? = null
+    private var rotaryKnobType: RotaryKnobType = RotaryKnobType.Volume()
+    private lateinit var editMenuSelection: Spinner
+    private lateinit var editMenuCloseBtn: ImageButton
+    private lateinit var editMenuAutomation: ImageButton
+    private lateinit var editMenuMute: ImageButton
+    private lateinit var editMenuSolo: ImageButton
+
+
     private lateinit var recordButton: ImageButton
     private val filterListener: ToggleButtonGroupTableLayout.ToggleButtonListener = this
 
@@ -92,7 +104,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var uiClock: TextView
     private lateinit var countInClock: TextView
-    private lateinit var mainRotaryKnobView: RotaryKnobView
 
     /**
      * UI clock variables
@@ -125,20 +136,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.setListener(this)
 
-       // mainRotaryKnobView = findViewById(R.id.edit_knob)
-        edit_knob.listener =this
+        // mainRotaryKnobView = findViewById(R.id.edit_knob)
+        // main_edit_knob.listener =this
 
         // val toggleLayout = findViewById<ToggleButtonGroupTableLayout>(R.id.main_ui_pattern_radio_group)
         main_ui_pattern_radio_group.setUpListener(filterListener)
         countInClock = findViewById(R.id.count_in_view)
         recordButton = findViewById(R.id.record_btn)
 
-        mainViewModel.sharedViewState.observe(this, Observer { viewState ->
-
-            main_ui_volume_seek_slider.progress = viewState.mainSliderValue
-            barMeasure = viewState.barMeasure
-
-        })
 
 
         mainViewModel.event.observe(this, Observer { event ->
@@ -255,6 +260,21 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         initializeUiComponents()
 
+
+        mainViewModel.sharedViewState.observe(this, Observer { viewState ->
+
+            editMenuRotaryKnob?.setKnobPositionByValue(viewState.popupEditRotaryKnob.value)
+
+
+
+
+            // main_ui_volume_seek_slider.progress = viewState.popupEditRotaryKnob
+            barMeasure = viewState.barMeasure
+
+        })
+
+
+
     }
 
     private fun showUndoConfirmMsg() {
@@ -298,8 +318,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         fabGestureDetectionListener.setFabGestureListener(this)
 
         //Main UI volume slider
-        volumeSlider = main_ui_volume_seek_slider
-        volumeSlider.setOnSeekBarChangeListener(this)
+      //  volumeSlider = main_ui_volume_seek_slider
+      //  volumeSlider.setOnSeekBarChangeListener(this)
 
         //Selector menu for volume slider
         setUpEditPopUpMenu()
@@ -443,7 +463,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
 
         // default label
-        var label = getString(R.string.main_slider_short_volume_label)
+        val label = getString(R.string.main_edit_menu_label)
         edit_menu_button.text =
             sharedPref.getString(getString(MAIN_SLIDER_CONTROL_TEXT_TITLE), label)
 
@@ -452,7 +472,20 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         // Inflate a custom view using layout inflater
-        val editMenuView = inflater.inflate(R.layout.edit_menu_view, null)
+        val editMenuView =
+            inflater.inflate(R.layout.edit_menu_view, this.findViewById(R.id.edit_menu_layout))
+
+        //initialize views that's inside of popup window
+        editMenuRotaryKnob = editMenuView.findViewById(R.id.main_edit_knob)
+        editMenuSelection = editMenuView.findViewById(R.id.edit_param_menu)
+        editMenuCloseBtn = editMenuView.findViewById(R.id.close_edit_menu)
+        editMenuAutomation = editMenuView.findViewById(R.id.automation_btn)
+        editMenuMute = editMenuView.findViewById(R.id.mute_btn)
+        editMenuSolo = editMenuView.findViewById(R.id.solo_btn)
+
+
+
+        editMenuRotaryKnob?.listener = this
 
         // Initialize a new instance of popup window
         popupWindow = PopupWindow(
@@ -460,7 +493,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             LinearLayout.LayoutParams.WRAP_CONTENT, // Width of popup window
             LinearLayout.LayoutParams.WRAP_CONTENT // Window height
         )
-
 
         //popupWindow.isOutsideTouchable = true
         popupWindow.setOnDismissListener {
@@ -504,26 +536,14 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
         }
 
-        val closeBtn = editMenuView.findViewById<ImageButton>(R.id.close_edit_menu)
-        closeBtn.setOnClickListener {
+        editMenuCloseBtn.setOnClickListener {
             popupWindow.dismiss()
             isEditMenuShowing = false
 
         }
 
-        val spinner: Spinner = editMenuView.findViewById(R.id.edit_param_menu)
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.DrumScreenEdit,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            // Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            // Apply the adapter to the spinner
-            spinner.adapter = adapter
-        }
 
+        popUpEditMenuSelection()
 
         //This is to move the window around on touch
         var dX: Float = 0f
@@ -561,14 +581,84 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
     }
 
+    private fun popUpEditMenuSelection() {
+
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.DrumScreenEdit,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            editMenuSelection.adapter = adapter
+        }
+
+        editMenuSelection.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                parent?.let {
+                    val item = it.getItemAtPosition(position).toString()
+
+                    rotaryKnobType = when (item) {
+
+                        getString(RotaryKnobType.Volume().nameResource) -> {
+                            RotaryKnobType.Volume()
+                        }
+                        getString(RotaryKnobType.Pan().nameResource) -> {
+                            RotaryKnobType.Pan()
+                        }
+                        getString(RotaryKnobType.Pitch().nameResource) -> {
+                            RotaryKnobType.Pitch()
+                        }
+                        getString(RotaryKnobType.HiPassFilter().nameResource) -> {
+                            RotaryKnobType.HiPassFilter()
+                        }
+                        getString(RotaryKnobType.LowPassFilter().nameResource) -> {
+                            RotaryKnobType.LowPassFilter()
+                        }
+                        getString(RotaryKnobType.Reverb().nameResource) -> {
+                            RotaryKnobType.Reverb()
+                        }
+                        getString(RotaryKnobType.Delay().nameResource) -> {
+                            RotaryKnobType.Delay()
+                        }
+
+                        else -> {
+                            RotaryKnobType.Volume()
+                        }
+                    }
+
+
+                }
+
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+
+
+        }
+    }
+
     //Main edit rotary knob
     override fun onRotate(value: Int) {
-
-
+        mainViewModel.onAction(
+            MainViewModel.Action.OnEditRotaryKnobProgressChange(
+                value,
+                rotaryKnobType
+            )
+        )
     }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        mainViewModel.onAction(MainViewModel.Action.OnMainSliderProgressChange(progress))
+
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -983,7 +1073,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         //Log.d("nativeCode", text)
         Log.d("nativeCode", "${count} second")
     }
-
 
 
 }
