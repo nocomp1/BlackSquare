@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.blacksquare.Helpers.ApplicationState
 import com.example.blacksquare.Helpers.Metronome
+import com.example.blacksquare.Models.Pad
 import com.example.blacksquare.Models.PadSequenceTimeStamp
 import com.example.blacksquare.Models.PopUpMainEditMenu.*
 import com.example.blacksquare.Models.Quantize
@@ -84,6 +85,8 @@ class MainViewModel() : ViewModel() {
     private val patternSelected = MutableLiveData<Int>()
         .also { _viewState.addSource(it) { combineSources() } }
 
+    val padSelected = MutableLiveData<Pad>()
+        .also { _viewState.addSource(it) { combineSources() } }
 
     private val _events: MutableLiveData<Event> = MediatorLiveData()
     val event: LiveData<Event> get() = _events
@@ -100,7 +103,8 @@ class MainViewModel() : ViewModel() {
         val isQuantizeEnabled: Boolean,
         val quantizeStyle: Quantize,
         val barMeasure: Int,
-        val timeLeftBeforePatternChange: Long
+        val timeLeftBeforePatternChange: Long,
+        val padSelected : Pad
     )
 
     private fun combineSources() {
@@ -113,7 +117,8 @@ class MainViewModel() : ViewModel() {
             isQuantizeEnabled = isQuantizeEnabled.value ?: false,
             quantizeStyle = quantizeStyle.value ?: Quantize.SixTenthNote,
             barMeasure = barMeasure.value ?: 1,
-            timeLeftBeforePatternChange = timeLeftBeforePatternChange.value ?: 0L
+            timeLeftBeforePatternChange = timeLeftBeforePatternChange.value ?: 0L,
+            padSelected = padSelected.value ?: Pad()
         ).also { _viewState.value = it }
 
     }

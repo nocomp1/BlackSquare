@@ -1,7 +1,7 @@
 package com.example.blacksquare.Views
 
 import android.content.Context
-import android.graphics.Matrix
+import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
@@ -85,7 +85,7 @@ class RotaryKnobView @JvmOverloads constructor(
      */
     private fun calculateAngle(x: Float, y: Float): Float {
         val px = (x / width.toFloat()) - 0.5
-        val py = ( 1 - y / height.toFloat()) - 0.5
+        val py = (1 - y / height.toFloat()) - 0.5
         var angle = -(Math.toDegrees(atan2(py, px)))
             .toFloat() + 90
         if (angle > 180) angle -= 360
@@ -99,18 +99,33 @@ class RotaryKnobView @JvmOverloads constructor(
             super.onTouchEvent(event)
     }
 
+//    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+//    val canvas = Canvas(bitmap)
+//    private val textPaint =
+//        Paint().apply {
+//            isAntiAlias = true
+//            color = Color.RED
+//            style = Paint.Style.STROKE
+//        }
+//
+//    override fun onDraw(canvas: Canvas?) {
+//        super.onDraw(canvas)
+//        canvas?.drawPaint(textPaint)
+//        canvas?.drawCircle()
+//    }
+
     private fun setKnobPosition(deg: Float) {
         // to allow setting the knob position before onMeasure or onLayout ran
         val x = if (width != 0) {
             width.toFloat() / 2
         } else {
-            resources.getDimension(R.dimen.knob_width) / 2
+            resources.getDimension(R.dimen.popup_edit_menu_rotary_knob_width) / 2
         }
 
         val y = if (height != 0) {
             height.toFloat() / 2
         } else {
-            resources.getDimension(R.dimen.knob_height) / 2
+            resources.getDimension(R.dimen.popup_edit_menu_rotary_knob_height) / 2
         }
 
         val matrix = Matrix()
@@ -123,7 +138,7 @@ class RotaryKnobView @JvmOverloads constructor(
      * Sets knob to value's position
      */
     fun setKnobPositionByValue(value: Int) {
-        var angle = ((value - minValue) * divider) -150
+        var angle = ((value - minValue) * divider) - 150
         if (angle > 180) angle -= 360
         Log.i("KNOB", "seet position to $angle")
         setKnobPosition(angle)
@@ -157,6 +172,7 @@ class RotaryKnobView @JvmOverloads constructor(
     override fun onDown(event: MotionEvent): Boolean {
         return true
     }
+
     // Unused. Needed for GestureDetector implementation
     override fun onSingleTapUp(e: MotionEvent): Boolean {
         return true

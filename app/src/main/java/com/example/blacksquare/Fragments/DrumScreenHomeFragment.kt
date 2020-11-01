@@ -18,6 +18,7 @@ import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.SeekBar
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
@@ -26,6 +27,7 @@ import com.example.blacksquare.Helpers.Definitions
 import com.example.blacksquare.Helpers.DrumScreenHelper
 import com.example.blacksquare.Managers.DrumPadSoundPool
 import com.example.blacksquare.Managers.SoundResManager
+import com.example.blacksquare.Models.Pad
 import com.example.blacksquare.Models.PadClickListenerModel
 import com.example.blacksquare.Models.PadSequenceTimeStamp
 import com.example.blacksquare.Models.PopUpMainEditMenu.MainEditRotaryKnob
@@ -707,13 +709,28 @@ class DrumScreenHomeFragment : BaseFragment(),
         buttonView: View
     ): Boolean {
 
-
+        //if a pad is not selected
         if ((padId != ApplicationState.selectedPadId) ||
             (ApplicationState.selectedPadId == null)
         ) {
             ApplicationState.selectedPadId = padId
+
+            //store pad position on screen - Post to shared viewModel
+            buttonView.doOnLayout {
+                sharedViewModel.padSelected.postValue(
+                    Pad(
+                        padPositionX = it.x.toInt(),
+                        padPositionY = it.y.toInt(),
+                        selected = true
+                    )
+                )
+
+            }
+
+
             padList.forEach { view ->
                 view.pad
+
 
                 val background = view.pad.background
                 val stateListDrawable = background as StateListDrawable
@@ -722,7 +739,7 @@ class DrumScreenHomeFragment : BaseFragment(),
                 val drawableItems = dcs.children
                 val gradientDrawableChecked = drawableItems[0] as GradientDrawable
                 val gradientDrawableUnChecked = drawableItems[1] as GradientDrawable
-                //gradientDrawableUnChecked.setStroke(2, Color.RED)
+
                 gradientDrawableChecked.setStroke(
                     2,
                     ContextCompat.getColor(activity!!.applicationContext, R.color.colorPrimary)

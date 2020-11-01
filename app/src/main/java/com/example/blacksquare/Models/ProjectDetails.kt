@@ -13,19 +13,22 @@ data class ProjectDetails(
 )
 
 data class Pad(
-    var padId : Long,
-    var panRange: String,
-    var soundLocation: String,
-    var volumeLevel: String ,
-    var pitchRange: String,
-    var reverbLevel: String,
-    var lowPassFilter: Double = 0.0,
-    var highPassFilter: Double = 0.0,
-    var automation: PadAutomation,
-    var mute: Boolean = false,
-    var solo: Boolean = false,
-    var timeLineHit: ArrayMap<Long, PadSequenceTimeStamp> =
-        ArrayMap<Long, PadSequenceTimeStamp>()
+    val padId : Long? = null,
+    val panRange: String? = null,
+    val soundLocation: String? = null,
+    val volumeLevel: String ? = null,
+    val pitchRange: String? = null,
+    val reverbLevel: String? = null,
+    val lowPassFilter: Double = 0.0,
+    val highPassFilter: Double = 0.0,
+    val automation: PadAutomation? = null,
+    val mute: Boolean = false,
+    val solo: Boolean = false,
+    val timeLineHit: ArrayMap<Long, PadSequenceTimeStamp> =
+        ArrayMap(),
+    val padPositionX : Int? = null,
+    val padPositionY : Int? = null,
+    val selected : Boolean =false
 
 )
 

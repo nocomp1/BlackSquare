@@ -133,6 +133,9 @@
     <string name="sequence_screen_name">Sequence</string>
     <string name="mixing_screen_name">Mixing</string>
     <string name="song_screen_name">Song</string>
+    <string name="automation_ab">A</string>
+    <string name="mute_ab">M</string>
+    <string name="solo_ab">S</string>
 
 
     <string name="fan_off">off</string>

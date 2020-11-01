@@ -37,6 +37,7 @@ import com.example.blacksquare.Helpers.ApplicationState
 import com.example.blacksquare.Helpers.Metronome
 import com.example.blacksquare.Listeners.FabGestureDetectionListener
 import com.example.blacksquare.Managers.SharedPrefManager
+import com.example.blacksquare.Models.Pad
 import com.example.blacksquare.Models.PopUpMainEditMenu.RotaryKnobType
 import com.example.blacksquare.Utils.BpmUtils
 import com.example.blacksquare.Utils.Kotlin.exhaustive
@@ -59,7 +60,6 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
-import timber.log.Timber
 import java.io.InputStream
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -83,15 +83,16 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
     private var isMetronomeOn: Boolean = true
     private var metronomeInterval: Long? = null
     private var currentTempo: Long? = null
+    private lateinit var padSelected: Pad
 
     //Edit menu controls
-    private  var editMenuRotaryKnob: RotaryKnobView? = null
+    private var editMenuRotaryKnob: RotaryKnobView? = null
     private var rotaryKnobType: RotaryKnobType = RotaryKnobType.Volume()
     private lateinit var editMenuSelection: Spinner
     private lateinit var editMenuCloseBtn: ImageButton
-    private lateinit var editMenuAutomation: ImageButton
-    private lateinit var editMenuMute: ImageButton
-    private lateinit var editMenuSolo: ImageButton
+    private lateinit var editMenuAutomation: Button
+    private lateinit var editMenuMute: Button
+    private lateinit var editMenuSolo: Button
 
 
     private lateinit var recordButton: ImageButton
@@ -185,6 +186,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
                     // runOnUiThread {   }
 
                 }
+
             }.exhaustive
 
         })
@@ -264,15 +266,11 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         mainViewModel.sharedViewState.observe(this, Observer { viewState ->
 
             editMenuRotaryKnob?.setKnobPositionByValue(viewState.popupEditRotaryKnob.value)
-
-
-
-
-            // main_ui_volume_seek_slider.progress = viewState.popupEditRotaryKnob
             barMeasure = viewState.barMeasure
 
-        })
+            padSelected = viewState.padSelected
 
+        })
 
 
     }
@@ -318,8 +316,8 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         fabGestureDetectionListener.setFabGestureListener(this)
 
         //Main UI volume slider
-      //  volumeSlider = main_ui_volume_seek_slider
-      //  volumeSlider.setOnSeekBarChangeListener(this)
+        //  volumeSlider = main_ui_volume_seek_slider
+        //  volumeSlider.setOnSeekBarChangeListener(this)
 
         //Selector menu for volume slider
         setUpEditPopUpMenu()
@@ -483,8 +481,6 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
         editMenuMute = editMenuView.findViewById(R.id.mute_btn)
         editMenuSolo = editMenuView.findViewById(R.id.solo_btn)
 
-
-
         editMenuRotaryKnob?.listener = this
 
         // Initialize a new instance of popup window
@@ -493,7 +489,7 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
             LinearLayout.LayoutParams.WRAP_CONTENT, // Width of popup window
             LinearLayout.LayoutParams.WRAP_CONTENT // Window height
         )
-
+        popupWindow.contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         //popupWindow.isOutsideTouchable = true
         popupWindow.setOnDismissListener {
             isEditMenuShowing = false
@@ -510,10 +506,27 @@ class MainActivity : AppCompatActivity(), FabGestureDetectionListener.FabGesture
 
             // If API level 23 or higher then execute the code
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                var x = 0
+                var slideInEdge = Gravity.LEFT
+                //Make sure we slide in popup window on side that has the most space
+                if (padSelected.padPositionX?.let { it1 -> window.decorView.width.minus(it1) }!! > padSelected.padPositionX!!) {
+                    x = window.decorView.width.minus(popupWindow.contentView.measuredWidth)
+                    slideInEdge = Gravity.RIGHT
+                }
+
                 // Create a new slide animation for popup window enter transition
                 val slideIn = Slide()
-                slideIn.slideEdge = Gravity.TOP
+                slideIn.slideEdge = slideInEdge
                 popupWindow.enterTransition = slideIn
+
+                popupWindow.showAtLocation(
+                    window.decorView,
+                    Gravity.NO_GRAVITY,
+                    x,
+                    window.decorView.height / 2 - (popupWindow.contentView.measuredHeight / 2)
+                )
+
 
                 // Slide animation for popup window exit transition
                 val slideOut = Slide()

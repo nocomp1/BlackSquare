@@ -6,7 +6,7 @@
     android:id="@+id/edit_menu_layout"
     android:background="@drawable/round_corner_bg"
     android:paddingStart="16dp"
-    android:paddingBottom="16dp"
+    android:paddingBottom="24dp"
     android:paddingEnd="16dp"
     android:paddingTop="16dp">
 
@@ -41,34 +41,44 @@
         android:text="Pad 3"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/edit_param_menu"
-        android:visibility="invisible"
+        android:visibility="gone"
         />
 
-    <ImageButton
+    <Button
         android:id="@+id/automation_btn"
         android:layout_width="35dp"
         android:layout_height="35dp"
+        android:text="@string/automation_ab"
+        app:layout_constraintBottom_toTopOf="@id/mute_btn"
+        android:background="@drawable/default_pad"
+        app:layout_constraintEnd_toStartOf="@id/main_edit_knob"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/selected_callout" />
+        app:layout_constraintTop_toTopOf="@id/main_edit_knob" />
 
-    <ImageButton
+    <Button
         android:id="@+id/mute_btn"
         android:layout_width="35dp"
         android:layout_height="35dp"
+        android:text="@string/mute_ab"
+app:layout_constraintBottom_toTopOf="@id/solo_btn"
+        android:background="@drawable/default_pad"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/automation_btn" />
 
-    <ImageButton
+    <Button
         android:id="@+id/solo_btn"
         android:layout_width="35dp"
         android:layout_height="35dp"
+        android:text="@string/solo_ab"
+        android:background="@drawable/default_pad"
+        app:layout_constraintBottom_toBottomOf="@id/main_edit_knob"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/mute_btn" />
 
     <com.example.blacksquare.Views.RotaryKnobView
         android:id="@+id/main_edit_knob"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/popup_edit_menu_rotary_knob_width"
+        android:layout_height="@dimen/popup_edit_menu_rotary_knob_height"
         android:layout_marginStart="8dp"
         app:knobDrawable="@drawable/ic_rotary_knob"
         app:initialValue="50"
@@ -82,6 +92,7 @@
         android:layout_width="45dp"
         android:layout_height="100dp"
         android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/main_edit_knob"
         app:layout_constraintStart_toEndOf="@id/main_edit_knob"
         app:layout_constraintTop_toBottomOf="@id/selected_callout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

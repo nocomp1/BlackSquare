@@ -1,7 +1,7 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
-    android:width="@dimen/knob_width"
-    android:height="@dimen/knob_height"
+    android:width="@dimen/popup_edit_menu_rotary_knob_width"
+    android:height="@dimen/popup_edit_menu_rotary_knob_height"
     android:viewportWidth="256"
     android:viewportHeight="256">
   <path
