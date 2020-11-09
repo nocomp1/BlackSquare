@@ -2,4 +2,4 @@
 Music Production Workstation
 
 
-![alt text](https://drive.google.com/file/d/14A0Dn3BtflytlTPFmwRbD1TQK_S0R2FW/view?raw=true)
+![alt text](https://cdn.crevado.com/artists/795610/artwork/11015594_enlarged-1.png)
