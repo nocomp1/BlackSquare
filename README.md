@@ -2,4 +2,4 @@
 Music Production Workstation
 
 
-![alt text](https://i2.wp.com/www.nocompcorporate.com/wp-content/uploads/2020/03/BlackSquare-1-600x360.png)
+![alt text](https://drive.google.com/file/d/14A0Dn3BtflytlTPFmwRbD1TQK_S0R2FW/view?usp=sharing)
